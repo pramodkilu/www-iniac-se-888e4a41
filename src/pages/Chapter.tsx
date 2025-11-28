@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb } from "lucide-react";
+import BlixCartViewer from "@/components/3d/BlixCartViewer";
 
 const Chapter = () => {
   const { id } = useParams();
@@ -25,10 +26,11 @@ const Chapter = () => {
       experiment: "Try sliding a book across your desk, then try rolling it on pencils. Which way is easier? That's the difference friction makes!"
     },
     steps: [
-      { number: 1, instruction: "Attach two CT2 connectors to a P11 beam", pieces: ["CT2", "CT2", "P11"] },
-      { number: 2, instruction: "Add CT3 connectors for the axles", pieces: ["CT3", "CT3"] },
-      { number: 3, instruction: "Insert the wheel shafts", pieces: ["Shaft x2"] },
-      { number: 4, instruction: "Attach four wheels to complete your cart", pieces: ["Wheel x4"] }
+      { number: 1, instruction: "Start with the base beam (P11)", pieces: ["P11"] },
+      { number: 2, instruction: "Attach two CT2 connectors to the base", pieces: ["CT2", "CT2"] },
+      { number: 3, instruction: "Add CT3 connectors for the axles", pieces: ["CT3", "CT3"] },
+      { number: 4, instruction: "Insert axle shafts through the holders", pieces: ["Shaft x2"] },
+      { number: 5, instruction: "Attach four wheels to complete your cart!", pieces: ["Wheel x4"] }
     ],
     challenge: {
       title: "Distance Challenge",
@@ -62,7 +64,7 @@ const Chapter = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <Tabs defaultValue="story" className="space-y-6">
+        <Tabs defaultValue="build" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
             <TabsTrigger value="story" className="gap-2">
               <Play className="h-4 w-4" />
@@ -125,43 +127,46 @@ const Chapter = () => {
             </Card>
           </TabsContent>
 
-          {/* Build Tab */}
+          {/* Build Tab with 3D Viewer */}
           <TabsContent value="build" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Hammer className="h-5 w-5 text-primary" />
-                  Building Instructions
+                  Interactive 3D Building Guide
                 </CardTitle>
-                <CardDescription>Follow these steps to build your {chapterData.title}</CardDescription>
+                <CardDescription>
+                  Follow the steps below and watch the 3D model as you build your {chapterData.title}
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="space-y-4">
+                <BlixCartViewer />
+              </CardContent>
+            </Card>
+
+            {/* Step-by-step text guide */}
+            <Card className="border-muted">
+              <CardHeader>
+                <CardTitle className="text-lg">Written Instructions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
                   {chapterData.steps.map((step) => (
-                    <Card key={step.number} className="border-primary/20">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                            {step.number}
-                          </div>
-                          <CardTitle className="text-base">{step.instruction}</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2">
+                    <div key={step.number} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {step.number}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium mb-1">{step.instruction}</p>
+                        <div className="flex flex-wrap gap-1">
                           {step.pieces.map((piece, idx) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
                               {piece}
                             </Badge>
                           ))}
                         </div>
-                        <div className="mt-4 p-4 bg-muted rounded-lg">
-                          <p className="text-sm text-muted-foreground">
-                            🔧 In the full app, you'll see a 3D interactive model here that you can rotate and zoom!
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </CardContent>
