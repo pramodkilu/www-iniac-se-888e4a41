@@ -1,0 +1,222 @@
+import { useParams, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb } from "lucide-react";
+
+const Chapter = () => {
+  const { id } = useParams();
+
+  // Sample data for Chapter 1
+  const chapterData = {
+    id: 1,
+    title: "Cart With Wheels",
+    description: "Learn about friction and motion by building a wheeled cart",
+    difficulty: "Easy",
+    category: "Mechanics",
+    story: {
+      title: "The Old Man's Problem",
+      content: "Once upon a time, an old man needed to move his heavy possessions from one place to another. Pushing them along the ground was so difficult! Then he had a brilliant idea - what if he used wheels?"
+    },
+    theory: {
+      concept: "Friction",
+      explanation: "Friction is the force that opposes motion between two surfaces. When you slide something heavy on the ground, there's a lot of friction. But when you add wheels, the friction is greatly reduced, making it much easier to move!",
+      experiment: "Try sliding a book across your desk, then try rolling it on pencils. Which way is easier? That's the difference friction makes!"
+    },
+    steps: [
+      { number: 1, instruction: "Attach two CT2 connectors to a P11 beam", pieces: ["CT2", "CT2", "P11"] },
+      { number: 2, instruction: "Add CT3 connectors for the axles", pieces: ["CT3", "CT3"] },
+      { number: 3, instruction: "Insert the wheel shafts", pieces: ["Shaft x2"] },
+      { number: 4, instruction: "Attach four wheels to complete your cart", pieces: ["Wheel x4"] }
+    ],
+    challenge: {
+      title: "Distance Challenge",
+      description: "Push your cart on different surfaces (smooth desk, rough carpet, bumpy ground) and measure how far it travels. Which surface has the most friction? The least?",
+      xp: 100
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Link to="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline">Chapter {id}</Badge>
+                <Badge className="bg-success text-success-foreground">{chapterData.difficulty}</Badge>
+                <Badge variant="secondary">{chapterData.category}</Badge>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold">{chapterData.title}</h1>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
+        <Tabs defaultValue="story" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="story" className="gap-2">
+              <Play className="h-4 w-4" />
+              <span className="hidden sm:inline">Story</span>
+            </TabsTrigger>
+            <TabsTrigger value="theory" className="gap-2">
+              <Lightbulb className="h-4 w-4" />
+              <span className="hidden sm:inline">Theory</span>
+            </TabsTrigger>
+            <TabsTrigger value="build" className="gap-2">
+              <Hammer className="h-4 w-4" />
+              <span className="hidden sm:inline">Build</span>
+            </TabsTrigger>
+            <TabsTrigger value="challenge" className="gap-2">
+              <Trophy className="h-4 w-4" />
+              <span className="hidden sm:inline">Challenge</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Story Tab */}
+          <TabsContent value="story" className="space-y-6">
+            <Card className="border-primary/20">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary-glow/10">
+                <CardTitle className="flex items-center gap-2">
+                  <Book className="h-5 w-5 text-primary" />
+                  {chapterData.story.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <p className="text-lg leading-relaxed">{chapterData.story.content}</p>
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground italic">
+                    🎬 In the full app, this will be an animated story with Laya, Kit, and Robb!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Theory Tab */}
+          <TabsContent value="theory" className="space-y-6">
+            <Card className="border-secondary/20">
+              <CardHeader className="bg-gradient-to-r from-secondary/10 to-success/10">
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-secondary" />
+                  Understanding {chapterData.theory.concept}
+                </CardTitle>
+                <CardDescription>Learn the science behind this project</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">What is {chapterData.theory.concept}?</h3>
+                  <p className="text-muted-foreground">{chapterData.theory.explanation}</p>
+                </div>
+                <div className="p-4 bg-accent/10 border-l-4 border-accent rounded">
+                  <h4 className="font-semibold mb-2">Try This Experiment:</h4>
+                  <p className="text-sm">{chapterData.theory.experiment}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Build Tab */}
+          <TabsContent value="build" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Hammer className="h-5 w-5 text-primary" />
+                  Building Instructions
+                </CardTitle>
+                <CardDescription>Follow these steps to build your {chapterData.title}</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  {chapterData.steps.map((step) => (
+                    <Card key={step.number} className="border-primary/20">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                            {step.number}
+                          </div>
+                          <CardTitle className="text-base">{step.instruction}</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {step.pieces.map((piece, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {piece}
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="mt-4 p-4 bg-muted rounded-lg">
+                          <p className="text-sm text-muted-foreground">
+                            🔧 In the full app, you'll see a 3D interactive model here that you can rotate and zoom!
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Challenge Tab */}
+          <TabsContent value="challenge" className="space-y-6">
+            <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-primary/5">
+              <CardHeader className="bg-gradient-to-r from-accent/20 to-primary/20">
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-accent" />
+                  {chapterData.challenge.title}
+                </CardTitle>
+                <CardDescription>Complete this challenge to earn XP and unlock the next chapter!</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <p className="text-lg mb-6">{chapterData.challenge.description}</p>
+                
+                <div className="flex items-center justify-between p-4 bg-card rounded-lg border-2 border-accent">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Reward</p>
+                    <p className="text-2xl font-bold text-accent">{chapterData.challenge.xp} XP</p>
+                  </div>
+                  <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    Complete Challenge
+                  </Button>
+                </div>
+
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    📸 In the full app, you'll be able to take a photo of your completed build or answer interactive questions to complete challenges!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Navigation */}
+        <div className="mt-8 flex justify-between">
+          <Link to="/">
+            <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Chapters
+            </Button>
+          </Link>
+          <Button disabled className="opacity-50">
+            Next Chapter
+            <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
+          </Button>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Chapter;
