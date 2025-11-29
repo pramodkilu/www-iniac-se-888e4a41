@@ -40,55 +40,103 @@ const BlixCartViewer = () => {
   const mouse = useRef(new THREE.Vector2());
   const measurementLinesRef = useRef<THREE.Group | null>(null);
 
-  // Define build steps with 3D piece creation
+  // Define build steps with REAL BLIX components from PDF
   const buildSteps: BuildStep[] = [
     {
       number: 1,
-      instruction: "Start with the base beam (P11)",
-      pieces: ["P11"],
+      instruction: "Place two P7X11 U-shaped pillars (17 holes each)",
+      pieces: ["P7X11", "P7X11"],
       addPieces: (scene) => {
         const group = new THREE.Group();
         
-        // P11 beam (long rectangular beam)
-        const beamGeometry = new THREE.BoxGeometry(5, 0.3, 0.5);
-        const beamMaterial = new THREE.MeshPhongMaterial({ 
-          color: 0x2196F3, // Blue
-          emissive: 0x2196F3,
-          emissiveIntensity: 0.3,
-        });
-        const beam = new THREE.Mesh(beamGeometry, beamMaterial);
-        beam.position.y = 0;
-        beam.userData = { name: "P11 Base Beam", color: "Blue", stepNumber: 1 } as PieceMetadata;
-        group.add(beam);
+        // Helper to create U-shaped pillar with visible holes
+        const createPillar = (xPos: number) => {
+          const pillarGroup = new THREE.Group();
+          
+          // P7X11 - U-shaped structure (orange - BLIX primary color)
+          const leftArm = new THREE.Mesh(
+            new THREE.BoxGeometry(0.15, 1.4, 0.15),
+            new THREE.MeshPhongMaterial({ 
+              color: 0xff6b35,
+              emissive: 0xff6b35,
+              emissiveIntensity: 0.2
+            })
+          );
+          leftArm.position.set(-0.175, 0, 0);
+          
+          const rightArm = new THREE.Mesh(
+            new THREE.BoxGeometry(0.15, 1.4, 0.15),
+            new THREE.MeshPhongMaterial({ 
+              color: 0xff6b35,
+              emissive: 0xff6b35,
+              emissiveIntensity: 0.2
+            })
+          );
+          rightArm.position.set(0.175, 0, 0);
+          
+          const base = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 0.15, 0.15),
+            new THREE.MeshPhongMaterial({ 
+              color: 0xff6b35,
+              emissive: 0xff6b35,
+              emissiveIntensity: 0.2
+            })
+          );
+          base.position.set(0, -0.625, 0);
+          
+          // Add visible holes (8 holes on each side)
+          for (let i = 0; i < 8; i++) {
+            const holeY = -0.5 + (i * 0.15);
+            const holeGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.17, 8);
+            const hole = new THREE.Mesh(
+              holeGeom,
+              new THREE.MeshPhongMaterial({ color: 0x000000 })
+            );
+            hole.position.set(-0.175, holeY, 0);
+            hole.rotation.z = Math.PI / 2;
+            pillarGroup.add(hole);
+          }
+          
+          pillarGroup.add(leftArm, rightArm, base);
+          pillarGroup.position.x = xPos;
+          pillarGroup.userData = { 
+            name: `P7X11 Pillar (${xPos < 0 ? 'Left' : 'Right'})`, 
+            color: "Orange", 
+            stepNumber: 1 
+          } as PieceMetadata;
+          
+          return pillarGroup;
+        };
+        
+        group.add(createPillar(-1.5));
+        group.add(createPillar(1.5));
         
         return group;
       }
     },
     {
       number: 2,
-      instruction: "Attach two CT2 connectors to the base",
+      instruction: "Add CT2 tight connectors at the base",
       pieces: ["CT2", "CT2"],
       addPieces: (scene) => {
         const group = new THREE.Group();
         
-        // CT2 connectors (small cubic connectors)
-        const connectorGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+        // CT2 connectors (teal - secondary color)
+        const connectorGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.3, 12);
         const connectorMaterial = new THREE.MeshPhongMaterial({ 
-          color: 0xFF5722, // Orange-red
-          emissive: 0xFF5722,
-          emissiveIntensity: 0.3,
+          color: 0x4ecdc4,
+          emissive: 0x4ecdc4,
+          emissiveIntensity: 0.2
         });
         
-        // Left connector
         const connector1 = new THREE.Mesh(connectorGeometry, connectorMaterial);
-        connector1.position.set(-2, -0.3, 0);
-        connector1.userData = { name: "CT2 Connector Left", color: "Orange-Red", stepNumber: 2 } as PieceMetadata;
+        connector1.position.set(-1.5, -0.9, 0);
+        connector1.userData = { name: "CT2 Connector Left", color: "Teal", stepNumber: 2 } as PieceMetadata;
         group.add(connector1);
         
-        // Right connector
         const connector2 = new THREE.Mesh(connectorGeometry, connectorMaterial);
-        connector2.position.set(2, -0.3, 0);
-        connector2.userData = { name: "CT2 Connector Right", color: "Orange-Red", stepNumber: 2 } as PieceMetadata;
+        connector2.position.set(1.5, -0.9, 0);
+        connector2.userData = { name: "CT2 Connector Right", color: "Teal", stepNumber: 2 } as PieceMetadata;
         group.add(connector2);
         
         return group;
@@ -96,64 +144,53 @@ const BlixCartViewer = () => {
     },
     {
       number: 3,
-      instruction: "Add CT3 connectors for the axles",
-      pieces: ["CT3", "CT3"],
+      instruction: "Connect pillars with horizontal beam",
+      pieces: ["Beam"],
       addPieces: (scene) => {
         const group = new THREE.Group();
         
-        // CT3 connectors (cylindrical holders)
-        const axleHolderGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.6, 16);
-        const axleHolderMaterial = new THREE.MeshPhongMaterial({ 
-          color: 0x4CAF50, // Green
-          emissive: 0x4CAF50,
-          emissiveIntensity: 0.3,
-        });
-        
-        // Front axle holder
-        const holder1 = new THREE.Mesh(axleHolderGeometry, axleHolderMaterial);
-        holder1.position.set(-2, -0.7, 0);
-        holder1.rotation.z = Math.PI / 2;
-        holder1.userData = { name: "CT3 Front Holder", color: "Green", stepNumber: 3 } as PieceMetadata;
-        group.add(holder1);
-        
-        // Rear axle holder
-        const holder2 = new THREE.Mesh(axleHolderGeometry, axleHolderMaterial);
-        holder2.position.set(2, -0.7, 0);
-        holder2.rotation.z = Math.PI / 2;
-        holder2.userData = { name: "CT3 Rear Holder", color: "Green", stepNumber: 3 } as PieceMetadata;
-        group.add(holder2);
+        // Connecting beam (orange to match pillars)
+        const beam = new THREE.Mesh(
+          new THREE.BoxGeometry(3.5, 0.15, 0.15),
+          new THREE.MeshPhongMaterial({ 
+            color: 0xff6b35,
+            emissive: 0xff6b35,
+            emissiveIntensity: 0.2
+          })
+        );
+        beam.position.set(0, -0.9, 0);
+        beam.userData = { name: "Connecting Beam", color: "Orange", stepNumber: 3 } as PieceMetadata;
+        group.add(beam);
         
         return group;
       }
     },
     {
       number: 4,
-      instruction: "Insert axle shafts through the holders",
-      pieces: ["Shaft x2"],
+      instruction: "Insert SH170 shafts (17cm) through holders",
+      pieces: ["SH170", "SH170"],
       addPieces: (scene) => {
         const group = new THREE.Group();
         
-        // Axle shafts (thin cylinders)
-        const shaftGeometry = new THREE.CylinderGeometry(0.08, 0.08, 2.5, 16);
+        // SH170 shafts (gray metallic)
+        const shaftGeometry = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 16);
         const shaftMaterial = new THREE.MeshPhongMaterial({ 
-          color: 0x9E9E9E, // Gray
-          emissive: 0x9E9E9E,
-          emissiveIntensity: 0.3,
-          metalness: 0.8,
+          color: 0x95a5a6,
+          emissive: 0x95a5a6,
+          emissiveIntensity: 0.1,
+          metalness: 0.8
         });
         
-        // Front shaft
         const shaft1 = new THREE.Mesh(shaftGeometry, shaftMaterial);
-        shaft1.position.set(-2, -0.7, 0);
+        shaft1.position.set(-1.5, -0.9, 0);
         shaft1.rotation.z = Math.PI / 2;
-        shaft1.userData = { name: "Front Axle Shaft", color: "Gray", stepNumber: 4 } as PieceMetadata;
+        shaft1.userData = { name: "SH170 Front Shaft", color: "Gray", stepNumber: 4 } as PieceMetadata;
         group.add(shaft1);
         
-        // Rear shaft
         const shaft2 = new THREE.Mesh(shaftGeometry, shaftMaterial);
-        shaft2.position.set(2, -0.7, 0);
+        shaft2.position.set(1.5, -0.9, 0);
         shaft2.rotation.z = Math.PI / 2;
-        shaft2.userData = { name: "Rear Axle Shaft", color: "Gray", stepNumber: 4 } as PieceMetadata;
+        shaft2.userData = { name: "SH170 Rear Shaft", color: "Gray", stepNumber: 4 } as PieceMetadata;
         group.add(shaft2);
         
         return group;
@@ -161,47 +198,73 @@ const BlixCartViewer = () => {
     },
     {
       number: 5,
-      instruction: "Attach four wheels to complete your cart!",
-      pieces: ["Wheel x4"],
+      instruction: "Attach 4 BLIX wheels to complete your cart!",
+      pieces: ["Wheel", "Wheel", "Wheel", "Wheel"],
       addPieces: (scene) => {
         const group = new THREE.Group();
         
-        // Wheels (torus + circle for tire look)
-        const createWheel = (x: number, z: number) => {
+        // BLIX Wheels - realistic design
+        const createWheel = (x: number, z: number, label: string) => {
           const wheelGroup = new THREE.Group();
           
-          // Tire (torus)
-          const tireGeometry = new THREE.TorusGeometry(0.5, 0.15, 16, 32);
-          const tireMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x212121, // Dark gray/black
-            emissive: 0x212121,
-            emissiveIntensity: 0.2,
-          });
-          const tire = new THREE.Mesh(tireGeometry, tireMaterial);
-          tire.rotation.y = Math.PI / 2;
+          // Tire (dark rubber)
+          const tireGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.25, 32);
+          const tire = new THREE.Mesh(
+            tireGeometry,
+            new THREE.MeshPhongMaterial({ 
+              color: 0x2c3e50,
+              emissive: 0x2c3e50,
+              emissiveIntensity: 0.1
+            })
+          );
+          tire.rotation.z = Math.PI / 2;
           wheelGroup.add(tire);
           
-          // Hub (circle)
-          const hubGeometry = new THREE.CylinderGeometry(0.35, 0.35, 0.15, 16);
-          const hubMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0xFFC107, // Yellow
-            emissive: 0xFFC107,
-            emissiveIntensity: 0.3,
-          });
-          const hub = new THREE.Mesh(hubGeometry, hubMaterial);
+          // Hub (lighter center)
+          const hubGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.27, 16);
+          const hub = new THREE.Mesh(
+            hubGeometry,
+            new THREE.MeshPhongMaterial({ 
+              color: 0x34495e,
+              emissive: 0x34495e,
+              emissiveIntensity: 0.2
+            })
+          );
           hub.rotation.z = Math.PI / 2;
           wheelGroup.add(hub);
           
-          wheelGroup.position.set(x, -0.7, z);
-          wheelGroup.userData = { name: `Wheel (${x < 0 ? 'Front' : 'Rear'} ${z < 0 ? 'Left' : 'Right'})`, color: "Black/Yellow", stepNumber: 5 } as PieceMetadata;
+          // Tread lines (for detail)
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const treadGeometry = new THREE.BoxGeometry(0.1, 0.02, 0.26);
+            const tread = new THREE.Mesh(
+              treadGeometry,
+              new THREE.MeshPhongMaterial({ color: 0x1a1a1a })
+            );
+            tread.position.set(
+              Math.cos(angle) * 0.48,
+              Math.sin(angle) * 0.48,
+              0
+            );
+            tread.rotation.z = angle;
+            wheelGroup.add(tread);
+          }
+          
+          wheelGroup.position.set(x, -0.9, z);
+          wheelGroup.rotation.y = Math.PI / 2;
+          wheelGroup.userData = { 
+            name: `BLIX Wheel ${label}`, 
+            color: "Black", 
+            stepNumber: 5 
+          } as PieceMetadata;
+          
           return wheelGroup;
         };
         
-        // Four wheels
-        group.add(createWheel(-2, -1.2));  // Front left
-        group.add(createWheel(-2, 1.2));   // Front right
-        group.add(createWheel(2, -1.2));   // Rear left
-        group.add(createWheel(2, 1.2));    // Rear right
+        group.add(createWheel(-1.5, -0.95, "Front Left"));
+        group.add(createWheel(-1.5, 0.95, "Front Right"));
+        group.add(createWheel(1.5, -0.95, "Rear Left"));
+        group.add(createWheel(1.5, 0.95, "Rear Right"));
         
         return group;
       }

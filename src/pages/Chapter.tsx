@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb } from "lucide-react";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
+import StoryViewer from "@/components/StoryViewer";
+import FrictionSimulator from "@/components/FrictionSimulator";
 
 const Chapter = () => {
   const { id } = useParams();
@@ -86,22 +88,7 @@ const Chapter = () => {
 
           {/* Story Tab */}
           <TabsContent value="story" className="space-y-6">
-            <Card className="border-primary/20">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary-glow/10">
-                <CardTitle className="flex items-center gap-2">
-                  <Book className="h-5 w-5 text-primary" />
-                  {chapterData.story.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <p className="text-lg leading-relaxed">{chapterData.story.content}</p>
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground italic">
-                    🎬 In the full app, this will be an animated story with Laya, Kit, and Robb!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <StoryViewer />
           </TabsContent>
 
           {/* Theory Tab */}
@@ -125,6 +112,8 @@ const Chapter = () => {
                 </div>
               </CardContent>
             </Card>
+            
+            <FrictionSimulator />
           </TabsContent>
 
           {/* Build Tab with 3D Viewer */}
