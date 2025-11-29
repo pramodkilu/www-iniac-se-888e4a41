@@ -3,13 +3,21 @@ import * as THREE from "three";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ChevronLeft, ChevronRight, RotateCcw, ZoomIn, ZoomOut, Maximize2, Ruler } from "lucide-react";
 
 interface BuildStep {
   number: number;
   instruction: string;
   pieces: string[];
   addPieces: (scene: THREE.Scene) => THREE.Group;
+}
+
+interface PieceMetadata {
+  name: string;
+  color: string;
+  stepNumber: number;
 }
 
 const BlixCartViewer = () => {
@@ -23,7 +31,14 @@ const BlixCartViewer = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isRotating, setIsRotating] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  const [isExploded, setIsExploded] = useState(false);
+  const [showMeasurements, setShowMeasurements] = useState(false);
+  const [hoveredPiece, setHoveredPiece] = useState<THREE.Object3D | null>(null);
+  const [visibleComponents, setVisibleComponents] = useState<Record<string, boolean>>({});
   const previousMousePosition = useRef({ x: 0, y: 0 });
+  const raycaster = useRef(new THREE.Raycaster());
+  const mouse = useRef(new THREE.Vector2());
+  const measurementLinesRef = useRef<THREE.Group | null>(null);
 
   // Define build steps with 3D piece creation
   const buildSteps: BuildStep[] = [
@@ -43,6 +58,7 @@ const BlixCartViewer = () => {
         });
         const beam = new THREE.Mesh(beamGeometry, beamMaterial);
         beam.position.y = 0;
+        beam.userData = { name: "P11 Base Beam", color: "Blue", stepNumber: 1 } as PieceMetadata;
         group.add(beam);
         
         return group;
@@ -66,11 +82,13 @@ const BlixCartViewer = () => {
         // Left connector
         const connector1 = new THREE.Mesh(connectorGeometry, connectorMaterial);
         connector1.position.set(-2, -0.3, 0);
+        connector1.userData = { name: "CT2 Connector Left", color: "Orange-Red", stepNumber: 2 } as PieceMetadata;
         group.add(connector1);
         
         // Right connector
         const connector2 = new THREE.Mesh(connectorGeometry, connectorMaterial);
         connector2.position.set(2, -0.3, 0);
+        connector2.userData = { name: "CT2 Connector Right", color: "Orange-Red", stepNumber: 2 } as PieceMetadata;
         group.add(connector2);
         
         return group;
@@ -95,12 +113,14 @@ const BlixCartViewer = () => {
         const holder1 = new THREE.Mesh(axleHolderGeometry, axleHolderMaterial);
         holder1.position.set(-2, -0.7, 0);
         holder1.rotation.z = Math.PI / 2;
+        holder1.userData = { name: "CT3 Front Holder", color: "Green", stepNumber: 3 } as PieceMetadata;
         group.add(holder1);
         
         // Rear axle holder
         const holder2 = new THREE.Mesh(axleHolderGeometry, axleHolderMaterial);
         holder2.position.set(2, -0.7, 0);
         holder2.rotation.z = Math.PI / 2;
+        holder2.userData = { name: "CT3 Rear Holder", color: "Green", stepNumber: 3 } as PieceMetadata;
         group.add(holder2);
         
         return group;
@@ -126,12 +146,14 @@ const BlixCartViewer = () => {
         const shaft1 = new THREE.Mesh(shaftGeometry, shaftMaterial);
         shaft1.position.set(-2, -0.7, 0);
         shaft1.rotation.z = Math.PI / 2;
+        shaft1.userData = { name: "Front Axle Shaft", color: "Gray", stepNumber: 4 } as PieceMetadata;
         group.add(shaft1);
         
         // Rear shaft
         const shaft2 = new THREE.Mesh(shaftGeometry, shaftMaterial);
         shaft2.position.set(2, -0.7, 0);
         shaft2.rotation.z = Math.PI / 2;
+        shaft2.userData = { name: "Rear Axle Shaft", color: "Gray", stepNumber: 4 } as PieceMetadata;
         group.add(shaft2);
         
         return group;
@@ -171,6 +193,7 @@ const BlixCartViewer = () => {
           wheelGroup.add(hub);
           
           wheelGroup.position.set(x, -0.7, z);
+          wheelGroup.userData = { name: `Wheel (${x < 0 ? 'Front' : 'Rear'} ${z < 0 ? 'Left' : 'Right'})`, color: "Black/Yellow", stepNumber: 5 } as PieceMetadata;
           return wheelGroup;
         };
         
@@ -235,6 +258,11 @@ const BlixCartViewer = () => {
     scene.add(cartGroup);
     cartGroupRef.current = cartGroup;
 
+    // Create measurement lines group
+    const measurementGroup = new THREE.Group();
+    scene.add(measurementGroup);
+    measurementLinesRef.current = measurementGroup;
+
     // Animation loop
     let animationFrameId: number;
     const animate = () => {
@@ -269,6 +297,69 @@ const BlixCartViewer = () => {
     };
   }, [isRotating, isDragging]);
 
+  // Create measurement lines
+  useEffect(() => {
+    if (!measurementLinesRef.current || !cartGroupRef.current) return;
+
+    // Clear existing measurements
+    measurementLinesRef.current.clear();
+
+    if (!showMeasurements) return;
+
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff00ff, linewidth: 2 });
+    const textColor = 0xff00ff;
+
+    // Measurement: Base beam length
+    const points1 = [new THREE.Vector3(-2.5, 0.2, 0), new THREE.Vector3(2.5, 0.2, 0)];
+    const geometry1 = new THREE.BufferGeometry().setFromPoints(points1);
+    const line1 = new THREE.Line(geometry1, lineMaterial);
+    measurementLinesRef.current.add(line1);
+
+    // Measurement: Wheel spacing
+    const points2 = [new THREE.Vector3(-2, -0.7, -1.5), new THREE.Vector3(2, -0.7, -1.5)];
+    const geometry2 = new THREE.BufferGeometry().setFromPoints(points2);
+    const line2 = new THREE.Line(geometry2, lineMaterial);
+    measurementLinesRef.current.add(line2);
+
+    // Measurement: Cart width
+    const points3 = [new THREE.Vector3(-2, -0.7, -1.2), new THREE.Vector3(-2, -0.7, 1.2)];
+    const geometry3 = new THREE.BufferGeometry().setFromPoints(points3);
+    const line3 = new THREE.Line(geometry3, lineMaterial);
+    measurementLinesRef.current.add(line3);
+  }, [showMeasurements, currentStep]);
+
+  // Handle exploded view
+  useEffect(() => {
+    if (!cartGroupRef.current) return;
+
+    cartGroupRef.current.children.forEach((stepGroup, stepIndex) => {
+      stepGroup.children.forEach((piece) => {
+        const originalPos = piece.userData.originalPosition || piece.position.clone();
+        piece.userData.originalPosition = originalPos;
+
+        if (isExploded) {
+          const offset = new THREE.Vector3(
+            originalPos.x * 0.3,
+            stepIndex * 0.5,
+            originalPos.z * 0.3
+          );
+          piece.position.copy(originalPos).add(offset);
+        } else {
+          piece.position.copy(originalPos);
+        }
+      });
+    });
+  }, [isExploded, currentStep]);
+
+  // Initialize visibility state
+  useEffect(() => {
+    const initialVisibility: Record<string, boolean> = {};
+    buildSteps.forEach((_, index) => {
+      initialVisibility[`step-${index}`] = true;
+    });
+    setVisibleComponents(initialVisibility);
+  }, []);
+
   // Update cart based on current step
   useEffect(() => {
     if (!sceneRef.current || !cartGroupRef.current) return;
@@ -282,6 +373,7 @@ const BlixCartViewer = () => {
     // Add pieces up to current step
     for (let i = 0; i <= currentStep; i++) {
       const stepGroup = buildSteps[i].addPieces(sceneRef.current);
+      stepGroup.visible = visibleComponents[`step-${i}`] !== false;
       cartGroupRef.current.add(stepGroup);
       
       // Only highlight the current step pieces
@@ -310,7 +402,7 @@ const BlixCartViewer = () => {
       
       currentStepPiecesRef.current.push(stepGroup);
     }
-  }, [currentStep]);
+  }, [currentStep, visibleComponents]);
 
   // Mouse controls
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -333,6 +425,37 @@ const BlixCartViewer = () => {
 
   const handleMouseUp = () => {
     setIsDragging(false);
+  };
+
+  const handleMouseHover = (e: React.MouseEvent) => {
+    if (!mountRef.current || !cameraRef.current || !cartGroupRef.current) return;
+
+    const rect = mountRef.current.getBoundingClientRect();
+    mouse.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.current.setFromCamera(mouse.current, cameraRef.current);
+    const intersects = raycaster.current.intersectObjects(cartGroupRef.current.children, true);
+
+    // Reset previous hover
+    if (hoveredPiece && hoveredPiece instanceof THREE.Mesh) {
+      const originalEmissive = hoveredPiece.userData.originalEmissive || 0x000000;
+      hoveredPiece.material.emissive.setHex(originalEmissive);
+      hoveredPiece.material.emissiveIntensity = hoveredPiece.userData.originalIntensity || 0.3;
+    }
+
+    if (intersects.length > 0) {
+      const piece = intersects[0].object;
+      if (piece instanceof THREE.Mesh) {
+        setHoveredPiece(piece);
+        piece.userData.originalEmissive = piece.material.emissive.getHex();
+        piece.userData.originalIntensity = piece.material.emissiveIntensity;
+        piece.material.emissive.setHex(0xffffff);
+        piece.material.emissiveIntensity = 0.6;
+      }
+    } else {
+      setHoveredPiece(null);
+    }
   };
 
   // Control functions
@@ -363,115 +486,191 @@ const BlixCartViewer = () => {
     }
   };
 
+  const toggleComponentVisibility = (stepIndex: number) => {
+    setVisibleComponents(prev => ({
+      ...prev,
+      [`step-${stepIndex}`]: !prev[`step-${stepIndex}`]
+    }));
+  };
+
   return (
     <div className="space-y-4">
-      <Card className="overflow-hidden border-primary/20">
-        {/* 3D Viewer */}
-        <div 
-          ref={mountRef} 
-          className="w-full h-[500px] cursor-grab active:cursor-grabbing bg-gradient-to-br from-muted/30 to-muted/10"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        />
-
-        {/* Controls Overlay */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          <Button
-            size="icon"
-            variant="secondary"
-            onClick={handleZoomIn}
-            className="shadow-lg bg-card"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            onClick={handleZoomOut}
-            className="shadow-lg bg-card"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            onClick={handleReset}
-            className="shadow-lg bg-card"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Step Info Overlay */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <Card className="p-4 bg-card/95 backdrop-blur-sm shadow-xl border-primary/20">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Badge className="bg-primary text-primary-foreground">
-                  Step {currentStep + 1} of {buildSteps.length}
-                </Badge>
-                <span className="text-sm font-semibold">
-                  {buildSteps[currentStep].instruction}
-                </span>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Component Visibility Panel */}
+        <Card className="lg:col-span-1 p-4 space-y-4">
+          <div>
+            <h3 className="font-semibold mb-3 text-sm">View Controls</h3>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="exploded"
+                  checked={isExploded}
+                  onCheckedChange={(checked) => setIsExploded(checked as boolean)}
+                />
+                <Label htmlFor="exploded" className="text-sm cursor-pointer flex items-center gap-1">
+                  <Maximize2 className="h-3 w-3" />
+                  Exploded View
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="measurements"
+                  checked={showMeasurements}
+                  onCheckedChange={(checked) => setShowMeasurements(checked as boolean)}
+                />
+                <Label htmlFor="measurements" className="text-sm cursor-pointer flex items-center gap-1">
+                  <Ruler className="h-3 w-3" />
+                  Show Measurements
+                </Label>
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-wrap gap-2 mb-4">
-              {buildSteps[currentStep].pieces.map((piece, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">
-                  {piece}
-                </Badge>
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3 text-sm">Components</h3>
+            <div className="space-y-2">
+              {buildSteps.slice(0, currentStep + 1).map((step, idx) => (
+                <div key={idx} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`step-${idx}`}
+                    checked={visibleComponents[`step-${idx}`] !== false}
+                    onCheckedChange={() => toggleComponentVisibility(idx)}
+                  />
+                  <Label htmlFor={`step-${idx}`} className="text-xs cursor-pointer">
+                    Step {idx + 1}: {step.pieces.join(", ")}
+                  </Label>
+                </div>
               ))}
             </div>
+          </div>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between">
-              <Button
-                onClick={handlePrevStep}
-                disabled={currentStep === 0}
-                variant="outline"
-                size="sm"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
+          {hoveredPiece?.userData && (
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-2 text-sm">Hovered Piece</h3>
+              <div className="text-xs space-y-1">
+                <p className="font-medium">{hoveredPiece.userData.name}</p>
+                <Badge variant="secondary" className="text-xs">
+                  {hoveredPiece.userData.color}
+                </Badge>
+                <p className="text-muted-foreground">
+                  Step {hoveredPiece.userData.stepNumber}
+                </p>
+              </div>
+            </div>
+          )}
+        </Card>
 
-              {/* Progress dots */}
-              <div className="flex gap-1">
-                {buildSteps.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`h-2 w-2 rounded-full transition-all ${
-                      idx === currentStep
-                        ? 'bg-primary w-6'
-                        : idx < currentStep
-                        ? 'bg-success'
-                        : 'bg-muted'
-                    }`}
-                  />
+        {/* 3D Viewer */}
+        <Card className="lg:col-span-3 overflow-hidden border-primary/20 relative">
+          <div 
+            ref={mountRef} 
+            className="w-full h-[500px] cursor-grab active:cursor-grabbing bg-gradient-to-br from-muted/30 to-muted/10"
+            onMouseDown={handleMouseDown}
+            onMouseMove={(e) => {
+              handleMouseMove(e);
+              if (!isDragging) handleMouseHover(e);
+            }}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          />
+
+          {/* Controls Overlay */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleZoomIn}
+              className="shadow-lg bg-card"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleZoomOut}
+              className="shadow-lg bg-card"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleReset}
+              className="shadow-lg bg-card"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Step Info Overlay */}
+          <div className="absolute bottom-4 left-4 right-4">
+            <Card className="p-4 bg-card/95 backdrop-blur-sm shadow-xl border-primary/20">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-primary text-primary-foreground">
+                    Step {currentStep + 1} of {buildSteps.length}
+                  </Badge>
+                  <span className="text-sm font-semibold">
+                    {buildSteps[currentStep].instruction}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {buildSteps[currentStep].pieces.map((piece, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-xs">
+                    {piece}
+                  </Badge>
                 ))}
               </div>
 
-              <Button
-                onClick={handleNextStep}
-                disabled={currentStep === buildSteps.length - 1}
-                variant="outline"
-                size="sm"
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </Card>
+              {/* Navigation */}
+              <div className="flex items-center justify-between">
+                <Button
+                  onClick={handlePrevStep}
+                  disabled={currentStep === 0}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+
+                {/* Progress dots */}
+                <div className="flex gap-1">
+                  {buildSteps.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-2 w-2 rounded-full transition-all ${
+                        idx === currentStep
+                          ? 'bg-primary w-6'
+                          : idx < currentStep
+                          ? 'bg-success'
+                          : 'bg-muted'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <Button
+                  onClick={handleNextStep}
+                  disabled={currentStep === buildSteps.length - 1}
+                  variant="outline"
+                  size="sm"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Card>
+      </div>
 
       {/* Instructions */}
       <Card className="p-4 bg-muted/30">
         <p className="text-sm text-muted-foreground text-center">
-          🖱️ Click and drag to rotate • Scroll or use buttons to zoom • Watch pieces pulse when added
+          🖱️ Click and drag to rotate • Scroll or use buttons to zoom • Hover over pieces to identify • Use controls to explore
         </p>
       </Card>
     </div>
