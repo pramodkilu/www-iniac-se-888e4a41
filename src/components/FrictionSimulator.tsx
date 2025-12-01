@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Play, RotateCcw } from "lucide-react";
+import { Play, RotateCcw, TrendingUp } from "lucide-react";
 
 type Surface = "ice" | "wood" | "carpet" | "rough";
 
@@ -11,7 +11,11 @@ const FrictionSimulator = () => {
   const [selectedSurface, setSelectedSurface] = useState<Surface>("wood");
   const [isRunning, setIsRunning] = useState(false);
   const [distance, setDistance] = useState(0);
+  const [velocity, setVelocity] = useState(0);
+  const [maxVelocity, setMaxVelocity] = useState(0);
   const [pushForce, setPushForce] = useState([50]);
+  const [testResults, setTestResults] = useState<Array<{surface: string, distance: number, force: number}>>([]);
+  const animationRef = useRef<number>();
 
   const surfaces = {
     ice: { name: "Ice", friction: 0.1, color: "bg-cyan-200", emoji: "🧊" },
@@ -23,23 +27,70 @@ const FrictionSimulator = () => {
   const runSimulation = () => {
     setIsRunning(true);
     const surface = surfaces[selectedSurface];
-    const maxDistance = (pushForce[0] / surface.friction) * 2;
     
+    // Physics constants
+    const mass = 0.5; // kg (cart mass)
+    const initialVelocity = pushForce[0] / mass; // v = F/m
+    const frictionForce = mass * 9.8 * surface.friction; // F = μ * m * g
+    const deceleration = frictionForce / mass; // a = F/m
+    
+    let currentVelocity = initialVelocity;
     let currentDistance = 0;
-    const interval = setInterval(() => {
-      currentDistance += maxDistance / 30;
-      setDistance(currentDistance);
+    let currentMaxVelocity = 0;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000; // seconds
       
-      if (currentDistance >= maxDistance) {
-        clearInterval(interval);
+      // v = v0 - at (velocity decreases due to friction)
+      currentVelocity = Math.max(0, initialVelocity - deceleration * elapsed);
+      
+      // d = v0*t - 0.5*a*t² (distance with deceleration)
+      currentDistance = initialVelocity * elapsed - 0.5 * deceleration * elapsed * elapsed;
+      
+      currentMaxVelocity = Math.max(currentMaxVelocity, currentVelocity);
+      
+      setVelocity(currentVelocity);
+      setDistance(currentDistance);
+      setMaxVelocity(currentMaxVelocity);
+      
+      if (currentVelocity > 0.1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
         setIsRunning(false);
+        setVelocity(0);
+        // Save result
+        setTestResults(prev => [...prev, {
+          surface: surface.name,
+          distance: Math.round(currentDistance),
+          force: pushForce[0]
+        }]);
       }
-    }, 50);
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
   };
 
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
   const reset = () => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
     setDistance(0);
+    setVelocity(0);
+    setMaxVelocity(0);
     setIsRunning(false);
+  };
+
+  const clearResults = () => {
+    setTestResults([]);
   };
 
   const cartPosition = Math.min((distance / 200) * 100, 90);
@@ -91,16 +142,28 @@ const FrictionSimulator = () => {
           </div>
 
           {/* Results */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-muted/50">
               <CardContent className="pt-4">
-                <p className="text-sm text-muted-foreground mb-1">Distance Traveled</p>
+                <p className="text-sm text-muted-foreground mb-1">Distance</p>
                 <p className="text-2xl font-bold text-primary">{Math.round(distance)} cm</p>
               </CardContent>
             </Card>
             <Card className="bg-muted/50">
               <CardContent className="pt-4">
-                <p className="text-sm text-muted-foreground mb-1">Friction Level</p>
+                <p className="text-sm text-muted-foreground mb-1">Current Speed</p>
+                <p className="text-2xl font-bold text-accent">{velocity.toFixed(1)} m/s</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted/50">
+              <CardContent className="pt-4">
+                <p className="text-sm text-muted-foreground mb-1">Max Speed</p>
+                <p className="text-2xl font-bold text-success">{maxVelocity.toFixed(1)} m/s</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted/50">
+              <CardContent className="pt-4">
+                <p className="text-sm text-muted-foreground mb-1">Friction</p>
                 <p className="text-2xl font-bold text-secondary">{(surface.friction * 100).toFixed(0)}%</p>
               </CardContent>
             </Card>
@@ -176,6 +239,34 @@ const FrictionSimulator = () => {
         </CardContent>
       </Card>
 
+      {/* Test Results Comparison */}
+      {testResults.length > 0 && (
+        <Card className="border-primary/20">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Test Results Comparison
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={clearResults}>
+              Clear History
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {testResults.map((result, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline">{result.surface}</Badge>
+                    <span className="text-sm text-muted-foreground">{result.force}N push</span>
+                  </div>
+                  <div className="text-lg font-bold text-primary">{result.distance} cm</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Learning Notes */}
       <Card className="bg-accent/5 border-accent/20">
         <CardContent className="pt-6">
@@ -193,7 +284,11 @@ const FrictionSimulator = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
-              <span>More push force makes the cart travel farther, but friction always slows it down</span>
+              <span>More push force creates higher initial velocity, making the cart travel farther</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-primary font-bold">•</span>
+              <span>Friction force slows the cart down by opposing its motion (deceleration)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-bold">•</span>
