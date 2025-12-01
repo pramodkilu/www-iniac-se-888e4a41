@@ -28,11 +28,42 @@ const Chapter = () => {
       experiment: "Try sliding a book across your desk, then try rolling it on pencils. Which way is easier? That's the difference friction makes!"
     },
     steps: [
-      { number: 1, instruction: "Start with the base beam (P11)", pieces: ["P11"] },
-      { number: 2, instruction: "Attach two CT2 connectors to the base", pieces: ["CT2", "CT2"] },
-      { number: 3, instruction: "Add CT3 connectors for the axles", pieces: ["CT3", "CT3"] },
-      { number: 4, instruction: "Insert axle shafts through the holders", pieces: ["Shaft x2"] },
-      { number: 5, instruction: "Attach four wheels to complete your cart!", pieces: ["Wheel x4"] }
+      { 
+        number: 1, 
+        instruction: "Take the P7X11 U-shaped pillar and lay it flat as your base structure", 
+        pieces: ["P7X11"],
+        detail: "This will be the main frame of your cart. Notice the multiple holes - these will hold other components."
+      },
+      { 
+        number: 2, 
+        instruction: "Insert two CT2 connectors into the bottom holes of the base pillar", 
+        pieces: ["CT2", "CT2"],
+        detail: "These connectors will hold the axle holders in place. Push them in firmly until they click."
+      },
+      { 
+        number: 3, 
+        instruction: "Attach two CT3 axle holders to the CT2 connectors", 
+        pieces: ["CT3", "CT3"],
+        detail: "The CT3 holders have round holes for the axle shafts to pass through."
+      },
+      { 
+        number: 4, 
+        instruction: "Slide two SH170 axle shafts through the CT3 holders", 
+        pieces: ["SH170", "SH170"],
+        detail: "The shafts should move freely through the holders - this is what allows the wheels to spin."
+      },
+      { 
+        number: 5, 
+        instruction: "Push four wheels onto the ends of both axle shafts", 
+        pieces: ["Wheel x4"],
+        detail: "Make sure the wheels are pushed all the way onto the shafts and can spin freely."
+      },
+      {
+        number: 6,
+        instruction: "Test your cart by pushing it on a smooth surface!",
+        pieces: [],
+        detail: "Notice how easily it rolls compared to sliding something without wheels. That's reduced friction!"
+      }
     ],
     challenge: {
       title: "Distance Challenge",
@@ -147,13 +178,18 @@ const Chapter = () => {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium mb-1">{step.instruction}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {step.pieces.map((piece, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {piece}
-                            </Badge>
-                          ))}
-                        </div>
+                        {step.detail && (
+                          <p className="text-sm text-muted-foreground mb-2">{step.detail}</p>
+                        )}
+                        {step.pieces.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {step.pieces.map((piece, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {piece}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

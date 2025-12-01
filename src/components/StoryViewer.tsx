@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryScene {
   character: "laya" | "kit" | "robb" | "narrator";
@@ -11,6 +12,9 @@ interface StoryScene {
 
 const StoryViewer = () => {
   const [currentScene, setCurrentScene] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const { toast } = useToast();
   
   const story: StoryScene[] = [
     {
@@ -54,34 +58,99 @@ const StoryViewer = () => {
     laya: {
       name: "Laya",
       color: "from-purple-400 to-pink-400",
-      avatar: "🧑‍🔬"
+      avatar: "🧑‍🔬",
+      voiceConfig: { pitch: 1.2, rate: 0.95 } // Higher pitch, slightly slower
     },
     kit: {
       name: "Kit",
       color: "from-blue-400 to-cyan-400",
-      avatar: "🦊"
+      avatar: "🦊",
+      voiceConfig: { pitch: 1.4, rate: 1.1 } // Highest pitch, energetic
     },
     robb: {
       name: "Robb",
       color: "from-green-400 to-emerald-400",
-      avatar: "🤖"
+      avatar: "🤖",
+      voiceConfig: { pitch: 0.8, rate: 0.9 } // Lower pitch, robotic
     },
     narrator: {
       name: "Narrator",
       color: "from-amber-400 to-orange-400",
-      avatar: "📖"
+      avatar: "📖",
+      voiceConfig: { pitch: 1.0, rate: 0.95 } // Normal pitch
     }
   };
 
+  // Voice narration using Web Speech API
+  const speakText = (text: string, character: keyof typeof characters) => {
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voiceConfig = characters[character].voiceConfig;
+    
+    utterance.pitch = voiceConfig.pitch;
+    utterance.rate = voiceConfig.rate;
+    utterance.volume = 1.0;
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      if (autoPlay && currentScene < story.length - 1) {
+        setTimeout(() => {
+          setCurrentScene(currentScene + 1);
+        }, 1000);
+      }
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      toast({
+        title: "Voice Error",
+        description: "Could not play voice narration. Check your browser settings.",
+        variant: "destructive",
+      });
+    };
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
+  // Auto-play voice when scene changes
+  useEffect(() => {
+    if (autoPlay) {
+      const scene = story[currentScene];
+      speakText(scene.text, scene.character);
+    }
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [currentScene, autoPlay]);
+
   const nextScene = () => {
+    stopSpeaking();
     if (currentScene < story.length - 1) {
       setCurrentScene(currentScene + 1);
     }
   };
 
   const prevScene = () => {
+    stopSpeaking();
     if (currentScene > 0) {
       setCurrentScene(currentScene - 1);
+    }
+  };
+
+  const toggleAutoPlay = () => {
+    if (autoPlay) {
+      stopSpeaking();
+      setAutoPlay(false);
+    } else {
+      setAutoPlay(true);
+      speakText(scene.text, scene.character);
     }
   };
 
@@ -144,12 +213,22 @@ const StoryViewer = () => {
         </Button>
 
         <Button
-          variant="outline"
+          variant={autoPlay ? "default" : "outline"}
           size="lg"
           className="gap-2"
+          onClick={toggleAutoPlay}
         >
-          <Volume2 className="h-4 w-4" />
-          Play Audio
+          {isSpeaking ? (
+            <>
+              <VolumeX className="h-4 w-4" />
+              Stop
+            </>
+          ) : (
+            <>
+              <Volume2 className="h-4 w-4" />
+              {autoPlay ? "Auto-Play ON" : "Play Audio"}
+            </>
+          )}
         </Button>
 
         <Button
