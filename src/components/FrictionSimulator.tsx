@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import * as THREE from "three";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -16,13 +17,190 @@ const FrictionSimulator = () => {
   const [pushForce, setPushForce] = useState([50]);
   const [testResults, setTestResults] = useState<Array<{surface: string, distance: number, force: number}>>([]);
   const animationRef = useRef<number>();
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cartRef = useRef<THREE.Group | null>(null);
 
   const surfaces = {
-    ice: { name: "Ice", friction: 0.1, color: "bg-cyan-200", emoji: "🧊" },
-    wood: { name: "Wood", friction: 0.4, color: "bg-amber-200", emoji: "🪵" },
-    carpet: { name: "Carpet", friction: 0.7, color: "bg-red-200", emoji: "🟥" },
-    rough: { name: "Rough Ground", friction: 0.9, color: "bg-stone-400", emoji: "⛰️" }
+    ice: { name: "Ice", friction: 0.1, color: 0x88ccff, emoji: "🧊" },
+    wood: { name: "Wood", friction: 0.4, color: 0xd4a574, emoji: "🪵" },
+    carpet: { name: "Carpet", friction: 0.7, color: 0xcc5555, emoji: "🟥" },
+    rough: { name: "Rough Ground", friction: 0.9, color: 0x888888, emoji: "⛰️" }
   };
+
+  // Create 3D BLIX cart model
+  const createBlixCart = () => {
+    const cartGroup = new THREE.Group();
+
+    // Base P7X11 pillar (orange BLIX color)
+    const pillarGeom = new THREE.BoxGeometry(0.15, 1.1, 0.15);
+    const pillarMat = new THREE.MeshPhongMaterial({ 
+      color: 0xff6b35,
+      emissive: 0xff6b35,
+      emissiveIntensity: 0.3
+    });
+    const pillar = new THREE.Mesh(pillarGeom, pillarMat);
+    cartGroup.add(pillar);
+
+    // CT2 connectors (gray)
+    const connectorMat = new THREE.MeshPhongMaterial({ color: 0x555555 });
+    const connector1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), connectorMat);
+    connector1.position.set(0, -0.4, -0.15);
+    const connector2 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), connectorMat);
+    connector2.position.set(0, -0.4, 0.15);
+    cartGroup.add(connector1, connector2);
+
+    // SH170 axle shafts (metallic)
+    const axleMat = new THREE.MeshPhongMaterial({ 
+      color: 0xaaaaaa,
+      shininess: 100,
+      specular: 0x444444
+    });
+    const axle1 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 16), axleMat);
+    axle1.rotation.x = Math.PI / 2;
+    axle1.position.set(0, -0.4, -0.15);
+    const axle2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 16), axleMat);
+    axle2.rotation.x = Math.PI / 2;
+    axle2.position.set(0, -0.4, 0.15);
+    cartGroup.add(axle1, axle2);
+
+    // Wheels (black with hub)
+    const createWheel = (x: number, z: number) => {
+      const wheelGroup = new THREE.Group();
+      const wheel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.15, 0.06, 24),
+        new THREE.MeshPhongMaterial({ color: 0x222222 })
+      );
+      wheel.rotation.z = Math.PI / 2;
+      
+      // Hub detail
+      const hub = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.08, 8),
+        new THREE.MeshPhongMaterial({ color: 0xff6b35 })
+      );
+      hub.rotation.z = Math.PI / 2;
+      
+      wheelGroup.add(wheel, hub);
+      wheelGroup.position.set(x, -0.55, z);
+      return wheelGroup;
+    };
+
+    cartGroup.add(
+      createWheel(-0.3, -0.15),
+      createWheel(0.3, -0.15),
+      createWheel(-0.3, 0.15),
+      createWheel(0.3, 0.15)
+    );
+
+    return cartGroup;
+  };
+
+  // Initialize 3D scene
+  useEffect(() => {
+    if (!mountRef.current) return;
+
+    // Scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf5f5f5);
+    sceneRef.current = scene;
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(50, mountRef.current.clientWidth / 300, 0.1, 1000);
+    camera.position.set(3, 2, 4);
+    camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(mountRef.current.clientWidth, 300);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    mountRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.left = -10;
+    directionalLight.shadow.camera.right = 10;
+    directionalLight.shadow.camera.top = 10;
+    directionalLight.shadow.camera.bottom = -10;
+    scene.add(directionalLight);
+
+    // Ground plane (surface)
+    const groundGeom = new THREE.PlaneGeometry(10, 2);
+    const groundMat = new THREE.MeshPhongMaterial({ 
+      color: surfaces[selectedSurface].color,
+      side: THREE.DoubleSide
+    });
+    const ground = new THREE.Mesh(groundGeom, groundMat);
+    ground.rotation.x = Math.PI / 2;
+    ground.position.y = -0.7;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Track line
+    const trackGeom = new THREE.PlaneGeometry(10, 0.05);
+    const trackMat = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+    const track = new THREE.Mesh(trackGeom, trackMat);
+    track.rotation.x = Math.PI / 2;
+    track.position.y = -0.69;
+    scene.add(track);
+
+    // BLIX Cart
+    const cart = createBlixCart();
+    cart.position.set(-4, 0, 0);
+    cart.castShadow = true;
+    cart.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+      }
+    });
+    scene.add(cart);
+    cartRef.current = cart;
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+      if (!mountRef.current || !camera || !renderer) return;
+      const width = mountRef.current.clientWidth;
+      camera.aspect = width / 300;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, 300);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
+  }, []);
+
+  // Update surface color when selection changes
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    const ground = sceneRef.current.children.find(
+      child => child instanceof THREE.Mesh && child.geometry instanceof THREE.PlaneGeometry
+    ) as THREE.Mesh;
+    if (ground && ground.material instanceof THREE.MeshPhongMaterial) {
+      ground.material.color.setHex(surfaces[selectedSurface].color);
+    }
+  }, [selectedSurface]);
 
   const runSimulation = () => {
     setIsRunning(true);
@@ -53,6 +231,20 @@ const FrictionSimulator = () => {
       setVelocity(currentVelocity);
       setDistance(currentDistance);
       setMaxVelocity(currentMaxVelocity);
+
+      // Update 3D cart position
+      if (cartRef.current) {
+        const maxDistance = 8; // max distance in 3D units
+        const cartPosition = -4 + (currentDistance / 100) * maxDistance;
+        cartRef.current.position.x = Math.min(cartPosition, 4);
+        
+        // Rotate wheels based on distance
+        cartRef.current.children.forEach(child => {
+          if (child.position.y < -0.5) { // wheels
+            child.rotation.y = (currentDistance / 10) * Math.PI;
+          }
+        });
+      }
       
       if (currentVelocity > 0.1) {
         animationRef.current = requestAnimationFrame(animate);
@@ -87,13 +279,22 @@ const FrictionSimulator = () => {
     setVelocity(0);
     setMaxVelocity(0);
     setIsRunning(false);
+    
+    // Reset cart position
+    if (cartRef.current) {
+      cartRef.current.position.x = -4;
+      cartRef.current.children.forEach(child => {
+        if (child.position.y < -0.5) {
+          child.rotation.y = 0;
+        }
+      });
+    }
   };
 
   const clearResults = () => {
     setTestResults([]);
   };
 
-  const cartPosition = Math.min((distance / 200) * 100, 90);
   const surface = surfaces[selectedSurface];
 
   return (
@@ -106,40 +307,12 @@ const FrictionSimulator = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Simulation Area */}
-          <div className="relative h-40 rounded-lg border-2 border-border overflow-hidden">
-            {/* Surface Background */}
-            <div className={`absolute inset-0 ${surface.color} opacity-50`}>
-              <div className="absolute inset-0 grid grid-cols-20 gap-1 p-2">
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <div key={i} className="text-2xl opacity-30">{surface.emoji}</div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Cart */}
-            <div
-              className="absolute bottom-8 transition-all duration-100"
-              style={{ left: `${cartPosition}%` }}
-            >
-              <div className="relative">
-                {/* Cart Body */}
-                <div className="w-16 h-10 bg-primary rounded-t-lg shadow-lg border-2 border-primary-foreground/20" />
-                {/* Wheels */}
-                <div className="flex justify-between -mt-2 px-1">
-                  <div className={`w-5 h-5 rounded-full bg-foreground border-2 border-primary ${isRunning ? 'animate-spin' : ''}`}>
-                    <div className="w-1 h-1 bg-background rounded-full mt-2 ml-2" />
-                  </div>
-                  <div className={`w-5 h-5 rounded-full bg-foreground border-2 border-primary ${isRunning ? 'animate-spin' : ''}`}>
-                    <div className="w-1 h-1 bg-background rounded-full mt-2 ml-2" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Finish Line */}
-            <div className="absolute right-4 top-0 bottom-0 w-1 bg-accent opacity-50" />
-          </div>
+          {/* 3D Simulation Area */}
+          <div 
+            ref={mountRef} 
+            className="relative rounded-lg border-2 border-border overflow-hidden bg-muted/30"
+            style={{ height: '300px' }}
+          />
 
           {/* Results */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
