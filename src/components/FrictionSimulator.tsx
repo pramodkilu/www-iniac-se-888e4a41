@@ -120,6 +120,82 @@ const FrictionSimulator = () => {
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // Camera control state
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let spherical = { theta: Math.atan2(camera.position.x, camera.position.z), phi: Math.acos(camera.position.y / camera.position.length()), radius: camera.position.length() };
+    const target = new THREE.Vector3(0, 0, 0);
+
+    const updateCameraPosition = () => {
+      camera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+      camera.position.y = spherical.radius * Math.cos(spherical.phi);
+      camera.position.z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+      camera.lookAt(target);
+    };
+
+    // Mouse controls for rotation
+    const onMouseDown = (e: MouseEvent) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - previousMousePosition.x;
+      const deltaY = e.clientY - previousMousePosition.y;
+      
+      spherical.theta -= deltaX * 0.01;
+      spherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, spherical.phi + deltaY * 0.01));
+      
+      updateCameraPosition();
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseUp = () => {
+      isDragging = false;
+    };
+
+    // Wheel zoom
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      spherical.radius = Math.max(3, Math.min(15, spherical.radius + e.deltaY * 0.01));
+      updateCameraPosition();
+    };
+
+    // Touch controls
+    let touchStart = { x: 0, y: 0 };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      const deltaX = e.touches[0].clientX - touchStart.x;
+      const deltaY = e.touches[0].clientY - touchStart.y;
+      
+      spherical.theta -= deltaX * 0.01;
+      spherical.phi = Math.max(0.3, Math.min(Math.PI - 0.3, spherical.phi + deltaY * 0.01));
+      
+      updateCameraPosition();
+      touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+
+    const onTouchEnd = () => {
+      isDragging = false;
+    };
+
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('mouseup', onMouseUp);
+    renderer.domElement.addEventListener('mouseleave', onMouseUp);
+    renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
+    renderer.domElement.addEventListener('touchstart', onTouchStart);
+    renderer.domElement.addEventListener('touchmove', onTouchMove);
+    renderer.domElement.addEventListener('touchend', onTouchEnd);
+
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
@@ -134,7 +210,7 @@ const FrictionSimulator = () => {
     scene.add(directionalLight);
 
     // Ground plane (surface)
-    const groundGeom = new THREE.PlaneGeometry(10, 2);
+    const groundGeom = new THREE.PlaneGeometry(10, 4);
     const groundMat = new THREE.MeshPhongMaterial({ 
       color: surfaces[selectedSurface].color,
       side: THREE.DoubleSide
@@ -184,6 +260,14 @@ const FrictionSimulator = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('mousemove', onMouseMove);
+      renderer.domElement.removeEventListener('mouseup', onMouseUp);
+      renderer.domElement.removeEventListener('mouseleave', onMouseUp);
+      renderer.domElement.removeEventListener('wheel', onWheel);
+      renderer.domElement.removeEventListener('touchstart', onTouchStart);
+      renderer.domElement.removeEventListener('touchmove', onTouchMove);
+      renderer.domElement.removeEventListener('touchend', onTouchEnd);
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
       }
@@ -308,11 +392,16 @@ const FrictionSimulator = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 3D Simulation Area */}
-          <div 
-            ref={mountRef} 
-            className="relative rounded-lg border-2 border-border overflow-hidden bg-muted/30"
-            style={{ height: '300px' }}
-          />
+          <div className="relative">
+            <div 
+              ref={mountRef} 
+              className="relative rounded-lg border-2 border-border overflow-hidden bg-muted/30 cursor-grab active:cursor-grabbing"
+              style={{ height: '300px' }}
+            />
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Drag to rotate • Scroll to zoom
+            </p>
+          </div>
 
           {/* Results */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
