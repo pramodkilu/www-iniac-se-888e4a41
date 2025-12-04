@@ -32,6 +32,12 @@ const FrictionSimulator = () => {
   const cartRef = useRef<THREE.Group | null>(null);
   const surfaceMeshRef = useRef<THREE.Mesh | null>(null);
   const wheelsRef = useRef<THREE.Group[]>([]);
+  const particlesRef = useRef<THREE.Points | null>(null);
+  const particleDataRef = useRef<{ velocities: THREE.Vector3[], lifetimes: number[], maxLifetimes: number[] }>({
+    velocities: [],
+    lifetimes: [],
+    maxLifetimes: []
+  });
 
   const surfaces = {
     ice: { name: "Ice", friction: 0.1, color: 0x88ccff, emoji: "🧊" },
@@ -201,6 +207,49 @@ const FrictionSimulator = () => {
       }
     });
 
+    // Create dust particle system
+    const particleCount = 200;
+    const particleGeometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
+    
+    // Initialize particles off-screen
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = -100;
+      positions[i * 3 + 1] = -100;
+      positions[i * 3 + 2] = -100;
+      colors[i * 3] = 0.6;
+      colors[i * 3 + 1] = 0.5;
+      colors[i * 3 + 2] = 0.4;
+      sizes[i] = Math.random() * 0.08 + 0.03;
+    }
+    
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.06,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.7,
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+    });
+    
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    scene.add(particles);
+    particlesRef.current = particles;
+    
+    // Initialize particle data
+    particleDataRef.current = {
+      velocities: Array(particleCount).fill(null).map(() => new THREE.Vector3()),
+      lifetimes: Array(particleCount).fill(0),
+      maxLifetimes: Array(particleCount).fill(1)
+    };
+
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
@@ -261,6 +310,109 @@ const FrictionSimulator = () => {
     cameraRef.current.lookAt(target);
   };
 
+  // Helper to emit dust particles
+  const emitDustParticles = (cartX: number, velocity: number, surfaceType: Surface) => {
+    if (!particlesRef.current || velocity < 5) return;
+    
+    // Only emit dust on rough surfaces
+    const dustySurfaces = ['carpet', 'rough'];
+    if (!dustySurfaces.includes(surfaceType)) return;
+    
+    const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
+    const colors = particlesRef.current.geometry.attributes.color.array as Float32Array;
+    const { velocities, lifetimes, maxLifetimes } = particleDataRef.current;
+    
+    // Surface-specific colors
+    const dustColors = {
+      carpet: { r: 0.8, g: 0.4, b: 0.4 },
+      rough: { r: 0.6, g: 0.55, b: 0.5 }
+    };
+    const color = dustColors[surfaceType as 'carpet' | 'rough'] || dustColors.rough;
+    
+    // Emit 2-4 particles per frame based on velocity
+    const particlesToEmit = Math.min(4, Math.floor(velocity / 20) + 2);
+    
+    for (let i = 0; i < particlesToEmit; i++) {
+      // Find dead particle to reuse
+      const deadIndex = lifetimes.findIndex(l => l <= 0);
+      if (deadIndex === -1) continue;
+      
+      // Position near wheels (behind cart)
+      const offsetX = (Math.random() - 0.5) * 0.4;
+      const offsetZ = (Math.random() - 0.5) * 0.8;
+      
+      positions[deadIndex * 3] = cartX - 0.3 + offsetX;
+      positions[deadIndex * 3 + 1] = -1.1 + Math.random() * 0.1;
+      positions[deadIndex * 3 + 2] = offsetZ;
+      
+      // Randomize color slightly
+      colors[deadIndex * 3] = color.r + (Math.random() - 0.5) * 0.1;
+      colors[deadIndex * 3 + 1] = color.g + (Math.random() - 0.5) * 0.1;
+      colors[deadIndex * 3 + 2] = color.b + (Math.random() - 0.5) * 0.1;
+      
+      // Set velocity (spray backward and up)
+      velocities[deadIndex].set(
+        -velocity * 0.02 + (Math.random() - 0.5) * 0.03,
+        Math.random() * 0.04 + 0.02,
+        (Math.random() - 0.5) * 0.03
+      );
+      
+      // Set lifetime
+      maxLifetimes[deadIndex] = 0.8 + Math.random() * 0.4;
+      lifetimes[deadIndex] = maxLifetimes[deadIndex];
+    }
+    
+    particlesRef.current.geometry.attributes.position.needsUpdate = true;
+    particlesRef.current.geometry.attributes.color.needsUpdate = true;
+  };
+  
+  // Update dust particles
+  const updateDustParticles = (deltaTime: number) => {
+    if (!particlesRef.current) return;
+    
+    const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
+    const { velocities, lifetimes } = particleDataRef.current;
+    const gravity = -0.08;
+    
+    for (let i = 0; i < lifetimes.length; i++) {
+      if (lifetimes[i] <= 0) continue;
+      
+      lifetimes[i] -= deltaTime;
+      
+      if (lifetimes[i] <= 0) {
+        // Move off-screen
+        positions[i * 3] = -100;
+        positions[i * 3 + 1] = -100;
+        positions[i * 3 + 2] = -100;
+      } else {
+        // Update position
+        velocities[i].y += gravity * deltaTime;
+        positions[i * 3] += velocities[i].x;
+        positions[i * 3 + 1] += velocities[i].y;
+        positions[i * 3 + 2] += velocities[i].z;
+        
+        // Slow down horizontal movement
+        velocities[i].x *= 0.98;
+        velocities[i].z *= 0.98;
+        
+        // Stop at ground level
+        if (positions[i * 3 + 1] < -1.15) {
+          positions[i * 3 + 1] = -1.15;
+          velocities[i].y = 0;
+          velocities[i].x *= 0.8;
+          velocities[i].z *= 0.8;
+        }
+      }
+    }
+    
+    particlesRef.current.geometry.attributes.position.needsUpdate = true;
+    
+    // Update opacity based on average lifetime
+    const mat = particlesRef.current.material as THREE.PointsMaterial;
+    const activeCount = lifetimes.filter(l => l > 0).length;
+    mat.opacity = Math.min(0.7, activeCount * 0.02);
+  };
+
   const runSimulation = () => {
     setIsRunning(true);
     const surface = surfaces[selectedSurface];
@@ -273,11 +425,15 @@ const FrictionSimulator = () => {
     let currentVelocity = initialVelocity;
     let currentDistance = 0;
     let currentMaxVelocity = 0;
-    const startTime = Date.now();
+    let lastTime = Date.now();
+    const startTime = lastTime;
     let wheelRotation = 0;
     
     const animate = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
+      const now = Date.now();
+      const deltaTime = (now - lastTime) / 1000;
+      lastTime = now;
+      const elapsed = (now - startTime) / 1000;
       
       currentVelocity = Math.max(0, initialVelocity - deceleration * elapsed);
       currentDistance = initialVelocity * elapsed - 0.5 * deceleration * elapsed * elapsed;
@@ -307,7 +463,13 @@ const FrictionSimulator = () => {
             }
           }
         });
+        
+        // Emit dust particles on rough surfaces
+        emitDustParticles(cartRef.current.position.x, currentVelocity, selectedSurface);
       }
+      
+      // Update existing particles
+      updateDustParticles(deltaTime);
       
       if (currentVelocity > 0.1) {
         animationRef.current = requestAnimationFrame(animate);
@@ -354,6 +516,19 @@ const FrictionSimulator = () => {
           }
         }
       });
+    }
+    
+    // Reset particles
+    if (particlesRef.current) {
+      const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < positions.length / 3; i++) {
+        positions[i * 3] = -100;
+        positions[i * 3 + 1] = -100;
+        positions[i * 3 + 2] = -100;
+        particleDataRef.current.lifetimes[i] = 0;
+      }
+      particlesRef.current.geometry.attributes.position.needsUpdate = true;
+      (particlesRef.current.material as THREE.PointsMaterial).opacity = 0;
     }
   };
 
