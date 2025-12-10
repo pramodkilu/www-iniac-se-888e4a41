@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Rocket, Wrench, Brain, Sparkles, Cog } from "lucide-react";
+import characterLaya from "@/assets/character-laya.png";
+import characterKit from "@/assets/character-kit.png";
+import characterRobb from "@/assets/character-robb.png";
 
 const Hero = () => {
   return (
@@ -36,7 +39,46 @@ const Hero = () => {
             Build, Learn, and Explore with 30 Amazing STEM Projects!
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          {/* Character illustrations */}
+          <div className="flex items-end justify-center gap-4 md:gap-8 mt-8">
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl group-hover:bg-white/30 transition-all"></div>
+              <img 
+                src={characterLaya} 
+                alt="Laya - curious engineer" 
+                className="relative w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-300 hover:-translate-y-2"
+              />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                Laya
+              </span>
+            </div>
+            
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl group-hover:bg-white/30 transition-all"></div>
+              <img 
+                src={characterRobb} 
+                alt="Robb - friendly robot helper" 
+                className="relative w-28 h-28 md:w-40 md:h-40 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-300 hover:-translate-y-2"
+              />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                Robb
+              </span>
+            </div>
+            
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-white/20 rounded-full blur-xl group-hover:bg-white/30 transition-all"></div>
+              <img 
+                src={characterKit} 
+                alt="Kit - adventurous builder" 
+                className="relative w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-300 hover:-translate-y-2"
+              />
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-white font-bold text-sm bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                Kit
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 mt-12">
             <Button 
               size="lg" 
               className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-105 font-semibold"
