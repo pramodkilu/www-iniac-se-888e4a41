@@ -1,5 +1,5 @@
 import Hero from "@/components/Hero";
-import ChapterGrid from "@/components/ChapterGrid";
+import ChapterWheel from "@/components/ChapterWheel";
 import Characters from "@/components/Characters";
 
 const Index = () => {
@@ -7,7 +7,7 @@ const Index = () => {
     <div className="min-h-screen">
       <Hero />
       <Characters />
-      <ChapterGrid />
+      <ChapterWheel />
     </div>
   );
 };
