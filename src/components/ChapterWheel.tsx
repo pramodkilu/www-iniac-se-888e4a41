@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Lock, CheckCircle2, Play, ChevronRight, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -121,9 +121,22 @@ const grades: Grade[] = [
 const ChapterWheel = () => {
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [rotation, setRotation] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const getPositionOnCircle = (index: number, total: number, radius: number, offsetAngle = -90) => {
-    const angle = ((index / total) * 360 + offsetAngle) * (Math.PI / 180);
+  // Animate rotation
+  useEffect(() => {
+    if (selectedGrade || isHovered) return;
+    
+    const interval = setInterval(() => {
+      setRotation(prev => (prev + 0.3) % 360);
+    }, 50);
+    
+    return () => clearInterval(interval);
+  }, [selectedGrade, isHovered]);
+
+  const getPositionOnCircle = (index: number, total: number, radius: number, offsetAngle = -90, extraRotation = 0) => {
+    const angle = ((index / total) * 360 + offsetAngle + extraRotation) * (Math.PI / 180);
     return {
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius,
@@ -137,18 +150,38 @@ const ChapterWheel = () => {
         height="500" 
         viewBox="-250 -250 500 500"
         className="max-w-full h-auto"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Outer decorative ring */}
-        <circle r="220" fill="none" stroke="hsl(var(--border))" strokeWidth="2" opacity="0.3" />
+        {/* Animated outer rings */}
+        <circle 
+          r="220" 
+          fill="none" 
+          stroke="hsl(var(--primary))" 
+          strokeWidth="2" 
+          opacity="0.2"
+          strokeDasharray="10 5"
+          style={{ transform: `rotate(${rotation}deg)`, transformOrigin: 'center' }}
+        />
+        <circle 
+          r="200" 
+          fill="none" 
+          stroke="hsl(var(--primary))" 
+          strokeWidth="1" 
+          opacity="0.15"
+          strokeDasharray="5 10"
+          style={{ transform: `rotate(${-rotation * 0.5}deg)`, transformOrigin: 'center' }}
+        />
         
-        {/* Center hub */}
+        {/* Center hub with pulse effect */}
+        <circle r="65" fill="hsl(var(--primary))" opacity="0.3" className="animate-pulse" />
         <circle r="60" fill="hsl(var(--primary))" />
         <text x="0" y="-10" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">BLIX</text>
         <text x="0" y="10" textAnchor="middle" fill="white" fontSize="11" opacity="0.9">Choose Grade</text>
         
-        {/* Grade circles */}
+        {/* Grade circles with rotation */}
         {grades.map((grade, index) => {
-          const pos = getPositionOnCircle(index, grades.length, 150);
+          const pos = getPositionOnCircle(index, grades.length, 150, -90, rotation);
           const completedCount = grade.chapters.filter(c => c.completed).length;
           
           return (
