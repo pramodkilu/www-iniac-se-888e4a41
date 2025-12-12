@@ -6,7 +6,7 @@ import characterRobb from "@/assets/character-robb.png";
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-accent py-24 px-4">
+    <section className="relative overflow-hidden py-24 px-4" style={{ background: 'linear-gradient(135deg, hsl(15 85% 55%) 0%, hsl(5 70% 40%) 100%)' }}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
@@ -109,6 +109,12 @@ const Hero = () => {
               <div className="text-4xl md:text-5xl font-bold text-white">∞</div>
               <div className="text-white/80 font-medium mt-1">Fun!</div>
             </div>
+          </div>
+
+          {/* Powered by INIAC badge */}
+          <div className="mt-8 flex items-center gap-2 text-white/70 text-sm font-medium">
+            <span>Powered by</span>
+            <span className="font-bold text-white tracking-wide">INIAC</span>
           </div>
         </div>
       </div>
