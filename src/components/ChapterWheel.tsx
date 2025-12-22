@@ -22,100 +22,43 @@ interface Grade {
   chapters: Chapter[];
 }
 
+const generateChapters = (gradeId: number): Chapter[] => {
+  const icons = ["🚗", "💨", "🎨", "🔧", "📐", "🏰", "🛞", "📏", "🍝", "🚀", "🖼️", "⚡", "🎠", "🔩", "🏗️", "💨", "⚖️", "💪", "☀️", "🔭", "⚡", "🌉", "🔄", "⚙️", "🎯", "🤖", "🌬️", "🌁", "🔧", "🏆"];
+  const colors = ["#E53935", "#1E88E5", "#8E24AA", "#D81B60", "#FDD835", "#43A047", "#FB8C00", "#00ACC1", "#7CB342", "#3949AB", "#AB47BC", "#FFB300", "#EC407A", "#E53935", "#FF7043", "#26A69A", "#5C6BC0", "#00897B", "#FFA000", "#7B1FA2", "#C62828", "#455A64", "#6D4C41", "#37474F", "#D32F2F", "#1976D2", "#0097A7", "#512DA8", "#F57C00", "#FFD700"];
+  const titles = [
+    "Cart With Wheels", "Aerodynamic Car", "Sign Boards", "Bottle Opener", "Challenge Ladder",
+    "Trebuchet", "Suspension Car", "Trundle Wheel", "Pasta Maker", "Launcher",
+    "Flipping Picture", "Zip Line", "Merry-Go-Round", "Screw Press", "Crane",
+    "Windmill", "Balance Scale", "Hydraulic Arm", "Solar Oven", "Periscope",
+    "Electric Motor", "Bridge Builder", "Pulley System", "Gear Train", "Catapult Pro",
+    "Robotic Arm", "Wind Turbine", "Suspension Bridge", "Compound Machine", "Final Project"
+  ];
+  const categories = ["Mechanics", "Physics", "Design", "Engineering", "Math", "Energy", "Art", "Electronics", "Robotics", "Creative"];
+  const difficulties: ("Easy" | "Medium" | "Hard")[] = ["Easy", "Medium", "Hard"];
+  
+  return Array.from({ length: 30 }, (_, i) => ({
+    id: (gradeId - 1) * 30 + i + 1,
+    title: titles[i],
+    description: `Chapter ${i + 1} of Grade ${gradeId} - Learn exciting STEM concepts through hands-on projects.`,
+    difficulty: difficulties[Math.floor(i / 10)],
+    category: categories[i % categories.length],
+    completed: gradeId === 1 && i === 0,
+    locked: i > 5,
+    icon: icons[i],
+    color: colors[i],
+  }));
+};
+
 const grades: Grade[] = [
-  {
-    id: 1,
-    label: "Grade 1",
-    color: "#4CAF50",
-    chapters: [
-      { id: 1, title: "Cart With Wheels", description: "Learn about friction and motion by building your first wheeled vehicle.", difficulty: "Easy", category: "Mechanics", completed: true, icon: "🚗", color: "#E53935" },
-      { id: 2, title: "Aerodynamic Car", description: "Discover aerodynamics and speed. Shape your car to cut through air.", difficulty: "Easy", category: "Physics", icon: "💨", color: "#1E88E5" },
-      { id: 3, title: "Sign Boards", description: "Learn about shapes, balance and design principles.", difficulty: "Easy", category: "Design", icon: "🎨", color: "#8E24AA" },
-      { id: 4, title: "Bottle Opener", description: "Simple machines in action - levers and mechanical advantage.", difficulty: "Easy", category: "Mechanics", icon: "🔧", color: "#D81B60" },
-    ],
-  },
-  {
-    id: 2,
-    label: "Grade 2",
-    color: "#FFC107",
-    chapters: [
-      { id: 5, title: "Challenge Ladder", description: "Calculate angles and build stable structures using triangles.", difficulty: "Medium", category: "Math", icon: "📐", color: "#FDD835" },
-      { id: 6, title: "Trebuchet", description: "Explore gravity, levers and projectile motion.", difficulty: "Medium", category: "Physics", icon: "🏰", color: "#43A047" },
-      { id: 7, title: "Suspension Car", description: "Understand how suspension systems absorb shock.", difficulty: "Medium", category: "Engineering", icon: "🛞", color: "#FB8C00" },
-      { id: 8, title: "Trundle Wheel", description: "Measure distance accurately using circumference.", difficulty: "Medium", category: "Math", icon: "📏", color: "#00ACC1" },
-    ],
-  },
-  {
-    id: 3,
-    label: "Grade 3",
-    color: "#FF9800",
-    chapters: [
-      { id: 9, title: "Pasta Maker", description: "Build mechanical tools with gears and rotation.", difficulty: "Medium", category: "Mechanics", icon: "🍝", color: "#7CB342" },
-      { id: 10, title: "Launcher", description: "Force and projectile motion - calculate trajectories.", difficulty: "Hard", category: "Physics", locked: true, icon: "🚀", color: "#3949AB" },
-      { id: 11, title: "Flipping Picture", description: "Optical illusions - persistence of vision explained.", difficulty: "Easy", category: "Art", icon: "🖼️", color: "#AB47BC" },
-    ],
-  },
-  {
-    id: 4,
-    label: "Grade 4",
-    color: "#F44336",
-    chapters: [
-      { id: 12, title: "Zip Line", description: "Energy transformation - potential to kinetic.", difficulty: "Medium", category: "Physics", icon: "⚡", color: "#FFB300" },
-      { id: 13, title: "Merry-Go-Round", description: "Rotational mechanics and centripetal force.", difficulty: "Medium", category: "Mechanics", locked: true, icon: "🎠", color: "#EC407A" },
-      { id: 14, title: "Screw Press", description: "Mechanical advantage through helical motion.", difficulty: "Hard", category: "Engineering", locked: true, icon: "🔩", color: "#E53935" },
-    ],
-  },
-  {
-    id: 5,
-    label: "Grade 5",
-    color: "#9C27B0",
-    chapters: [
-      { id: 15, title: "Crane", description: "Lifting mechanisms, pulleys, and construction.", difficulty: "Hard", category: "Engineering", locked: true, icon: "🏗️", color: "#FF7043" },
-      { id: 16, title: "Windmill", description: "Harness wind energy and learn about renewable power.", difficulty: "Medium", category: "Energy", icon: "💨", color: "#26A69A" },
-      { id: 17, title: "Balance Scale", description: "Understanding equilibrium and weight distribution.", difficulty: "Easy", category: "Physics", icon: "⚖️", color: "#5C6BC0" },
-    ],
-  },
-  {
-    id: 6,
-    label: "Grade 6",
-    color: "#2196F3",
-    chapters: [
-      { id: 18, title: "Hydraulic Arm", description: "Learn about fluid mechanics and hydraulic systems.", difficulty: "Hard", category: "Engineering", icon: "💪", color: "#00897B" },
-      { id: 19, title: "Solar Oven", description: "Use solar energy to cook - renewable energy in action.", difficulty: "Medium", category: "Energy", icon: "☀️", color: "#FFA000" },
-      { id: 20, title: "Periscope", description: "Optics and reflection - see around corners.", difficulty: "Easy", category: "Physics", icon: "🔭", color: "#7B1FA2" },
-    ],
-  },
-  {
-    id: 7,
-    label: "Grade 7",
-    color: "#00BCD4",
-    chapters: [
-      { id: 21, title: "Electric Motor", description: "Build a simple motor and learn electromagnetism.", difficulty: "Hard", category: "Electronics", locked: true, icon: "⚡", color: "#C62828" },
-      { id: 22, title: "Bridge Builder", description: "Engineering strong structures - tension and compression.", difficulty: "Medium", category: "Engineering", icon: "🌉", color: "#455A64" },
-      { id: 23, title: "Pulley System", description: "Mechanical advantage with multiple pulleys.", difficulty: "Medium", category: "Mechanics", icon: "🔄", color: "#6D4C41" },
-    ],
-  },
-  {
-    id: 8,
-    label: "Grade 8",
-    color: "#607D8B",
-    chapters: [
-      { id: 24, title: "Gear Train", description: "Complex gear systems and ratio calculations.", difficulty: "Hard", category: "Mechanics", icon: "⚙️", color: "#37474F" },
-      { id: 25, title: "Catapult Pro", description: "Advanced projectile physics with adjustable angles.", difficulty: "Hard", category: "Physics", locked: true, icon: "🎯", color: "#D32F2F" },
-      { id: 26, title: "Robotic Arm", description: "Introduction to robotics and programmed movement.", difficulty: "Hard", category: "Robotics", locked: true, icon: "🤖", color: "#1976D2" },
-    ],
-  },
-  {
-    id: 9,
-    label: "Grade 9",
-    color: "#795548",
-    chapters: [
-      { id: 27, title: "Wind Turbine", description: "Generate electricity from wind power.", difficulty: "Hard", category: "Energy", locked: true, icon: "🌬️", color: "#0097A7" },
-      { id: 28, title: "Suspension Bridge", description: "Advanced bridge engineering with cables.", difficulty: "Hard", category: "Engineering", locked: true, icon: "🌁", color: "#512DA8" },
-      { id: 29, title: "Compound Machine", description: "Combine multiple simple machines.", difficulty: "Hard", category: "Mechanics", locked: true, icon: "🔧", color: "#F57C00" },
-      { id: 30, title: "Final Project", description: "Design and build your own STEM creation.", difficulty: "Hard", category: "Creative", locked: true, icon: "🏆", color: "#FFD700" },
-    ],
-  },
+  { id: 1, label: "Grade 1", color: "#4CAF50", chapters: generateChapters(1) },
+  { id: 2, label: "Grade 2", color: "#FFC107", chapters: generateChapters(2) },
+  { id: 3, label: "Grade 3", color: "#FF9800", chapters: generateChapters(3) },
+  { id: 4, label: "Grade 4", color: "#F44336", chapters: generateChapters(4) },
+  { id: 5, label: "Grade 5", color: "#9C27B0", chapters: generateChapters(5) },
+  { id: 6, label: "Grade 6", color: "#2196F3", chapters: generateChapters(6) },
+  { id: 7, label: "Grade 7", color: "#00BCD4", chapters: generateChapters(7) },
+  { id: 8, label: "Grade 8", color: "#607D8B", chapters: generateChapters(8) },
+  { id: 9, label: "Grade 9", color: "#795548", chapters: generateChapters(9) },
 ];
 
 const ChapterWheel = () => {
