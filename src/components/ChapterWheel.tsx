@@ -263,7 +263,15 @@ const ChapterWheel = () => {
     if (!selectedGrade) return null;
     
     const chapters = selectedGrade.chapters;
-    const radius = chapters.length <= 4 ? 120 : chapters.length <= 6 ? 140 : 160;
+    
+    // Distribute 30 chapters across 3 rings: 8, 10, 12
+    const rings = [
+      { count: 8, radius: 120, circleSize: 28, fontSize: 11 },
+      { count: 10, radius: 200, circleSize: 32, fontSize: 12 },
+      { count: 12, radius: 280, circleSize: 36, fontSize: 13 },
+    ];
+    
+    let chapterIndex = 0;
     
     return (
       <div className="relative">
@@ -280,102 +288,130 @@ const ChapterWheel = () => {
         </button>
         
         <svg 
-          width="500" 
-          height="500" 
-          viewBox="-250 -250 500 500"
+          width="700" 
+          height="700" 
+          viewBox="-350 -350 700 700"
           className="max-w-full h-auto mt-8"
         >
-          {/* Outer decorative ring */}
-          <circle r="200" fill="none" stroke={selectedGrade.color} strokeWidth="2" opacity="0.3" />
+          {/* Animated decorative rings */}
+          <circle 
+            r="320" 
+            fill="none" 
+            stroke={selectedGrade.color} 
+            strokeWidth="1" 
+            opacity="0.15"
+            strokeDasharray="8 4"
+            style={{ transform: `rotate(${rotation * 0.3}deg)`, transformOrigin: 'center' }}
+          />
+          <circle 
+            r="240" 
+            fill="none" 
+            stroke={selectedGrade.color} 
+            strokeWidth="1" 
+            opacity="0.2"
+            strokeDasharray="5 8"
+            style={{ transform: `rotate(${-rotation * 0.5}deg)`, transformOrigin: 'center' }}
+          />
+          <circle 
+            r="160" 
+            fill="none" 
+            stroke={selectedGrade.color} 
+            strokeWidth="1" 
+            opacity="0.25"
+            strokeDasharray="3 6"
+            style={{ transform: `rotate(${rotation * 0.7}deg)`, transformOrigin: 'center' }}
+          />
           
           {/* Center hub with grade info */}
-          <circle r="70" fill={selectedGrade.color} />
-          <text x="0" y="-15" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">Grade</text>
-          <text x="0" y="15" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold">{selectedGrade.id}</text>
-          <text x="0" y="35" textAnchor="middle" fill="white" fontSize="10" opacity="0.9">{chapters.length} Chapters</text>
+          <circle r="55" fill={selectedGrade.color} opacity="0.3" className="animate-pulse" />
+          <circle r="48" fill={selectedGrade.color} />
+          <text x="0" y="-12" textAnchor="middle" fill="white" fontSize="12" fontWeight="600">Grade</text>
+          <text x="0" y="14" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">{selectedGrade.id}</text>
+          <text x="0" y="32" textAnchor="middle" fill="white" fontSize="9" opacity="0.9">30 Chapters</text>
           
-          {/* Chapter circles */}
-          {chapters.map((chapter, index) => {
-            const pos = getPositionOnCircle(index, chapters.length, radius);
-            const isSelected = selectedChapter?.id === chapter.id;
+          {/* Chapter circles in 3 rings */}
+          {rings.map((ring, ringIndex) => {
+            const ringChapters = chapters.slice(chapterIndex, chapterIndex + ring.count);
+            const startIndex = chapterIndex;
+            chapterIndex += ring.count;
             
-            return (
-              <g 
-                key={chapter.id}
-                transform={`translate(${pos.x}, ${pos.y})`}
-                onClick={() => setSelectedChapter(chapter)}
-                className="cursor-pointer"
-              >
-                {/* Selection ring */}
-                {isSelected && (
+            // Alternate rotation direction per ring
+            const ringRotation = ringIndex % 2 === 0 ? rotation * 0.2 : -rotation * 0.15;
+            
+            return ringChapters.map((chapter, idx) => {
+              const pos = getPositionOnCircle(idx, ring.count, ring.radius, -90, ringRotation);
+              const isSelected = selectedChapter?.id === chapter.id;
+              const chapterNum = startIndex + idx + 1;
+              
+              return (
+                <g 
+                  key={chapter.id}
+                  transform={`translate(${pos.x}, ${pos.y})`}
+                  onClick={() => setSelectedChapter(chapter)}
+                  className="cursor-pointer"
+                  style={{ transition: 'transform 0.3s ease' }}
+                >
+                  {/* Selection ring */}
+                  {isSelected && (
+                    <circle
+                      r={ring.circleSize + 8}
+                      fill="none"
+                      stroke="#FFD700"
+                      strokeWidth="3"
+                      className="animate-pulse"
+                    />
+                  )}
+                  
+                  {/* Outer glow */}
                   <circle
-                    r="50"
-                    fill="none"
-                    stroke="#FFD700"
-                    strokeWidth="3"
-                    className="animate-pulse"
+                    r={ring.circleSize + 4}
+                    fill={chapter.locked ? "#9E9E9E" : chapter.color}
+                    opacity="0.25"
                   />
-                )}
-                
-                {/* Outer glow */}
-                <circle
-                  r="44"
-                  fill={chapter.locked ? "#9E9E9E" : chapter.color}
-                  opacity="0.3"
-                  className="transition-all"
-                />
-                
-                {/* Main circle */}
-                <circle
-                  r="38"
-                  fill={chapter.locked ? "#9E9E9E" : chapter.color}
-                  className="transition-transform hover:scale-105 drop-shadow-lg"
-                />
-                
-                {/* Chapter number */}
-                <text
-                  x="0"
-                  y="-8"
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="12"
-                  fontWeight="bold"
-                >
-                  Ch.{chapter.id}
-                </text>
-                
-                {/* Icon */}
-                <text
-                  x="0"
-                  y="14"
-                  textAnchor="middle"
-                  fontSize="18"
-                  className="select-none"
-                >
-                  {chapter.locked ? "🔒" : chapter.icon}
-                </text>
-                
-                {/* Title below */}
-                <text
-                  x="0"
-                  y="62"
-                  textAnchor="middle"
-                  fill="hsl(var(--foreground))"
-                  fontSize="9"
-                  fontWeight="500"
-                >
-                  {chapter.title.length > 14 ? chapter.title.slice(0, 12) + "..." : chapter.title}
-                </text>
-                
-                {/* Completed badge */}
-                {chapter.completed && (
-                  <g transform="translate(26, -26)">
-                    <circle r="10" fill="#4CAF50" />
-                    <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">✓</text>
-                  </g>
-                )}
-              </g>
-            );
+                  
+                  {/* Main circle */}
+                  <circle
+                    r={ring.circleSize}
+                    fill={chapter.locked ? "#9E9E9E" : chapter.color}
+                    className="transition-all duration-200 hover:brightness-110 drop-shadow-md"
+                    style={{ 
+                      filter: isSelected ? 'brightness(1.2) drop-shadow(0 0 8px rgba(255,215,0,0.6))' : undefined 
+                    }}
+                  />
+                  
+                  {/* Chapter number */}
+                  <text
+                    x="0"
+                    y={-ring.circleSize * 0.15}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize={ring.fontSize - 2}
+                    fontWeight="bold"
+                  >
+                    {chapterNum}
+                  </text>
+                  
+                  {/* Icon */}
+                  <text
+                    x="0"
+                    y={ring.circleSize * 0.4}
+                    textAnchor="middle"
+                    fontSize={ring.fontSize}
+                    className="select-none"
+                  >
+                    {chapter.locked ? "🔒" : chapter.icon}
+                  </text>
+                  
+                  {/* Completed badge */}
+                  {chapter.completed && (
+                    <g transform={`translate(${ring.circleSize * 0.7}, ${-ring.circleSize * 0.7})`}>
+                      <circle r="8" fill="#4CAF50" />
+                      <text x="0" y="3" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">✓</text>
+                    </g>
+                  )}
+                </g>
+              );
+            });
           })}
         </svg>
       </div>
