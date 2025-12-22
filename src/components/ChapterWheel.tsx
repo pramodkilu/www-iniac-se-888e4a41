@@ -143,6 +143,27 @@ const ChapterWheel = () => {
     };
   };
 
+  // Floating particles data
+  const particles = [
+    { icon: "⚙️", radius: 235, speed: 0.8, offset: 0, size: 16 },
+    { icon: "🔧", radius: 240, speed: -0.5, offset: 45, size: 14 },
+    { icon: "💡", radius: 230, speed: 0.6, offset: 90, size: 18 },
+    { icon: "🚀", radius: 245, speed: -0.7, offset: 135, size: 16 },
+    { icon: "⚡", radius: 238, speed: 0.9, offset: 180, size: 15 },
+    { icon: "🔬", radius: 242, speed: -0.4, offset: 225, size: 14 },
+    { icon: "🌟", radius: 232, speed: 0.7, offset: 270, size: 17 },
+    { icon: "📐", radius: 248, speed: -0.6, offset: 315, size: 15 },
+  ];
+
+  // Small dot particles
+  const dotParticles = Array.from({ length: 20 }, (_, i) => ({
+    radius: 210 + Math.random() * 50,
+    speed: (Math.random() - 0.5) * 1.5,
+    offset: (i / 20) * 360,
+    size: 2 + Math.random() * 4,
+    opacity: 0.3 + Math.random() * 0.4,
+  }));
+
   const renderGradeCircles = () => {
     return (
       <svg 
@@ -153,6 +174,44 @@ const ChapterWheel = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
+        {/* Floating dot particles */}
+        {dotParticles.map((particle, index) => {
+          const angle = (particle.offset + rotation * particle.speed) * (Math.PI / 180);
+          const x = Math.cos(angle) * particle.radius;
+          const y = Math.sin(angle) * particle.radius;
+          return (
+            <circle
+              key={`dot-${index}`}
+              cx={x}
+              cy={y}
+              r={particle.size}
+              fill="hsl(var(--primary))"
+              opacity={particle.opacity}
+            />
+          );
+        })}
+        
+        {/* Floating icon particles */}
+        {particles.map((particle, index) => {
+          const angle = (particle.offset + rotation * particle.speed) * (Math.PI / 180);
+          const x = Math.cos(angle) * particle.radius;
+          const y = Math.sin(angle) * particle.radius;
+          return (
+            <text
+              key={`icon-${index}`}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={particle.size}
+              opacity={0.7}
+              className="select-none pointer-events-none"
+            >
+              {particle.icon}
+            </text>
+          );
+        })}
+        
         {/* Animated outer rings */}
         <circle 
           r="220" 
