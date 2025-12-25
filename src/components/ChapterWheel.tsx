@@ -264,12 +264,11 @@ const ChapterWheel = () => {
     
     const chapters = selectedGrade.chapters;
     
-    // Generate spiral path positions
+    // Larger spiral with better spacing
     const getSpiralPosition = (index: number, total: number) => {
-      // Spiral from center outward
-      const maxRadius = 300;
-      const minRadius = 60;
-      const turns = 2.5; // Number of spiral turns
+      const maxRadius = 380;
+      const minRadius = 80;
+      const turns = 2.8;
       
       const progress = index / (total - 1);
       const angle = progress * turns * 2 * Math.PI - Math.PI / 2;
@@ -282,14 +281,14 @@ const ChapterWheel = () => {
       };
     };
     
-    // Generate path for the road
+    // Generate smooth road path
     const generateRoadPath = () => {
       let path = "";
-      for (let i = 0; i <= 100; i++) {
-        const progress = i / 100;
-        const maxRadius = 300;
-        const minRadius = 60;
-        const turns = 2.5;
+      for (let i = 0; i <= 150; i++) {
+        const progress = i / 150;
+        const maxRadius = 380;
+        const minRadius = 80;
+        const turns = 2.8;
         const angle = progress * turns * 2 * Math.PI - Math.PI / 2;
         const radius = minRadius + progress * (maxRadius - minRadius);
         const x = Math.cos(angle) * radius;
@@ -302,37 +301,87 @@ const ChapterWheel = () => {
     const roadPath = generateRoadPath();
     
     return (
-      <div className="relative">
+      <div className="relative w-full flex flex-col items-center">
         {/* Back button */}
         <button
           onClick={() => {
             setSelectedGrade(null);
             setSelectedChapter(null);
           }}
-          className="absolute top-0 left-0 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors z-10"
+          className="absolute top-0 left-0 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors z-10 bg-card/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border/50 shadow-lg"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Back to Grades</span>
         </button>
         
+        {/* Grade Title */}
+        <div className="mt-12 mb-4 text-center">
+          <h2 className="text-3xl font-bold" style={{ color: selectedGrade.color }}>
+            {selectedGrade.label} Journey
+          </h2>
+          <p className="text-muted-foreground">30 Chapters • From START to FINISH</p>
+        </div>
+        
         <svg 
-          width="700" 
-          height="700" 
-          viewBox="-350 -350 700 700"
-          className="max-w-full h-auto mt-8"
+          width="850" 
+          height="850" 
+          viewBox="-425 -425 850 850"
+          className="max-w-full h-auto"
         >
+          {/* Outer glow ring */}
+          <circle
+            r="410"
+            fill="none"
+            stroke={selectedGrade.color}
+            strokeWidth="2"
+            opacity="0.15"
+            strokeDasharray="15 10"
+            style={{ 
+              transform: `rotate(${rotation * 0.3}deg)`,
+              transformOrigin: 'center'
+            }}
+          />
+          <circle
+            r="395"
+            fill="none"
+            stroke={selectedGrade.color}
+            strokeWidth="1"
+            opacity="0.1"
+            strokeDasharray="8 15"
+            style={{ 
+              transform: `rotate(${-rotation * 0.2}deg)`,
+              transformOrigin: 'center'
+            }}
+          />
+          
           {/* Animated background particles */}
-          {Array.from({ length: 12 }).map((_, i) => {
-            const angle = (i / 12) * Math.PI * 2 + rotation * 0.01;
-            const radius = 320;
+          {Array.from({ length: 24 }).map((_, i) => {
+            const angle = (i / 24) * Math.PI * 2 + rotation * 0.015;
+            const radius = 400 + Math.sin(i * 0.5 + rotation * 0.02) * 15;
             return (
               <circle
                 key={`particle-${i}`}
                 cx={Math.cos(angle) * radius}
                 cy={Math.sin(angle) * radius}
-                r="3"
+                r={3 + Math.sin(i + rotation * 0.05) * 1.5}
                 fill={selectedGrade.color}
-                opacity="0.3"
+                opacity={0.2 + Math.sin(i * 0.3) * 0.15}
+              />
+            );
+          })}
+          
+          {/* Inner glow particles */}
+          {Array.from({ length: 16 }).map((_, i) => {
+            const angle = (i / 16) * Math.PI * 2 - rotation * 0.01;
+            const radius = 100 + Math.cos(i * 0.7 + rotation * 0.03) * 20;
+            return (
+              <circle
+                key={`inner-particle-${i}`}
+                cx={Math.cos(angle) * radius}
+                cy={Math.sin(angle) * radius}
+                r={2 + Math.sin(i + rotation * 0.04) * 1}
+                fill={selectedGrade.color}
+                opacity={0.25}
               />
             );
           })}
@@ -342,10 +391,10 @@ const ChapterWheel = () => {
             d={roadPath}
             fill="none"
             stroke="hsl(var(--foreground))"
-            strokeWidth="36"
-            opacity="0.1"
+            strokeWidth="48"
+            opacity="0.08"
             strokeLinecap="round"
-            transform="translate(4, 4)"
+            transform="translate(5, 5)"
           />
           
           {/* Road background */}
@@ -353,60 +402,84 @@ const ChapterWheel = () => {
             d={roadPath}
             fill="none"
             stroke="hsl(var(--muted))"
-            strokeWidth="32"
+            strokeWidth="44"
             strokeLinecap="round"
           />
           
-          {/* Road center line (dashed) */}
+          {/* Road edge highlight */}
           <path
             d={roadPath}
             fill="none"
             stroke={selectedGrade.color}
-            strokeWidth="3"
-            strokeDasharray="12 8"
+            strokeWidth="48"
             strokeLinecap="round"
-            opacity="0.6"
+            opacity="0.1"
+          />
+          
+          {/* Road center line (animated dashed) */}
+          <path
+            d={roadPath}
+            fill="none"
+            stroke={selectedGrade.color}
+            strokeWidth="4"
+            strokeDasharray="16 10"
+            strokeLinecap="round"
+            opacity="0.7"
             style={{ 
-              strokeDashoffset: -rotation * 2,
+              strokeDashoffset: -rotation * 3,
             }}
           />
           
+          {/* Milestone markers at 10, 20 */}
+          {[10, 20].map((milestone) => {
+            const pos = getSpiralPosition(milestone - 1, 30);
+            return (
+              <g key={`milestone-${milestone}`} transform={`translate(${pos.x}, ${pos.y})`}>
+                <circle r="38" fill={selectedGrade.color} opacity="0.15" />
+              </g>
+            );
+          })}
+          
           {/* Start marker */}
           <g transform={`translate(${getSpiralPosition(0, 30).x}, ${getSpiralPosition(0, 30).y})`}>
-            <circle r="18" fill="#4CAF50" />
+            <circle r="28" fill="#4CAF50" className="drop-shadow-lg" />
+            <circle r="32" fill="none" stroke="#4CAF50" strokeWidth="2" opacity="0.5" className="animate-pulse" />
             <text x="0" y="1" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="10" fontWeight="bold">START</text>
           </g>
           
           {/* End marker */}
           <g transform={`translate(${getSpiralPosition(29, 30).x}, ${getSpiralPosition(29, 30).y})`}>
-            <circle r="20" fill="#FFD700" />
-            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="16">🏆</text>
+            <circle r="30" fill="#FFD700" className="drop-shadow-lg" />
+            <circle r="36" fill="none" stroke="#FFD700" strokeWidth="2" opacity="0.5" className="animate-pulse" />
+            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="20">🏆</text>
           </g>
           
           {/* Chapter nodes */}
           {chapters.map((chapter, index) => {
             const pos = getSpiralPosition(index, 30);
             const isSelected = selectedChapter?.id === chapter.id;
-            const nodeSize = 22;
+            const nodeSize = 28;
+            const isMilestone = (index + 1) % 10 === 0;
             
             return (
               <g 
                 key={chapter.id}
                 transform={`translate(${pos.x}, ${pos.y})`}
                 onClick={() => setSelectedChapter(chapter)}
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-110"
+                style={{ transformOrigin: 'center' }}
               >
                 {/* Selection glow */}
                 {isSelected && (
                   <>
                     <circle
-                      r={nodeSize + 12}
+                      r={nodeSize + 16}
                       fill={chapter.color}
-                      opacity="0.3"
+                      opacity="0.25"
                       className="animate-pulse"
                     />
                     <circle
-                      r={nodeSize + 6}
+                      r={nodeSize + 8}
                       fill="none"
                       stroke="#FFD700"
                       strokeWidth="3"
@@ -414,18 +487,18 @@ const ChapterWheel = () => {
                   </>
                 )}
                 
-                {/* Node background */}
+                {/* Node outer glow */}
                 <circle
-                  r={nodeSize + 3}
+                  r={nodeSize + 5}
                   fill={chapter.locked ? "#666" : chapter.color}
-                  opacity="0.3"
+                  opacity="0.25"
                 />
                 
                 {/* Main node */}
                 <circle
                   r={nodeSize}
                   fill={chapter.locked ? "#9E9E9E" : chapter.color}
-                  className="transition-all duration-200 drop-shadow-md"
+                  className="drop-shadow-md"
                   style={{
                     filter: isSelected ? 'brightness(1.2)' : 'brightness(1)',
                   }}
@@ -434,10 +507,10 @@ const ChapterWheel = () => {
                 {/* Chapter number */}
                 <text
                   x="0"
-                  y={-4}
+                  y={-6}
                   textAnchor="middle"
                   fill="white"
-                  fontSize="9"
+                  fontSize="11"
                   fontWeight="bold"
                 >
                   {index + 1}
@@ -446,9 +519,9 @@ const ChapterWheel = () => {
                 {/* Icon */}
                 <text
                   x="0"
-                  y="10"
+                  y="12"
                   textAnchor="middle"
-                  fontSize="11"
+                  fontSize="14"
                   className="select-none pointer-events-none"
                 >
                   {chapter.locked ? "🔒" : chapter.icon}
@@ -457,33 +530,27 @@ const ChapterWheel = () => {
                 {/* Completed indicator */}
                 {chapter.completed && (
                   <g transform={`translate(${nodeSize * 0.7}, ${-nodeSize * 0.7})`}>
-                    <circle r="7" fill="#4CAF50" stroke="white" strokeWidth="1" />
-                    <text x="0" y="2.5" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">✓</text>
+                    <circle r="10" fill="#4CAF50" stroke="white" strokeWidth="2" />
+                    <text x="0" y="3" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">✓</text>
                   </g>
                 )}
                 
-                {/* Connection line to next chapter */}
-                {index < chapters.length - 1 && !isSelected && (
-                  <line
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="0"
-                    stroke={chapter.color}
-                    strokeWidth="0"
-                    opacity="0"
-                  />
+                {/* Milestone star */}
+                {isMilestone && !chapter.locked && (
+                  <g transform={`translate(${-nodeSize * 0.7}, ${-nodeSize * 0.7})`}>
+                    <text x="0" y="3" textAnchor="middle" fontSize="12">⭐</text>
+                  </g>
                 )}
               </g>
             );
           })}
           
-          {/* Center grade badge */}
+          {/* Center grade badge - larger */}
           <g>
-            <circle r="40" fill={selectedGrade.color} opacity="0.2" />
-            <circle r="32" fill={selectedGrade.color} />
-            <text x="0" y="-8" textAnchor="middle" fill="white" fontSize="10" fontWeight="500">Grade</text>
-            <text x="0" y="12" textAnchor="middle" fill="white" fontSize="22" fontWeight="bold">{selectedGrade.id}</text>
+            <circle r="55" fill={selectedGrade.color} opacity="0.15" />
+            <circle r="48" fill={selectedGrade.color} className="drop-shadow-lg" />
+            <text x="0" y="-12" textAnchor="middle" fill="white" fontSize="12" fontWeight="500">Grade</text>
+            <text x="0" y="18" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold">{selectedGrade.id}</text>
           </g>
           
           {/* Progress arc */}
