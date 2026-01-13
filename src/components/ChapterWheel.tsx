@@ -67,18 +67,6 @@ const ChapterWheel = () => {
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [hoveredGrade, setHoveredGrade] = useState<Grade | null>(null);
-  const [rotation, setRotation] = useState(0);
-
-  // Subtle rotation animation
-  useEffect(() => {
-    if (selectedGrade) return;
-    
-    const interval = setInterval(() => {
-      setRotation(prev => (prev + 0.1) % 360);
-    }, 50);
-    
-    return () => clearInterval(interval);
-  }, [selectedGrade]);
 
   // ABB-style SDG wheel for grades
   const renderGradeWheel = () => {
@@ -137,12 +125,12 @@ const ChapterWheel = () => {
         </div>
         
         {/* The wheel */}
-        <div className="relative">
+        <div className="relative w-[600px] h-[600px] max-w-full mx-auto">
           <svg 
             width="600" 
             height="600" 
             viewBox="-300 -300 600 600"
-            className="max-w-full h-auto"
+            className="w-full h-full"
           >
             {/* Outer decorative ring */}
             <circle
@@ -155,7 +143,7 @@ const ChapterWheel = () => {
             
             {/* Decorative dots around the wheel */}
             {Array.from({ length: 36 }).map((_, i) => {
-              const angle = (i / 36) * Math.PI * 2 + (rotation * Math.PI / 180) * 0.1;
+              const angle = (i / 36) * Math.PI * 2;
               const r = 248;
               return (
                 <circle
@@ -178,6 +166,8 @@ const ChapterWheel = () => {
               const isHovered = hoveredGrade?.id === grade.id;
               const iconX = Math.cos(midAngle) * iconRadius;
               const iconY = Math.sin(midAngle) * iconRadius;
+              const labelX = Math.cos(midAngle) * labelRadius;
+              const labelY = Math.sin(midAngle) * labelRadius;
               
               return (
                 <g 
@@ -186,7 +176,6 @@ const ChapterWheel = () => {
                   onMouseEnter={() => setHoveredGrade(grade)}
                   onMouseLeave={() => setHoveredGrade(null)}
                   className="cursor-pointer"
-                  style={{ transition: 'transform 0.2s ease' }}
                 >
                   {/* Segment background */}
                   <path
@@ -196,8 +185,6 @@ const ChapterWheel = () => {
                     className="transition-all duration-200"
                     style={{
                       filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
-                      transform: isHovered ? `scale(1.02)` : 'scale(1)',
-                      transformOrigin: 'center',
                     }}
                   />
                   
@@ -234,6 +221,31 @@ const ChapterWheel = () => {
                     className="pointer-events-none select-none"
                   >
                     {grade.icon}
+                  </text>
+                  
+                  {/* Label outside the wheel */}
+                  <text
+                    x={labelX}
+                    y={labelY - 6}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill={isHovered ? grade.color : "hsl(var(--foreground))"}
+                    fontSize="13"
+                    fontWeight="bold"
+                    className="pointer-events-none select-none transition-colors"
+                  >
+                    Grade {grade.id}
+                  </text>
+                  <text
+                    x={labelX}
+                    y={labelY + 10}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="hsl(var(--muted-foreground))"
+                    fontSize="10"
+                    className="pointer-events-none select-none"
+                  >
+                    {grade.tagline}
                   </text>
                 </g>
               );
@@ -282,41 +294,6 @@ const ChapterWheel = () => {
               </text>
             </g>
           </svg>
-          
-          {/* Labels around the wheel */}
-          <div className="absolute inset-0 pointer-events-none">
-            {grades.map((grade, index) => {
-              const segmentAngle = (2 * Math.PI) / grades.length;
-              const midAngle = index * segmentAngle - Math.PI / 2 + segmentAngle / 2;
-              const labelR = labelRadius;
-              const x = 300 + Math.cos(midAngle) * labelR;
-              const y = 300 + Math.sin(midAngle) * labelR;
-              
-              return (
-                <div
-                  key={`label-${grade.id}`}
-                  className="absolute text-center pointer-events-auto cursor-pointer transition-transform hover:scale-105"
-                  style={{
-                    left: x,
-                    top: y,
-                    transform: 'translate(-50%, -50%)',
-                    minWidth: '80px',
-                  }}
-                  onClick={() => setSelectedGrade(grade)}
-                  onMouseEnter={() => setHoveredGrade(grade)}
-                  onMouseLeave={() => setHoveredGrade(null)}
-                >
-                  <div 
-                    className="font-bold text-sm"
-                    style={{ color: hoveredGrade?.id === grade.id ? grade.color : 'hsl(var(--foreground))' }}
-                  >
-                    Grade {grade.id}
-                  </div>
-                  <div className="text-xs text-muted-foreground">{grade.tagline}</div>
-                </div>
-              );
-            })}
-          </div>
         </div>
         
         {/* Hovered grade info */}
@@ -417,7 +394,7 @@ const ChapterWheel = () => {
           viewBox="-425 -425 850 850"
           className="max-w-full h-auto"
         >
-          {/* Outer glow ring */}
+          {/* Outer decorative ring */}
           <circle
             r="410"
             fill="none"
@@ -425,10 +402,6 @@ const ChapterWheel = () => {
             strokeWidth="2"
             opacity="0.15"
             strokeDasharray="15 10"
-            style={{ 
-              transform: `rotate(${rotation * 0.3}deg)`,
-              transformOrigin: 'center'
-            }}
           />
           <circle
             r="395"
@@ -437,38 +410,34 @@ const ChapterWheel = () => {
             strokeWidth="1"
             opacity="0.1"
             strokeDasharray="8 15"
-            style={{ 
-              transform: `rotate(${-rotation * 0.2}deg)`,
-              transformOrigin: 'center'
-            }}
           />
           
-          {/* Animated background particles */}
+          {/* Static decorative particles */}
           {Array.from({ length: 24 }).map((_, i) => {
-            const angle = (i / 24) * Math.PI * 2 + rotation * 0.015;
-            const radius = 400 + Math.sin(i * 0.5 + rotation * 0.02) * 15;
+            const angle = (i / 24) * Math.PI * 2;
+            const radius = 400 + Math.sin(i * 0.5) * 15;
             return (
               <circle
                 key={`particle-${i}`}
                 cx={Math.cos(angle) * radius}
                 cy={Math.sin(angle) * radius}
-                r={3 + Math.sin(i + rotation * 0.05) * 1.5}
+                r={3 + Math.sin(i) * 1.5}
                 fill={selectedGrade.color}
                 opacity={0.2 + Math.sin(i * 0.3) * 0.15}
               />
             );
           })}
           
-          {/* Inner glow particles */}
+          {/* Inner decorative particles */}
           {Array.from({ length: 16 }).map((_, i) => {
-            const angle = (i / 16) * Math.PI * 2 - rotation * 0.01;
-            const radius = 100 + Math.cos(i * 0.7 + rotation * 0.03) * 20;
+            const angle = (i / 16) * Math.PI * 2;
+            const radius = 100 + Math.cos(i * 0.7) * 20;
             return (
               <circle
                 key={`inner-particle-${i}`}
                 cx={Math.cos(angle) * radius}
                 cy={Math.sin(angle) * radius}
-                r={2 + Math.sin(i + rotation * 0.04) * 1}
+                r={2 + Math.sin(i) * 1}
                 fill={selectedGrade.color}
                 opacity={0.25}
               />
@@ -505,7 +474,7 @@ const ChapterWheel = () => {
             opacity="0.1"
           />
           
-          {/* Road center line (animated dashed) */}
+          {/* Road center line */}
           <path
             d={roadPath}
             fill="none"
@@ -514,9 +483,6 @@ const ChapterWheel = () => {
             strokeDasharray="16 10"
             strokeLinecap="round"
             opacity="0.7"
-            style={{ 
-              strokeDashoffset: -rotation * 3,
-            }}
           />
           
           {/* Milestone markers at 10, 20 */}
