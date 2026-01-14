@@ -140,15 +140,33 @@ const ChapterWheel = () => {
                   onClick={() => setSelectedGrade(grade)}
                   onMouseEnter={() => setHoveredGrade(grade)}
                   onMouseLeave={() => setHoveredGrade(null)}
+                  className="grade-segment"
                   style={{ cursor: 'pointer' }}
                 >
+                  {/* Segment shadow on hover */}
+                  <path
+                    d={createArcPath(startAngle, endAngle, segmentInnerRadius, segmentOuterRadius + 8)}
+                    fill={grade.color}
+                    className="segment-glow"
+                    style={{
+                      opacity: isHovered ? 0.4 : 0,
+                      filter: 'blur(8px)',
+                      transition: 'opacity 0.3s ease'
+                    }}
+                  />
+                  
                   {/* Segment */}
                   <path
                     d={createArcPath(startAngle, endAngle, segmentInnerRadius, segmentOuterRadius)}
                     fill={grade.color}
-                    opacity={isHovered ? 1 : 0.85}
                     stroke="white"
                     strokeWidth="2"
+                    className="segment-path"
+                    style={{
+                      opacity: isHovered ? 1 : 0.85,
+                      filter: isHovered ? 'brightness(1.15) saturate(1.1)' : 'brightness(1)',
+                      transition: 'opacity 0.3s ease, filter 0.3s ease'
+                    }}
                   />
                   
                   {/* Grade number */}
@@ -158,9 +176,12 @@ const ChapterWheel = () => {
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="white"
-                    fontSize="14"
+                    fontSize={isHovered ? "16" : "14"}
                     fontWeight="bold"
-                    style={{ pointerEvents: 'none' }}
+                    style={{ 
+                      pointerEvents: 'none',
+                      transition: 'font-size 0.3s ease'
+                    }}
                   >
                     {grade.id}
                   </text>
@@ -171,8 +192,11 @@ const ChapterWheel = () => {
                     y={iconY + 12}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="20"
-                    style={{ pointerEvents: 'none' }}
+                    fontSize={isHovered ? "24" : "20"}
+                    style={{ 
+                      pointerEvents: 'none',
+                      transition: 'font-size 0.3s ease'
+                    }}
                   >
                     {grade.icon}
                   </text>
