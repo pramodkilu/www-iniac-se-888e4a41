@@ -68,13 +68,12 @@ const ChapterWheel = () => {
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [hoveredGrade, setHoveredGrade] = useState<Grade | null>(null);
 
-  // ABB-style SDG wheel for grades
+  // ABB-style SDG wheel for grades - stable version
   const renderGradeWheel = () => {
-    const centerRadius = 100;
-    const segmentInnerRadius = 110;
-    const segmentOuterRadius = 220;
-    const iconRadius = 165;
-    const labelRadius = 270;
+    const centerRadius = 80;
+    const segmentInnerRadius = 90;
+    const segmentOuterRadius = 180;
+    const iconRadius = 135;
     
     const createArcPath = (startAngle: number, endAngle: number, innerR: number, outerR: number) => {
       const start1 = {
@@ -96,67 +95,35 @@ const ChapterWheel = () => {
       
       const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
       
-      return `M ${start1.x} ${start1.y} 
-              A ${outerR} ${outerR} 0 ${largeArc} 1 ${end1.x} ${end1.y}
-              L ${start2.x} ${start2.y}
-              A ${innerR} ${innerR} 0 ${largeArc} 0 ${end2.x} ${end2.y}
-              Z`;
+      return `M ${start1.x} ${start1.y} A ${outerR} ${outerR} 0 ${largeArc} 1 ${end1.x} ${end1.y} L ${start2.x} ${start2.y} A ${innerR} ${innerR} 0 ${largeArc} 0 ${end2.x} ${end2.y} Z`;
     };
     
     const segmentAngle = (2 * Math.PI) / grades.length;
-    const gapAngle = 0.02; // Small gap between segments
+    const gapAngle = 0.03;
     
     return (
-      <div className="relative flex flex-col items-center">
-        {/* Header section like ABB */}
-        <div className="text-center mb-8 max-w-2xl">
+      <div className="flex flex-col items-center">
+        {/* Header */}
+        <div className="text-center mb-8">
           <p className="text-sm font-semibold tracking-widest text-primary mb-3 uppercase">
             Choose Your Learning Path
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+          <h2 className="text-4xl font-bold mb-4">
             Explore 9 Grade Levels
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            With 30 hands-on STEM projects per grade, BLIX is helping students master engineering and robotics concepts through story-based learning.
-          </p>
-          <p className="text-muted-foreground mt-4">
-            Click on a grade to explore its chapters.
+          <p className="text-muted-foreground">
+            30 hands-on STEM projects per grade
           </p>
         </div>
         
-        {/* The wheel */}
-        <div className="relative w-[600px] h-[600px] max-w-full mx-auto">
+        {/* Wheel container - fixed size, no transforms */}
+        <div style={{ width: '500px', height: '500px', position: 'relative' }}>
           <svg 
-            width="600" 
-            height="600" 
-            viewBox="-300 -300 600 600"
-            className="w-full h-full"
+            width="500" 
+            height="500" 
+            viewBox="-250 -250 500 500"
+            style={{ display: 'block' }}
           >
-            {/* Outer decorative ring */}
-            <circle
-              r="235"
-              fill="none"
-              stroke="hsl(var(--border))"
-              strokeWidth="1"
-              opacity="0.5"
-            />
-            
-            {/* Decorative dots around the wheel */}
-            {Array.from({ length: 36 }).map((_, i) => {
-              const angle = (i / 36) * Math.PI * 2;
-              const r = 248;
-              return (
-                <circle
-                  key={`dot-${i}`}
-                  cx={Math.cos(angle) * r}
-                  cy={Math.sin(angle) * r}
-                  r={3}
-                  fill="hsl(var(--muted-foreground))"
-                  opacity={0.3}
-                />
-              );
-            })}
-            
             {/* Grade segments */}
             {grades.map((grade, index) => {
               const startAngle = index * segmentAngle - Math.PI / 2 + gapAngle / 2;
@@ -166,8 +133,6 @@ const ChapterWheel = () => {
               const isHovered = hoveredGrade?.id === grade.id;
               const iconX = Math.cos(midAngle) * iconRadius;
               const iconY = Math.sin(midAngle) * iconRadius;
-              const labelX = Math.cos(midAngle) * labelRadius;
-              const labelY = Math.sin(midAngle) * labelRadius;
               
               return (
                 <g 
@@ -175,38 +140,27 @@ const ChapterWheel = () => {
                   onClick={() => setSelectedGrade(grade)}
                   onMouseEnter={() => setHoveredGrade(grade)}
                   onMouseLeave={() => setHoveredGrade(null)}
-                  className="cursor-pointer"
+                  style={{ cursor: 'pointer' }}
                 >
-                  {/* Segment background */}
+                  {/* Segment */}
                   <path
                     d={createArcPath(startAngle, endAngle, segmentInnerRadius, segmentOuterRadius)}
                     fill={grade.color}
                     opacity={isHovered ? 1 : 0.85}
-                    className="transition-all duration-200"
-                    style={{
-                      filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
-                    }}
+                    stroke="white"
+                    strokeWidth="2"
                   />
-                  
-                  {/* Hover highlight */}
-                  {isHovered && (
-                    <path
-                      d={createArcPath(startAngle, endAngle, segmentOuterRadius, segmentOuterRadius + 8)}
-                      fill={grade.color}
-                      opacity="0.6"
-                    />
-                  )}
                   
                   {/* Grade number */}
                   <text
                     x={iconX}
-                    y={iconY - 12}
+                    y={iconY - 10}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="white"
                     fontSize="14"
                     fontWeight="bold"
-                    className="pointer-events-none select-none"
+                    style={{ pointerEvents: 'none' }}
                   >
                     {grade.id}
                   </text>
@@ -217,41 +171,16 @@ const ChapterWheel = () => {
                     y={iconY + 12}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="24"
-                    className="pointer-events-none select-none"
+                    fontSize="20"
+                    style={{ pointerEvents: 'none' }}
                   >
                     {grade.icon}
-                  </text>
-                  
-                  {/* Label outside the wheel */}
-                  <text
-                    x={labelX}
-                    y={labelY - 6}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill={isHovered ? grade.color : "hsl(var(--foreground))"}
-                    fontSize="13"
-                    fontWeight="bold"
-                    className="pointer-events-none select-none transition-colors"
-                  >
-                    Grade {grade.id}
-                  </text>
-                  <text
-                    x={labelX}
-                    y={labelY + 10}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="hsl(var(--muted-foreground))"
-                    fontSize="10"
-                    className="pointer-events-none select-none"
-                  >
-                    {grade.tagline}
                   </text>
                 </g>
               );
             })}
             
-            {/* Inner circle - center hub */}
+            {/* Center circle */}
             <circle
               r={centerRadius}
               fill="hsl(var(--background))"
@@ -259,63 +188,78 @@ const ChapterWheel = () => {
               strokeWidth="2"
             />
             
-            {/* Center content */}
-            <g>
-              <text
-                x="0"
-                y="-25"
-                textAnchor="middle"
-                fill="hsl(var(--foreground))"
-                fontSize="28"
-                fontWeight="bold"
-                className="select-none"
-              >
-                BLIX
-              </text>
-              <text
-                x="0"
-                y="5"
-                textAnchor="middle"
-                fill="hsl(var(--muted-foreground))"
-                fontSize="12"
-                className="select-none"
-              >
-                30 Projects
-              </text>
-              <text
-                x="0"
-                y="22"
-                textAnchor="middle"
-                fill="hsl(var(--muted-foreground))"
-                fontSize="12"
-                className="select-none"
-              >
-                per Grade
-              </text>
-            </g>
+            {/* Center text */}
+            <text
+              x="0"
+              y="-15"
+              textAnchor="middle"
+              fill="hsl(var(--foreground))"
+              fontSize="24"
+              fontWeight="bold"
+            >
+              BLIX
+            </text>
+            <text
+              x="0"
+              y="10"
+              textAnchor="middle"
+              fill="hsl(var(--muted-foreground))"
+              fontSize="11"
+            >
+              30 Projects/Grade
+            </text>
           </svg>
+          
+          {/* Labels outside wheel - positioned absolutely */}
+          {grades.map((grade, index) => {
+            const midAngle = (index + 0.5) * segmentAngle - Math.PI / 2;
+            const labelRadius = 220;
+            const labelX = 250 + Math.cos(midAngle) * labelRadius;
+            const labelY = 250 + Math.sin(midAngle) * labelRadius;
+            const isHovered = hoveredGrade?.id === grade.id;
+            
+            return (
+              <div
+                key={`label-${grade.id}`}
+                style={{
+                  position: 'absolute',
+                  left: `${labelX}px`,
+                  top: `${labelY}px`,
+                  transform: 'translate(-50%, -50%)',
+                  textAlign: 'center',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <div 
+                  style={{ 
+                    fontSize: '12px', 
+                    fontWeight: 'bold',
+                    color: isHovered ? grade.color : 'hsl(var(--foreground))'
+                  }}
+                >
+                  Grade {grade.id}
+                </div>
+                <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))' }}>
+                  {grade.tagline}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
-        {/* Hovered grade info */}
+        {/* Hover info card */}
         {hoveredGrade && (
-          <div className="mt-8 bg-card border rounded-xl p-6 shadow-lg animate-fade-in max-w-md text-center">
+          <div className="mt-6 bg-card border rounded-xl p-6 shadow-lg text-center max-w-sm">
             <div 
-              className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl mx-auto mb-4"
+              className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3"
               style={{ backgroundColor: hoveredGrade.color }}
             >
               {hoveredGrade.icon}
             </div>
-            <h3 className="text-2xl font-bold mb-1">{hoveredGrade.label}</h3>
-            <p className="text-muted-foreground mb-4">{hoveredGrade.tagline}</p>
-            <div className="flex items-center justify-center gap-4 text-sm">
-              <span className="flex items-center gap-1">
-                <span className="font-bold">{hoveredGrade.chapters.length}</span> chapters
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="font-bold">{hoveredGrade.chapters.filter(c => c.completed).length}</span> completed
-              </span>
-            </div>
-            <Button className="mt-4" onClick={() => setSelectedGrade(hoveredGrade)}>
+            <h3 className="text-xl font-bold mb-1">{hoveredGrade.label}</h3>
+            <p className="text-muted-foreground text-sm mb-3">{hoveredGrade.tagline}</p>
+            <Button onClick={() => setSelectedGrade(hoveredGrade)}>
               Explore Chapters
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
