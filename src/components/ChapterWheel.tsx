@@ -67,6 +67,15 @@ const ChapterWheel = () => {
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [hoveredGrade, setHoveredGrade] = useState<Grade | null>(null);
+  const [clickedGrade, setClickedGrade] = useState<{ id: number; x: number; y: number; color: string } | null>(null);
+
+  const handleGradeClick = (grade: Grade, x: number, y: number) => {
+    setClickedGrade({ id: grade.id, x, y, color: grade.color });
+    setTimeout(() => {
+      setSelectedGrade(grade);
+      setClickedGrade(null);
+    }, 400);
+  };
 
   // ABB-style SDG wheel for grades - stable version
   const renderGradeWheel = () => {
@@ -141,7 +150,7 @@ const ChapterWheel = () => {
                 return (
                   <g 
                     key={grade.id}
-                    onClick={() => setSelectedGrade(grade)}
+                    onClick={() => handleGradeClick(grade, iconX, iconY)}
                     onMouseEnter={() => setHoveredGrade(grade)}
                     onMouseLeave={() => setHoveredGrade(null)}
                     style={{ cursor: 'pointer' }}
@@ -169,6 +178,30 @@ const ChapterWheel = () => {
                         transition: 'opacity 0.3s ease, filter 0.3s ease'
                       }}
                     />
+                    
+                    {/* Ripple effect on click */}
+                    {clickedGrade?.id === grade.id && (
+                      <>
+                        <circle
+                          cx={iconX}
+                          cy={iconY}
+                          r="10"
+                          fill={grade.color}
+                          style={{
+                            animation: 'ripple-expand 0.4s ease-out forwards'
+                          }}
+                        />
+                        <circle
+                          cx={iconX}
+                          cy={iconY}
+                          r="10"
+                          fill={grade.color}
+                          style={{
+                            animation: 'ripple-expand 0.4s ease-out 0.1s forwards'
+                          }}
+                        />
+                      </>
+                    )}
                     
                     {/* Grade number */}
                     <text

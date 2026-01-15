@@ -159,6 +159,17 @@ All colors MUST be HSL.
     }
   }
 
+  @keyframes ripple-expand {
+    0% {
+      r: 10;
+      opacity: 0.6;
+    }
+    100% {
+      r: 60;
+      opacity: 0;
+    }
+  }
+
   .gradient-primary {
     background: var(--gradient-primary);
   }
