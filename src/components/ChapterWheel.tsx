@@ -115,27 +115,27 @@ const ChapterWheel = () => {
     return (
       <div className="flex flex-col items-center">
         {/* Header */}
-        <div className="text-center mb-8">
-          <p className="text-sm font-semibold tracking-widest text-primary mb-3 uppercase">
+        <div className="text-center mb-6 md:mb-8 px-4">
+          <p className="text-xs md:text-sm font-semibold tracking-widest text-primary mb-2 md:mb-3 uppercase">
             Choose Your Learning Path
           </p>
-          <h2 className="text-4xl font-bold mb-4">
+          <h2 className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">
             Explore 9 Grade Levels
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             30 hands-on STEM projects per grade
           </p>
         </div>
         
         {/* Wheel + Info Panel side by side */}
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
-          {/* Wheel container - fixed size, no transforms */}
-          <div style={{ width: '500px', height: '500px', position: 'relative', flexShrink: 0 }}>
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12 w-full">
+          {/* Wheel container - responsive size */}
+          <div className="relative flex-shrink-0 w-[320px] h-[320px] md:w-[500px] md:h-[500px]">
             <svg 
-              width="500" 
-              height="500" 
+              width="100%" 
+              height="100%" 
               viewBox="-250 -250 500 500"
-              style={{ display: 'block' }}
+              className="block touch-manipulation"
             >
               {/* Grade segments */}
               {grades.map((grade, index) => {
@@ -153,6 +153,7 @@ const ChapterWheel = () => {
                     onClick={() => handleGradeClick(grade, iconX, iconY)}
                     onMouseEnter={() => setHoveredGrade(grade)}
                     onMouseLeave={() => setHoveredGrade(null)}
+                    onTouchStart={() => setHoveredGrade(grade)}
                     style={{ cursor: 'pointer' }}
                   >
                     {/* Segment glow on hover */}
@@ -262,58 +263,60 @@ const ChapterWheel = () => {
               </text>
             </svg>
             
-            {/* Labels outside wheel - positioned absolutely */}
-            {grades.map((grade, index) => {
-              const midAngle = (index + 0.5) * segmentAngle - Math.PI / 2;
-              const labelRadius = 220;
-              const labelX = 250 + Math.cos(midAngle) * labelRadius;
-              const labelY = 250 + Math.sin(midAngle) * labelRadius;
-              const isHovered = hoveredGrade?.id === grade.id;
-              
-              return (
-                <div
-                  key={`label-${grade.id}`}
-                  style={{
-                    position: 'absolute',
-                    left: `${labelX}px`,
-                    top: `${labelY}px`,
-                    transform: 'translate(-50%, -50%)',
-                    textAlign: 'center',
-                    pointerEvents: 'none',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <div 
-                    style={{ 
-                      fontSize: '12px', 
-                      fontWeight: 'bold',
-                      color: isHovered ? grade.color : 'hsl(var(--foreground))',
-                      transition: 'color 0.3s ease'
+            {/* Labels outside wheel - hidden on mobile, visible on md+ */}
+            <div className="hidden md:block">
+              {grades.map((grade, index) => {
+                const midAngle = (index + 0.5) * segmentAngle - Math.PI / 2;
+                const labelRadius = 220;
+                const labelX = 250 + Math.cos(midAngle) * labelRadius;
+                const labelY = 250 + Math.sin(midAngle) * labelRadius;
+                const isHovered = hoveredGrade?.id === grade.id;
+                
+                return (
+                  <div
+                    key={`label-${grade.id}`}
+                    style={{
+                      position: 'absolute',
+                      left: `${labelX}px`,
+                      top: `${labelY}px`,
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: 'center',
+                      pointerEvents: 'none',
+                      whiteSpace: 'nowrap'
                     }}
                   >
-                    Grade {grade.id}
+                    <div 
+                      style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 'bold',
+                        color: isHovered ? grade.color : 'hsl(var(--foreground))',
+                        transition: 'color 0.3s ease'
+                      }}
+                    >
+                      Grade {grade.id}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))' }}>
+                      {grade.tagline}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '10px', color: 'hsl(var(--muted-foreground))' }}>
-                    {grade.tagline}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           
-          {/* Info Panel - next to wheel */}
-          <div className="w-full lg:w-80 min-h-[280px]">
+          {/* Info Panel - next to wheel on desktop, below on mobile */}
+          <div className="w-full max-w-sm lg:w-80 px-4 lg:px-0">
             {displayedGrade ? (
-              <div className="bg-card border rounded-2xl p-6 shadow-lg text-center animate-fade-in">
+              <div className="bg-card border rounded-2xl p-5 md:p-6 shadow-lg text-center animate-fade-in">
                 <div 
-                  className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl mx-auto mb-4"
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-2xl md:text-3xl mx-auto mb-3 md:mb-4"
                   style={{ backgroundColor: displayedGrade.color }}
                 >
                   {displayedGrade.icon}
                 </div>
-                <h3 className="text-2xl font-bold mb-2">{displayedGrade.label}</h3>
-                <p className="text-muted-foreground mb-4">{displayedGrade.tagline}</p>
-                <p className="text-sm text-muted-foreground mb-6">30 hands-on STEM projects</p>
+                <h3 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">{displayedGrade.label}</h3>
+                <p className="text-muted-foreground text-sm mb-2 md:mb-4">{displayedGrade.tagline}</p>
+                <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-6">30 hands-on STEM projects</p>
                 <Button 
                   onClick={() => setSelectedGrade(displayedGrade)}
                   className="w-full"
@@ -324,12 +327,12 @@ const ChapterWheel = () => {
                 </Button>
               </div>
             ) : (
-              <div className="bg-muted/50 border-2 border-dashed rounded-2xl p-8 h-full flex flex-col items-center justify-center text-center min-h-[280px]">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                  <span className="text-3xl">👈</span>
+              <div className="bg-muted/50 border-2 border-dashed rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-[200px] md:min-h-[280px]">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-muted rounded-full flex items-center justify-center mb-3 md:mb-4">
+                  <span className="text-2xl md:text-3xl">👆</span>
                 </div>
-                <p className="text-muted-foreground font-medium">
-                  Hover or click on a grade to see details
+                <p className="text-sm md:text-base text-muted-foreground font-medium">
+                  Tap on a grade to see details
                 </p>
               </div>
             )}
