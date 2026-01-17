@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      completed_chapters: {
+        Row: {
+          chapter_id: number
+          completed_at: string
+          grade_id: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id: number
+          completed_at?: string
+          grade_id: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: number
+          completed_at?: string
+          grade_id?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
