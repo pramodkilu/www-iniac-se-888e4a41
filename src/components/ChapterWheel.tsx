@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { X, Lock, CheckCircle2, Play, ChevronRight, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import AuthRequiredModal from "@/components/AuthRequiredModal";
 
 interface Chapter {
   id: number;
@@ -64,12 +66,22 @@ const grades: Grade[] = [
 ];
 
 const ChapterWheel = () => {
+  const { user, loading: authLoading } = useAuth();
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [hoveredGrade, setHoveredGrade] = useState<Grade | null>(null);
   const [clickedGrade, setClickedGrade] = useState<{ id: number; x: number; y: number; color: string } | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingGrade, setPendingGrade] = useState<{ grade: Grade; x: number; y: number } | null>(null);
 
   const handleGradeClick = (grade: Grade, x: number, y: number) => {
+    // If user is not logged in, show auth modal
+    if (!user && !authLoading) {
+      setPendingGrade({ grade, x, y });
+      setShowAuthModal(true);
+      return;
+    }
+    
     setClickedGrade({ id: grade.id, x, y, color: grade.color });
     setTimeout(() => {
       setSelectedGrade(grade);
@@ -743,6 +755,13 @@ const ChapterWheel = () => {
           renderGradeWheel()
         )}
       </div>
+
+      {/* Auth Required Modal */}
+      <AuthRequiredModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        gradeLabel={pendingGrade?.grade.label}
+      />
     </section>
   );
 };
