@@ -86,6 +86,10 @@ const Header = () => {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="w-4 h-4 mr-2" />
+                    My Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
