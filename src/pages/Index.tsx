@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ChapterWheel from "@/components/ChapterWheel";
 import Characters from "@/components/Characters";
+import RoboLigaSection from "@/components/RoboLigaSection";
 
 const Index = () => {
   return (
@@ -9,6 +10,7 @@ const Index = () => {
       <Header />
       <div className="pt-16">
         <Hero />
+        <RoboLigaSection />
         <Characters />
         <ChapterWheel />
       </div>
