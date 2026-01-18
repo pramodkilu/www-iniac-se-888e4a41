@@ -3,10 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Users, Calendar, MapPin, Award, Zap, Target, Clock } from "lucide-react";
 import roboligaCover from "@/assets/roboliga-cover.jpg";
 import roboligaStudents from "@/assets/roboliga-students.jpg";
-
 const RoboLigaSection = () => {
-  return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+  return <section className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
@@ -25,9 +23,8 @@ const RoboLigaSection = () => {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             SweSkola <span className="text-primary">RoboLiga</span>
           </h2>
-          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">
-            Bringing Schools Together Through Robotics — Experience Learning Through Play
-          </p>
+          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">Bringing Schools Together Through Robotics 
+ Experience Learning Through Play</p>
         </div>
 
         {/* Main Content Grid */}
@@ -35,11 +32,7 @@ const RoboLigaSection = () => {
           {/* Left - Image & Quick Info */}
           <div className="space-y-6">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-              <img 
-                src={roboligaStudents} 
-                alt="Students building robots at SweSkola RoboLiga" 
-                className="w-full aspect-video object-cover"
-              />
+              <img src={roboligaStudents} alt="Students building robots at SweSkola RoboLiga" className="w-full aspect-video object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 right-4">
                 <p className="text-white text-sm md:text-base font-medium">
@@ -162,20 +155,14 @@ const RoboLigaSection = () => {
 
         {/* CTA */}
         <div className="text-center">
-          <Button 
-            asChild
-            size="lg" 
-            className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/30"
-          >
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/30">
             <Link to="/roboliga/register">Register Your School</Link>
           </Button>
           <p className="text-slate-400 text-sm mt-4">
-            Powered by <span className="text-primary font-semibold">INIAC</span> × <span className="font-semibold">Blix-A-Then</span>
+            Powered by <span className="text-primary font-semibold">Blix-A-Thon</span> × <span className="font-semibold">Blix-A-Then</span>
           </p>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default RoboLigaSection;
