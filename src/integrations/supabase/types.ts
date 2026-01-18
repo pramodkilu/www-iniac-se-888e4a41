@@ -65,6 +65,57 @@ export type Database = {
         }
         Relationships: []
       }
+      roboliga_registrations: {
+        Row: {
+          category: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          school_city: string
+          school_name: string
+          status: string
+          student_count: number
+          team_members: Json
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          school_city: string
+          school_name: string
+          status?: string
+          student_count: number
+          team_members?: Json
+          team_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          school_city?: string
+          school_name?: string
+          status?: string
+          student_count?: number
+          team_members?: Json
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

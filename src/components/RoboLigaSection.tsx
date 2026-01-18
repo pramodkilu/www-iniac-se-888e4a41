@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trophy, Users, Calendar, MapPin, Award, Zap, Target, Clock } from "lucide-react";
 import roboligaCover from "@/assets/roboliga-cover.jpg";
@@ -162,10 +163,11 @@ const RoboLigaSection = () => {
         {/* CTA */}
         <div className="text-center">
           <Button 
+            asChild
             size="lg" 
             className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/30"
           >
-            Register Your School
+            <Link to="/roboliga/register">Register Your School</Link>
           </Button>
           <p className="text-slate-400 text-sm mt-4">
             Powered by <span className="text-primary font-semibold">INIAC</span> × <span className="font-semibold">Blix-A-Then</span>

@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Chapter from "./pages/Chapter";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import RoboLigaRegister from "./pages/RoboLigaRegister";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chapter/:id" element={<Chapter />} />
+            <Route path="/roboliga/register" element={<RoboLigaRegister />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
