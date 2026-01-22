@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Hero from "./Hero";
@@ -17,10 +17,16 @@ const slides: Slide[] = [
   { id: "chapters", label: "Explore", component: <ChapterWheel /> },
 ];
 
+const SWIPE_THRESHOLD = 50;
+
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Touch/swipe state
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   const goToSlide = useCallback((index: number) => {
     if (isTransitioning || index === currentSlide) return;
@@ -49,15 +55,51 @@ const HeroSlider = () => {
   }, [isAutoPlaying, nextSlide]);
 
   // Pause auto-play on user interaction
-  const handleUserInteraction = () => {
+  const handleUserInteraction = useCallback(() => {
     setIsAutoPlaying(false);
     // Resume after 30 seconds of no interaction
     const timeout = setTimeout(() => setIsAutoPlaying(true), 30000);
     return () => clearTimeout(timeout);
-  };
+  }, []);
+
+  // Touch event handlers for swipe
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    
+    const diff = touchStartX.current - touchEndX.current;
+    
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+      handleUserInteraction();
+      if (diff > 0) {
+        // Swiped left - go to next slide
+        nextSlide();
+      } else {
+        // Swiped right - go to previous slide
+        prevSlide();
+      }
+    }
+    
+    // Reset touch positions
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, [nextSlide, prevSlide, handleUserInteraction]);
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div 
+      className="relative w-full overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Slides Container */}
       <div 
         className="flex transition-transform duration-500 ease-out"
