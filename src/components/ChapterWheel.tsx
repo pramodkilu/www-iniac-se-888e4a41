@@ -662,7 +662,7 @@ const ChapterWheel = () => {
   };
 
   return (
-    <section className="py-20 px-4 bg-muted/30">
+    <section className="min-h-[calc(100vh-4rem)] flex flex-col justify-center py-12 md:py-16 px-4 bg-muted/30">
       <div className="container mx-auto max-w-7xl">
         {selectedGrade ? (
           <div className="flex flex-col lg:flex-row items-center justify-center gap-12">
