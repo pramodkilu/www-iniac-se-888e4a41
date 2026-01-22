@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Users, Calendar, MapPin, Award, Zap, Target, Clock } from "lucide-react";
 import roboligaCover from "@/assets/roboliga-cover.jpg";
 import roboligaStudents from "@/assets/roboliga-students.jpg";
+import CountdownTimer from "@/components/CountdownTimer";
+
+const FINALS_DATE = new Date('2026-03-21T09:00:00');
+
 const RoboLigaSection = () => {
   return <section className="py-16 md:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       {/* Background decoration */}
@@ -131,6 +135,15 @@ const RoboLigaSection = () => {
               precision, and strategy in this exciting race challenge.
             </p>
           </div>
+        </div>
+
+        {/* Countdown Timer */}
+        <div className="mb-12">
+          <div className="text-center mb-6">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Finals Countdown</h3>
+            <p className="text-slate-400 text-sm">March 21, 2026 • Västerås, Sweden</p>
+          </div>
+          <CountdownTimer targetDate={FINALS_DATE} />
         </div>
 
         {/* Event Details */}
