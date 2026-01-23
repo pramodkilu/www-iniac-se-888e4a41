@@ -3,10 +3,11 @@ import { Rocket, Wrench, Brain, Sparkles, Cog, GraduationCap } from "lucide-reac
 import characterLaya from "@/assets/character-laya.png";
 import characterKit from "@/assets/character-kit.png";
 import characterRobb from "@/assets/character-robb.png";
+import learningThroughPlay from "@/assets/learning-through-play.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center py-16 md:py-20 px-6 md:px-8" style={{ background: 'linear-gradient(135deg, hsl(15 85% 55%) 0%, hsl(5 70% 40%) 100%)' }}>
+    <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex flex-col" style={{ background: 'linear-gradient(135deg, hsl(15 85% 55%) 0%, hsl(5 70% 40%) 100%)' }}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
@@ -20,8 +21,8 @@ const Hero = () => {
         <Wrench className="absolute top-1/2 right-16 w-6 h-6 text-white/20 animate-pulse" />
       </div>
 
-      <div className="container mx-auto max-w-6xl relative z-10">
-        <div className="flex flex-col items-center text-center space-y-6 md:space-y-8 animate-bounce-in">
+      <div className="container mx-auto max-w-6xl relative z-10 flex-1 flex items-center py-12 md:py-16 px-6 md:px-8">
+        <div className="flex flex-col items-center text-center space-y-5 md:space-y-6 w-full animate-bounce-in">
           {/* INIAC Badge */}
           <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
             <Brain className="w-5 h-5 text-white" />
@@ -110,6 +111,15 @@ const Hero = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Learning Through Play Banner */}
+      <div className="w-full mt-auto">
+        <img 
+          src={learningThroughPlay} 
+          alt="Experience Learning Through Play" 
+          className="w-full h-auto object-cover"
+        />
       </div>
     </section>
   );
