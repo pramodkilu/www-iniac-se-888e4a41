@@ -8,7 +8,7 @@ import CountdownTimer from "@/components/CountdownTimer";
 const FINALS_DATE = new Date('2026-03-21T09:00:00');
 
 const RoboLigaSection = () => {
-  return <section className="min-h-[calc(100vh-4rem)] flex flex-col justify-center py-12 md:py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+  return <section className="min-h-[calc(100vh-4rem)] flex flex-col justify-center py-16 md:py-20 px-6 md:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
@@ -16,7 +16,7 @@ const RoboLigaSection = () => {
         <div className="absolute top-1/2 left-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="container mx-auto max-w-6xl px-4 relative z-10">
+      <div className="container mx-auto max-w-6xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/30 mb-6">
