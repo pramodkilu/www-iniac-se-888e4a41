@@ -27,6 +27,7 @@ const HeroSlider = () => {
   // Touch/swipe state
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const goToSlide = useCallback((index: number) => {
     if (isTransitioning || index === currentSlide) return;
@@ -61,6 +62,22 @@ const HeroSlider = () => {
     const timeout = setTimeout(() => setIsAutoPlaying(true), 30000);
     return () => clearTimeout(timeout);
   }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        prevSlide();
+        handleUserInteraction();
+      } else if (e.key === 'ArrowRight') {
+        nextSlide();
+        handleUserInteraction();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nextSlide, prevSlide, handleUserInteraction]);
 
   // Touch event handlers for swipe
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
