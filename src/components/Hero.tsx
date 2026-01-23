@@ -6,7 +6,7 @@ import characterRobb from "@/assets/character-robb.png";
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center py-12 md:py-16 px-4" style={{ background: 'linear-gradient(135deg, hsl(15 85% 55%) 0%, hsl(5 70% 40%) 100%)' }}>
+    <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center py-16 md:py-20 px-6 md:px-8" style={{ background: 'linear-gradient(135deg, hsl(15 85% 55%) 0%, hsl(5 70% 40%) 100%)' }}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
