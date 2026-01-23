@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Hero from "./Hero";
 import RoboLigaSection from "./RoboLigaSection";
@@ -149,8 +149,21 @@ const HeroSlider = () => {
         <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-foreground group-hover:text-primary transition-colors" />
       </button>
 
-      {/* Dot Indicators */}
+      {/* Dot Indicators with Play/Pause */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+        {/* Play/Pause Button */}
+        <button
+          onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+          className="bg-background/80 backdrop-blur-sm border border-border/50 rounded-full p-1.5 shadow-lg hover:bg-background transition-colors group"
+          aria-label={isAutoPlaying ? "Pause auto-advance" : "Play auto-advance"}
+        >
+          {isAutoPlaying ? (
+            <Pause className="w-3.5 h-3.5 text-foreground group-hover:text-primary transition-colors" />
+          ) : (
+            <Play className="w-3.5 h-3.5 text-foreground group-hover:text-primary transition-colors" />
+          )}
+        </button>
+
         {slides.map((slide, index) => (
           <button
             key={slide.id}
