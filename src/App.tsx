@@ -10,6 +10,10 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import RoboLigaRegister from "./pages/RoboLigaRegister";
 import NotFound from "./pages/NotFound";
+import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
+import AdminDashboard from "./pages/dashboards/AdminDashboard";
+import TeacherDashboard from "./pages/dashboards/TeacherDashboard";
+import StudentDashboard from "./pages/dashboards/StudentDashboard";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +30,11 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/chapter/:id" element={<Chapter />} />
             <Route path="/roboliga/register" element={<RoboLigaRegister />} />
+            {/* Dashboard routes */}
+            <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
+            <Route path="/teacher/*" element={<TeacherDashboard />} />
+            <Route path="/student/*" element={<StudentDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

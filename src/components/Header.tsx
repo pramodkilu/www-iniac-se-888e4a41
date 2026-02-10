@@ -86,6 +86,13 @@ const Header = () => {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                    const dashboardRoute = userRole === 'super_admin' ? '/super-admin' : userRole === 'admin' ? '/admin' : userRole === 'teacher' ? '/teacher' : '/student';
+                    navigate(dashboardRoute);
+                  }}>
+                    <User className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="w-4 h-4 mr-2" />
                     My Profile
