@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +6,8 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Users, BookOpen, UserCheck } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer } from 'recharts';
 
 const AdminDashboard = () => {
   const { user, userRole, loading } = useAuth();
@@ -38,6 +40,48 @@ const AdminDashboard = () => {
     setDataLoading(false);
   };
 
+  // Build chart data before early returns (hooks must be unconditional)
+  const completionTrend = useMemo(() => {
+    const days: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days[d.toISOString().slice(0, 10)] = 0;
+    }
+    completedChapters.forEach(c => {
+      const day = c.completed_at?.slice(0, 10);
+      if (day && day in days) days[day]++;
+    });
+    return Object.entries(days).map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      completions: count,
+    }));
+  }, [completedChapters]);
+
+  const registrationTrend = useMemo(() => {
+    const days: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days[d.toISOString().slice(0, 10)] = 0;
+    }
+    registrations.forEach(r => {
+      const day = r.created_at?.slice(0, 10);
+      if (day && day in days) days[day]++;
+    });
+    return Object.entries(days).map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      registrations: count,
+    }));
+  }, [registrations]);
+
+  const chartConfig = {
+    completions: { label: 'Completions', color: 'hsl(var(--primary))' },
+    registrations: { label: 'Registrations', color: 'hsl(270 60% 60%)' },
+  };
+
   if (loading || dataLoading) {
     return (
       <DashboardLayout title="Admin Dashboard">
@@ -66,6 +110,38 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        <Card className="bg-white/10 border-white/20">
+          <CardHeader><CardTitle className="text-white text-sm">Chapter Completions (30 days)</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[220px] w-full">
+              <BarChart data={completionTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="completions" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <Card className="bg-white/10 border-white/20">
+          <CardHeader><CardTitle className="text-white text-sm">Registrations (30 days)</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[220px] w-full">
+              <LineChart data={registrationTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line dataKey="registrations" stroke="hsl(270 60% 60%)" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Users */}
