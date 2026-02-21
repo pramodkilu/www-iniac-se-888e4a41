@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +6,8 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { GraduationCap, BookOpen, TrendingUp } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area } from 'recharts';
 
 const TeacherDashboard = () => {
   const { user, userRole, loading } = useAuth();
@@ -35,6 +37,46 @@ const TeacherDashboard = () => {
     setDataLoading(false);
   };
 
+  // Build all computed/memoized values before early returns
+  const studentStats = useMemo(() => profiles.map(p => {
+    const chapters = completedChapters.filter(c => c.user_id === p.user_id);
+    const grades = new Set(chapters.map(c => c.grade_id));
+    return { ...p, chaptersCompleted: chapters.length, gradesExplored: grades.size };
+  }).sort((a, b) => b.chaptersCompleted - a.chaptersCompleted), [profiles, completedChapters]);
+
+  const completionTrend = useMemo(() => {
+    const days: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days[d.toISOString().slice(0, 10)] = 0;
+    }
+    completedChapters.forEach(c => {
+      const day = c.completed_at?.slice(0, 10);
+      if (day && day in days) days[day]++;
+    });
+    return Object.entries(days).map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      completions: count,
+    }));
+  }, [completedChapters]);
+
+  const gradeBreakdown = useMemo(() => {
+    const grades: Record<number, number> = {};
+    completedChapters.forEach(c => {
+      grades[c.grade_id] = (grades[c.grade_id] || 0) + 1;
+    });
+    return Object.entries(grades)
+      .map(([grade, count]) => ({ grade: `Grade ${grade}`, count }))
+      .sort((a, b) => a.grade.localeCompare(b.grade));
+  }, [completedChapters]);
+
+  const chartConfig = {
+    completions: { label: 'Completions', color: 'hsl(var(--primary))' },
+    count: { label: 'Chapters', color: 'hsl(160 60% 45%)' },
+  };
+
   if (loading || dataLoading) {
     return (
       <DashboardLayout title="Teacher Dashboard">
@@ -44,13 +86,6 @@ const TeacherDashboard = () => {
       </DashboardLayout>
     );
   }
-
-  // Build per-student stats
-  const studentStats = profiles.map(p => {
-    const chapters = completedChapters.filter(c => c.user_id === p.user_id);
-    const grades = new Set(chapters.map(c => c.grade_id));
-    return { ...p, chaptersCompleted: chapters.length, gradesExplored: grades.size };
-  }).sort((a, b) => b.chaptersCompleted - a.chaptersCompleted);
 
   return (
     <DashboardLayout title="Teacher Dashboard" description="Monitor student progress and class performance.">
@@ -70,6 +105,38 @@ const TeacherDashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+        <Card className="bg-white/10 border-white/20">
+          <CardHeader><CardTitle className="text-white text-sm">Completion Trend (30 days)</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[220px] w-full">
+              <AreaChart data={completionTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 10 }} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area dataKey="completions" fill="hsl(var(--primary) / 0.3)" stroke="hsl(var(--primary))" strokeWidth={2} />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <Card className="bg-white/10 border-white/20">
+          <CardHeader><CardTitle className="text-white text-sm">Completions by Grade</CardTitle></CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[220px] w-full">
+              <BarChart data={gradeBreakdown}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="grade" tick={{ fill: '#9ca3af', fontSize: 10 }} />
+                <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="hsl(160 60% 45%)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Student Progress Table */}
