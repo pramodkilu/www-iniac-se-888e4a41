@@ -5,9 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, BookOpen, UserCheck } from 'lucide-react';
+import { Users, BookOpen, UserCheck, CheckCircle, XCircle } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const AdminDashboard = () => {
   const { user, userRole, loading } = useAuth();
@@ -91,6 +93,16 @@ const AdminDashboard = () => {
       </DashboardLayout>
     );
   }
+
+  const updateRegistrationStatus = async (id: string, status: 'approved' | 'rejected') => {
+    const { error } = await supabase.from('roboliga_registrations').update({ status }).eq('id', id);
+    if (error) {
+      toast.error('Failed to update status');
+    } else {
+      toast.success(`Registration ${status}`);
+      setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    }
+  };
 
   return (
     <DashboardLayout title="Admin Dashboard" description="Manage users, registrations, and track platform analytics.">
@@ -183,20 +195,39 @@ const AdminDashboard = () => {
                 <TableRow className="border-white/10">
                   <TableHead className="text-gray-400">Team</TableHead>
                   <TableHead className="text-gray-400">School</TableHead>
+                  <TableHead className="text-gray-400">Category</TableHead>
                   <TableHead className="text-gray-400">Status</TableHead>
+                  <TableHead className="text-gray-400 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {registrations.slice(0, 10).map((reg) => (
+                {registrations.map((reg) => (
                   <TableRow key={reg.id} className="border-white/10">
                     <TableCell className="text-white">{reg.team_name}</TableCell>
                     <TableCell className="text-gray-400">{reg.school_name}</TableCell>
+                    <TableCell className="text-gray-400">{reg.category}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         reg.status === 'approved' ? 'bg-green-500/20 text-green-400' :
                         reg.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
                         'bg-yellow-500/20 text-yellow-400'
                       }`}>{reg.status}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {reg.status === 'pending' ? (
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" variant="ghost" className="text-green-400 hover:text-green-300 hover:bg-green-500/10 h-8 px-2" onClick={() => updateRegistrationStatus(reg.id, 'approved')}>
+                            <CheckCircle className="w-4 h-4 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 px-2" onClick={() => updateRegistrationStatus(reg.id, 'rejected')}>
+                            <XCircle className="w-4 h-4 mr-1" /> Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button size="sm" variant="ghost" className="text-gray-500 hover:text-gray-300 h-8 px-2" onClick={() => updateRegistrationStatus(reg.id, reg.status === 'approved' ? 'rejected' : 'approved')}>
+                          {reg.status === 'approved' ? 'Revoke' : 'Approve'}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
