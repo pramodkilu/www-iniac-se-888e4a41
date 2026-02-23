@@ -25,7 +25,7 @@ const RoboLigaSection = () => {
           </div>
           
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            SweSkola <span className="text-primary">RoboLiga</span>
+            SweSkola <span className="text-primary">RoboLeague</span>
           </h2>
           <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">Bringing Schools Together Through Robotics 
  Experience Learning Through Play</p>
