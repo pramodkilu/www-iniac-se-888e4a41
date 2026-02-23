@@ -4,6 +4,7 @@ import { Trophy, Users, Calendar, MapPin, Award, Zap, Target, Clock } from "luci
 import roboligaCover from "@/assets/roboliga-cover.jpg";
 import roboligaStudents from "@/assets/roboliga-students.jpg";
 import CountdownTimer from "@/components/CountdownTimer";
+import sweskolaLogo from "@/assets/sweskola-logo.png";
 
 const FINALS_DATE = new Date('2026-03-21T09:00:00');
 
@@ -19,16 +20,13 @@ const RoboLigaSection = () => {
       <div className="container mx-auto max-w-6xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/30 mb-6">
-            <Trophy className="w-5 h-5 text-primary" />
-            <span className="text-primary font-semibold text-sm">Sweden's School Robotics League</span>
-          </div>
+          <img src={sweskolaLogo} alt="SweSkola RoboLeague Logo" className="w-40 h-40 md:w-52 md:h-52 mx-auto mb-6 drop-shadow-2xl" />
           
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             SweSkola <span className="text-primary">RoboLeague</span>
           </h2>
-          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">Bringing Schools Together Through Robotics 
- Experience Learning Through Play</p>
+          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">Bringing Schools Together Through Robotics 
+ Experience Learning Through Play</p>
         </div>
 
         {/* Main Content Grid */}
