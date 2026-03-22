@@ -9,6 +9,7 @@ import Chapter from "./pages/Chapter";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import RoboLigaRegister from "./pages/RoboLigaRegister";
+import Education from "./pages/Education";
 import NotFound from "./pages/NotFound";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
