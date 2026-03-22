@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/chapter/:id" element={<Chapter />} />
             <Route path="/roboliga/register" element={<RoboLigaRegister />} />
+            <Route path="/education" element={<Education />} />
             {/* Dashboard routes */}
             <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
