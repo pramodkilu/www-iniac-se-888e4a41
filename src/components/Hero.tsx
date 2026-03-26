@@ -5,7 +5,7 @@ import characterKit from "@/assets/character-kit.png";
 import characterRobb from "@/assets/character-robb.png";
 import learningThroughPlay from "@/assets/learning-through-play.jpg";
 const Hero = () => {
-  return <section className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex flex-col" style={{
+  return <section className="relative overflow-hidden h-[calc(100vh-4rem)] flex flex-col" style={{
     background: 'linear-gradient(135deg, hsl(15 85% 55%) 0%, hsl(5 70% 40%) 100%)'
   }}>
       {/* Animated background elements */}
