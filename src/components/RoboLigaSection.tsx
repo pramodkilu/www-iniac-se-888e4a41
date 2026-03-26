@@ -9,7 +9,7 @@ import sweskolaLogo from "@/assets/sweskola-logo.png";
 const FINALS_DATE = new Date('2026-03-21T09:00:00');
 
 const RoboLigaSection = () => {
-  return <section className="min-h-[calc(100vh-4rem)] flex flex-col justify-center py-16 md:py-20 px-6 md:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+  return <section className="h-[calc(100vh-4rem)] flex flex-col justify-center py-8 md:py-12 px-6 md:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden overflow-y-auto">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
