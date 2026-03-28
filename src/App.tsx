@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import RoboLigaRegister from "./pages/RoboLigaRegister";
 import Education from "./pages/Education";
+import Programs from "./pages/Programs";
 import NotFound from "./pages/NotFound";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/chapter/:id" element={<Chapter />} />
             <Route path="/roboliga/register" element={<RoboLigaRegister />} />
             <Route path="/education" element={<Education />} />
+            <Route path="/programs" element={<Programs />} />
             {/* Dashboard routes */}
             <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
