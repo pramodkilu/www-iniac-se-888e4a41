@@ -118,14 +118,16 @@ const HeroSlider = () => {
       onTouchEnd={handleTouchEnd}
     >
       {/* Slides Container */}
-      <div 
-        className="flex transition-transform duration-500 ease-out"
-        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-      >
-        {slides.map((slide) => (
+      <div className="relative w-full">
+        {slides.map((slide, index) => (
           <div 
             key={slide.id} 
-            className="w-full flex-shrink-0"
+            className={cn(
+              "w-full transition-opacity duration-500 ease-out",
+              currentSlide === index 
+                ? "relative opacity-100 z-10" 
+                : "absolute inset-0 opacity-0 z-0 pointer-events-none"
+            )}
           >
             {slide.component}
           </div>
