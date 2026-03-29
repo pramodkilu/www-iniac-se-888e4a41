@@ -75,19 +75,34 @@ const Curriculum = () => {
         <section className="py-12 md:py-20 px-6 bg-background">
           <div className="container mx-auto max-w-7xl">
             <Tabs value={activeGrade} onValueChange={setActiveGrade}>
-              <div className="flex justify-center mb-8">
-                <TabsList className="flex-wrap h-auto gap-1 p-2 bg-muted">
-                  {grades.map((g) => (
+              {/* Grade Circle Selector */}
+              <div className="flex flex-wrap justify-center gap-4 mb-10">
+                {grades.map((g) => {
+                  const isActive = activeGrade === String(g);
+                  return (
                     <TabsTrigger
                       key={g}
                       value={String(g)}
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2"
+                      className="flex flex-col items-center gap-1.5 bg-transparent p-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none shadow-none"
                     >
-                      Grade {g}
-                      <span className="ml-1.5 text-xs opacity-60">({curriculumData[g].stadium})</span>
+                      <div
+                        className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center font-black text-xl md:text-2xl transition-all duration-300 border-2 ${
+                          isActive
+                            ? `bg-gradient-to-br ${gradeColors[g]} text-white border-transparent shadow-lg scale-110`
+                            : "bg-muted text-muted-foreground border-border hover:border-primary/40 hover:scale-105"
+                        }`}
+                      >
+                        {g}
+                      </div>
+                      <span className={`text-xs font-medium transition-colors ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                        Grade {g}
+                      </span>
+                      <span className={`text-[10px] ${isActive ? "text-primary" : "text-muted-foreground/60"}`}>
+                        ({curriculumData[g].stadium})
+                      </span>
                     </TabsTrigger>
-                  ))}
-                </TabsList>
+                  );
+                })}
               </div>
 
               {grades.map((g) => {
