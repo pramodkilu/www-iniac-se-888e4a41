@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import RoboLigaRegister from "./pages/RoboLigaRegister";
 import Education from "./pages/Education";
 import Programs from "./pages/Programs";
+import Curriculum from "./pages/Curriculum";
 import NotFound from "./pages/NotFound";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
