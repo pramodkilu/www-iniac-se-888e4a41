@@ -17,6 +17,7 @@ const navItems = [
   { label: "Education & Schools", href: "/education" },
   { label: "Innovation & Startups", href: "/innovation" },
   { label: "Programs", href: "/programs" },
+  { label: "Curriculum", href: "/curriculum" },
   { label: "Partners", href: "/partners" },
   { label: "About INIAC", href: "/about" },
   { label: "Contact", href: "/contact" },

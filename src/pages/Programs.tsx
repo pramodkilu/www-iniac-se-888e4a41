@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import {
   Bot, Brain, Eye, Cpu, Layers, Rocket, GraduationCap,
   Wrench, Globe, Zap, Target, Users, CheckCircle, ArrowRight,
-  Cog, Monitor, Smartphone, School
+  Cog, Monitor, Smartphone, School, BookOpen
 } from "lucide-react";
 import robotteknikLogo from "@/assets/robotteknik-logo.png";
 import aiarvionLogo from "@/assets/sweskola-robo-aiarvion-logo.png";
@@ -248,6 +248,12 @@ const Programs = () => {
               From robotics kits to AI-powered platforms — deploy a complete STEM ecosystem in your classroom.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8 py-6 text-lg font-semibold shadow-xl">
+                <Link to="/curriculum">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  View Full Curriculum
+                </Link>
+              </Button>
               <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8 py-6 text-lg font-semibold shadow-xl">
                 <Link to="/education">
                   <GraduationCap className="mr-2 h-5 w-5" />
