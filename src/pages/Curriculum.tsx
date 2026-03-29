@@ -76,14 +76,14 @@ const Curriculum = () => {
           <div className="container mx-auto max-w-7xl">
             <Tabs value={activeGrade} onValueChange={setActiveGrade}>
               {/* Grade Circle Selector */}
-              <div className="flex flex-wrap justify-center gap-4 mb-10">
+              <TabsList className="flex flex-wrap justify-center gap-4 mb-10 h-auto bg-transparent p-0">
                 {grades.map((g) => {
                   const isActive = activeGrade === String(g);
                   return (
                     <TabsTrigger
                       key={g}
                       value={String(g)}
-                      className="flex flex-col items-center gap-1.5 bg-transparent p-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none shadow-none"
+                      className="flex flex-col items-center gap-1.5 bg-transparent p-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                     >
                       <div
                         className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center font-black text-xl md:text-2xl transition-all duration-300 border-2 ${
@@ -103,7 +103,7 @@ const Curriculum = () => {
                     </TabsTrigger>
                   );
                 })}
-              </div>
+              </TabsList>
 
               {grades.map((g) => {
                 const data = curriculumData[g];
