@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { ArrowLeft, Bot, GraduationCap, Users, Shield } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -27,6 +28,32 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupName, setSignupName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      emailSchema.parse(forgotEmail);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        toast.error(err.errors[0].message);
+        return;
+      }
+    }
+    setIsSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setIsSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Password reset email sent! Check your inbox.');
+      setShowForgot(false);
+      setForgotEmail('');
+    }
+  };
 
   // Get the redirect path from location state
   const from = (location.state as { from?: string })?.from || '/';
@@ -183,6 +210,46 @@ const Auth = () => {
           </div>
 
           <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+            {showForgot ? (
+              <form onSubmit={handleForgotPassword}>
+                <CardHeader>
+                  <CardTitle className="text-white text-center">Reset your password</CardTitle>
+                  <CardDescription className="text-gray-300 text-center">
+                    Enter your email and we'll send you a reset link
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email" className="text-gray-200">Email</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-2">
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send reset link'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-gray-300 hover:text-white hover:bg-white/10"
+                    onClick={() => setShowForgot(false)}
+                  >
+                    Back to sign in
+                  </Button>
+                </CardFooter>
+              </form>
+            ) : (
             <Tabs defaultValue="login" className="w-full">
               <CardHeader>
                 <TabsList className="grid w-full grid-cols-2 bg-white/10">
@@ -228,6 +295,15 @@ const Auth = () => {
                       {errors.loginPassword && (
                         <p className="text-red-400 text-sm">{errors.loginPassword}</p>
                       )}
+                    </div>
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => { setShowForgot(true); setForgotEmail(loginEmail); }}
+                        className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -306,6 +382,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </Card>
 
           <p className="text-center text-gray-500 text-sm mt-6">
