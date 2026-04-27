@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Chapter from "./pages/Chapter";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import RoboLigaRegister from "./pages/RoboLigaRegister";
 import Education from "./pages/Education";
@@ -30,6 +31,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chapter/:id" element={<Chapter />} />
             <Route path="/roboliga/register" element={<RoboLigaRegister />} />
