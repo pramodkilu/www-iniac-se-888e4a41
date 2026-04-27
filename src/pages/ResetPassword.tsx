@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,25 +13,66 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // Supabase auto-handles the recovery token in the URL hash and creates a session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' || session) {
+    let mounted = true;
+
+    const init = async () => {
+      // Case 1: Newer Supabase sends ?code=... (PKCE) — exchange it for a session
+      const code = searchParams.get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error('exchangeCodeForSession error:', error);
+          if (mounted) setErrorMsg('Reset link is invalid or has expired. Please request a new one.');
+          return;
+        }
+        if (mounted) setSessionReady(true);
+        return;
+      }
+
+      // Case 2: Hash-based recovery token (#access_token=...&type=recovery)
+      const hash = window.location.hash;
+      if (hash.includes('type=recovery') || hash.includes('access_token')) {
+        // Supabase client auto-parses the hash and creates a session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && mounted) {
+          setSessionReady(true);
+          return;
+        }
+      }
+
+      // Case 3: Already have a session (e.g. came back to page)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && mounted) {
         setSessionReady(true);
+      } else if (mounted) {
+        setErrorMsg('No active reset session. Please use the link from your email.');
+      }
+    };
+
+    // Listen for PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        setSessionReady(true);
+        setErrorMsg(null);
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setSessionReady(true);
-    });
+    init();
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,9 +131,11 @@ const ResetPassword = () => {
               <CardHeader>
                 <CardTitle className="text-white text-center">Set a new password</CardTitle>
                 <CardDescription className="text-gray-300 text-center">
-                  {sessionReady
-                    ? 'Enter your new password below'
-                    : 'Validating your reset link...'}
+                  {errorMsg
+                    ? errorMsg
+                    : sessionReady
+                      ? 'Enter your new password below'
+                      : 'Validating your reset link...'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -121,7 +164,7 @@ const ResetPassword = () => {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-2">
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
@@ -129,6 +172,16 @@ const ResetPassword = () => {
                 >
                   {isSubmitting ? 'Updating...' : 'Update Password'}
                 </Button>
+                {errorMsg && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-gray-300 hover:text-white hover:bg-white/10"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Request a new reset link
+                  </Button>
+                )}
               </CardFooter>
             </form>
           </Card>
