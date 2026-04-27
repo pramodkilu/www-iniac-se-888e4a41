@@ -382,6 +382,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </Card>
 
           <p className="text-center text-gray-500 text-sm mt-6">
