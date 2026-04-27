@@ -210,6 +210,46 @@ const Auth = () => {
           </div>
 
           <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+            {showForgot ? (
+              <form onSubmit={handleForgotPassword}>
+                <CardHeader>
+                  <CardTitle className="text-white text-center">Reset your password</CardTitle>
+                  <CardDescription className="text-gray-300 text-center">
+                    Enter your email and we'll send you a reset link
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email" className="text-gray-200">Email</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-2">
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send reset link'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-gray-300 hover:text-white hover:bg-white/10"
+                    onClick={() => setShowForgot(false)}
+                  >
+                    Back to sign in
+                  </Button>
+                </CardFooter>
+              </form>
+            ) : (
             <Tabs defaultValue="login" className="w-full">
               <CardHeader>
                 <TabsList className="grid w-full grid-cols-2 bg-white/10">
