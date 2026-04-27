@@ -256,6 +256,15 @@ const Auth = () => {
                         <p className="text-red-400 text-sm">{errors.loginPassword}</p>
                       )}
                     </div>
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => { setShowForgot(true); setForgotEmail(loginEmail); }}
+                        className="text-sm text-cyan-400 hover:text-cyan-300 hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                   </CardContent>
                   <CardFooter>
                     <Button 
