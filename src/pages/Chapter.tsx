@@ -205,6 +205,45 @@ const Chapter = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* AI + AR panel — appears right after the build steps */}
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Explore with AI & AR
+                </CardTitle>
+                <CardDescription>
+                  Done building? Ask our AI buddy anything, or place your creation in the real world with AR.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-auto py-5 flex-col items-start gap-1 border-primary/30 hover:bg-primary/10"
+                  onClick={() => setAiOpen(true)}
+                >
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
+                  </div>
+                  <p className="text-xs text-muted-foreground text-left font-normal">
+                    Chat with your AI tutor about this chapter.
+                  </p>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-5 flex-col items-start gap-1 border-accent/30 hover:bg-accent/10"
+                  onClick={() => setArOpen(true)}
+                >
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Box className="h-5 w-5 text-accent" /> View in AR
+                  </div>
+                  <p className="text-xs text-muted-foreground text-left font-normal">
+                    Place your BLIX build in the real world.
+                  </p>
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Challenge Tab */}
