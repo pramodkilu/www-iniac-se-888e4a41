@@ -178,25 +178,28 @@ const Chapter = () => {
               <CardContent>
                 <div className="space-y-3">
                   {chapterData.steps.map((step) => (
-                    <div key={step.number} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {step.number}
+                    <div key={step.number} className="space-y-3">
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {step.number}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium mb-1">{step.instruction}</p>
+                          {step.detail && (
+                            <p className="text-sm text-muted-foreground mb-2">{step.detail}</p>
+                          )}
+                          {step.pieces.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {step.pieces.map((piece, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {piece}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium mb-1">{step.instruction}</p>
-                        {step.detail && (
-                          <p className="text-sm text-muted-foreground mb-2">{step.detail}</p>
-                        )}
-                        {step.pieces.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {step.pieces.map((piece, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {piece}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <StepCamera step={step} chapterTitle={chapterData.title} />
                     </div>
                   ))}
                 </div>
