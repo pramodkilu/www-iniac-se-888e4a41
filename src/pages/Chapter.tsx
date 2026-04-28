@@ -11,6 +11,7 @@ import FrictionSimulator from "@/components/FrictionSimulator";
 import StepCamera from "@/components/StepCamera";
 import AIAssistant from "@/components/AIAssistant";
 import ARViewer from "@/components/ARViewer";
+import { useChapterProgress } from "@/hooks/useChapterProgress";
 
 const Chapter = () => {
   const { id } = useParams();
