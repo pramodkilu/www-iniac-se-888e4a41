@@ -117,6 +117,9 @@ const ARViewer = ({ open, onOpenChange, title, savedPose, onSavePose, onClearPos
         if (reticle.visible) {
           cart.position.setFromMatrixPosition(reticle.matrix);
           cart.visible = true;
+          // Persist the placement so it resumes next time.
+          const arr = Array.from(reticle.matrix.elements);
+          onSavePose?.(arr);
         }
       };
       session.addEventListener("select", onSelect);
