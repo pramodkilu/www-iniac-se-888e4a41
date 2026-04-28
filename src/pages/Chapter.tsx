@@ -3,10 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb } from "lucide-react";
+import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb, Sparkles, Box } from "lucide-react";
+import { useState } from "react";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
 import StoryViewer from "@/components/StoryViewer";
 import FrictionSimulator from "@/components/FrictionSimulator";
+import StepCamera from "@/components/StepCamera";
+import AIAssistant from "@/components/AIAssistant";
+import ARViewer from "@/components/ARViewer";
 
 const Chapter = () => {
   const { id } = useParams();
