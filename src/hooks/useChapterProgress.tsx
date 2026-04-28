@@ -75,12 +75,12 @@ export function useChapterProgress(chapterId: number | undefined) {
         user_id: user.id,
         chapter_id: chapterId,
         current_step: next.current_step,
-        step_verdicts: next.step_verdicts,
-        ar_pose: next.ar_pose,
+        step_verdicts: next.step_verdicts as unknown as never,
+        ar_pose: next.ar_pose as unknown as never,
       };
       const { data, error } = await supabase
         .from("chapter_progress")
-        .upsert(payload, { onConflict: "user_id,chapter_id" })
+        .upsert([payload], { onConflict: "user_id,chapter_id" })
         .select("id")
         .single();
       if (error) {
