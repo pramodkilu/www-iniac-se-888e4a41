@@ -5,14 +5,22 @@ import * as THREE from "three";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+interface ARPose {
+  matrix: number[];
+  savedAt: string;
+}
+
 interface ARViewerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  savedPose?: ARPose | null;
+  onSavePose?: (matrix: number[]) => void;
+  onClearPose?: () => void;
 }
 
 // Minimal WebXR AR overlay that places a simple BLIX-cart proxy in the real world.
-const ARViewer = ({ open, onOpenChange, title }: ARViewerProps) => {
+const ARViewer = ({ open, onOpenChange, title, savedPose, onSavePose, onClearPose }: ARViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [supported, setSupported] = useState<boolean | null>(null);
   const [running, setRunning] = useState(false);
@@ -78,6 +86,13 @@ const ARViewer = ({ open, onOpenChange, title }: ARViewerProps) => {
       });
       cart.visible = false;
       scene.add(cart);
+
+      // If a saved pose exists, restore the cart to that position from the start.
+      if (savedPose?.matrix && savedPose.matrix.length === 16) {
+        const m = new THREE.Matrix4().fromArray(savedPose.matrix);
+        cart.position.setFromMatrixPosition(m);
+        cart.visible = true;
+      }
 
       // Reticle
       const reticle = new THREE.Mesh(
