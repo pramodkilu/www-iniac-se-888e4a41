@@ -3,13 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb } from "lucide-react";
+import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb, Sparkles, Box } from "lucide-react";
+import { useState } from "react";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
 import StoryViewer from "@/components/StoryViewer";
 import FrictionSimulator from "@/components/FrictionSimulator";
+import StepCamera from "@/components/StepCamera";
+import AIAssistant from "@/components/AIAssistant";
+import ARViewer from "@/components/ARViewer";
 
 const Chapter = () => {
   const { id } = useParams();
+  const [aiOpen, setAiOpen] = useState(false);
+  const [arOpen, setArOpen] = useState(false);
 
   // Sample data for Chapter 1
   const chapterData = {
@@ -172,25 +178,28 @@ const Chapter = () => {
               <CardContent>
                 <div className="space-y-3">
                   {chapterData.steps.map((step) => (
-                    <div key={step.number} className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {step.number}
+                    <div key={step.number} className="space-y-3">
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {step.number}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium mb-1">{step.instruction}</p>
+                          {step.detail && (
+                            <p className="text-sm text-muted-foreground mb-2">{step.detail}</p>
+                          )}
+                          {step.pieces.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {step.pieces.map((piece, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {piece}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium mb-1">{step.instruction}</p>
-                        {step.detail && (
-                          <p className="text-sm text-muted-foreground mb-2">{step.detail}</p>
-                        )}
-                        {step.pieces.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {step.pieces.map((piece, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {piece}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <StepCamera step={step} chapterTitle={chapterData.title} />
                     </div>
                   ))}
                 </div>
@@ -221,10 +230,31 @@ const Chapter = () => {
                   </Button>
                 </div>
 
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    📸 In the full app, you'll be able to take a photo of your completed build or answer interactive questions to complete challenges!
-                  </p>
+                <div className="mt-6 grid sm:grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col items-start gap-1 border-primary/30 hover:bg-primary/5"
+                    onClick={() => setAiOpen(true)}
+                  >
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
+                    </div>
+                    <p className="text-xs text-muted-foreground text-left font-normal">
+                      Stuck? Chat with your AI tutor about this chapter.
+                    </p>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/5"
+                    onClick={() => setArOpen(true)}
+                  >
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Box className="h-5 w-5 text-accent" /> View in AR
+                    </div>
+                    <p className="text-xs text-muted-foreground text-left font-normal">
+                      Place your BLIX build in the real world using your camera.
+                    </p>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -245,6 +275,14 @@ const Chapter = () => {
           </Button>
         </div>
       </main>
+
+      <AIAssistant
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        chapterTitle={chapterData.title}
+        context={`Theory: ${chapterData.theory.concept}. ${chapterData.theory.explanation}`}
+      />
+      <ARViewer open={arOpen} onOpenChange={setArOpen} title={chapterData.title} />
     </div>
   );
 };
