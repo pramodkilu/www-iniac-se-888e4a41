@@ -230,10 +230,31 @@ const Chapter = () => {
                   </Button>
                 </div>
 
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    📸 In the full app, you'll be able to take a photo of your completed build or answer interactive questions to complete challenges!
-                  </p>
+                <div className="mt-6 grid sm:grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col items-start gap-1 border-primary/30 hover:bg-primary/5"
+                    onClick={() => setAiOpen(true)}
+                  >
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
+                    </div>
+                    <p className="text-xs text-muted-foreground text-left font-normal">
+                      Stuck? Chat with your AI tutor about this chapter.
+                    </p>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/5"
+                    onClick={() => setArOpen(true)}
+                  >
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Box className="h-5 w-5 text-accent" /> View in AR
+                    </div>
+                    <p className="text-xs text-muted-foreground text-left font-normal">
+                      Place your BLIX build in the real world using your camera.
+                    </p>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
