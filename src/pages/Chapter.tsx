@@ -14,8 +14,10 @@ import ARViewer from "@/components/ARViewer";
 
 const Chapter = () => {
   const { id } = useParams();
+  const chapterIdNum = Number(id) || 1;
   const [aiOpen, setAiOpen] = useState(false);
   const [arOpen, setArOpen] = useState(false);
+  const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
 
   // Sample data for Chapter 1
   const chapterData = {
