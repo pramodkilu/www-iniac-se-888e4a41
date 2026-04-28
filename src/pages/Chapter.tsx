@@ -202,7 +202,12 @@ const Chapter = () => {
                           )}
                         </div>
                       </div>
-                      <StepCamera step={step} chapterTitle={chapterData.title} />
+                      <StepCamera
+                        step={step}
+                        chapterTitle={chapterData.title}
+                        savedVerdict={progress.step_verdicts[String(step.number)]}
+                        onVerified={(v) => saveStepVerdict(step.number, v)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -324,7 +329,14 @@ const Chapter = () => {
         chapterTitle={chapterData.title}
         context={`Theory: ${chapterData.theory.concept}. ${chapterData.theory.explanation}`}
       />
-      <ARViewer open={arOpen} onOpenChange={setArOpen} title={chapterData.title} />
+      <ARViewer
+        open={arOpen}
+        onOpenChange={setArOpen}
+        title={chapterData.title}
+        savedPose={progress.ar_pose}
+        onSavePose={saveArPose}
+        onClearPose={clearArPose}
+      />
     </div>
   );
 };
