@@ -144,6 +144,11 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCamera
         <CardTitle className="flex items-center gap-2 text-lg">
           <Camera className="h-5 w-5 text-primary" />
           AI Step Check — Step {step.number}
+          {savedVerdict && (
+            <Badge variant="outline" className="ml-auto text-xs">
+              Resumed from last session
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription>
           Show your current build to the camera. Our AI teacher will check if the step looks right.
