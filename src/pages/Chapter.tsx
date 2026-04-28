@@ -275,6 +275,14 @@ const Chapter = () => {
           </Button>
         </div>
       </main>
+
+      <AIAssistant
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        chapterTitle={chapterData.title}
+        context={`Theory: ${chapterData.theory.concept}. ${chapterData.theory.explanation}`}
+      />
+      <ARViewer open={arOpen} onOpenChange={setArOpen} title={chapterData.title} />
     </div>
   );
 };
