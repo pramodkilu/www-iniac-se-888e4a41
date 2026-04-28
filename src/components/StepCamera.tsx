@@ -49,12 +49,12 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCamera
   };
 
   useEffect(() => {
-    // reset when step changes
+    // hydrate from saved verdict when step or saved value changes
     setSnapshot(null);
-    setResult(null);
+    setResult(savedVerdict ?? null);
     stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step.number]);
+  }, [step.number, savedVerdict?.verifiedAt]);
 
   useEffect(() => {
     return () => stopCamera();
@@ -119,7 +119,9 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCamera
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setResult(data as VerifyResult);
+      const verdict = data as VerifyResult;
+      setResult(verdict);
+      onVerified?.(verdict);
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Verification failed. Please try again.");
