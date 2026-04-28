@@ -187,7 +187,15 @@ const ARViewer = ({ open, onOpenChange, title, savedPose, onSavePose, onClearPos
           </div>
         )}
         {supported && !running && (
-          <Button onClick={startAR} className="w-full">Start AR Session</Button>
+          <div className="space-y-2">
+            {savedPose && (
+              <div className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2 flex items-center justify-between gap-2">
+                <span>Your last placement will be restored when you start.</span>
+                <Button size="sm" variant="ghost" onClick={() => onClearPose?.()}>Reset</Button>
+              </div>
+            )}
+            <Button onClick={startAR} className="w-full">Start AR Session</Button>
+          </div>
         )}
         {running && (
           <p className="text-sm text-muted-foreground">
