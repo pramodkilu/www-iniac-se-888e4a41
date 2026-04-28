@@ -14,6 +14,8 @@ import ARViewer from "@/components/ARViewer";
 
 const Chapter = () => {
   const { id } = useParams();
+  const [aiOpen, setAiOpen] = useState(false);
+  const [arOpen, setArOpen] = useState(false);
 
   // Sample data for Chapter 1
   const chapterData = {
