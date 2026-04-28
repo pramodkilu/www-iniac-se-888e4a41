@@ -11,11 +11,14 @@ import FrictionSimulator from "@/components/FrictionSimulator";
 import StepCamera from "@/components/StepCamera";
 import AIAssistant from "@/components/AIAssistant";
 import ARViewer from "@/components/ARViewer";
+import { useChapterProgress } from "@/hooks/useChapterProgress";
 
 const Chapter = () => {
   const { id } = useParams();
+  const chapterIdNum = Number(id) || 1;
   const [aiOpen, setAiOpen] = useState(false);
   const [arOpen, setArOpen] = useState(false);
+  const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
 
   // Sample data for Chapter 1
   const chapterData = {
@@ -199,7 +202,12 @@ const Chapter = () => {
                           )}
                         </div>
                       </div>
-                      <StepCamera step={step} chapterTitle={chapterData.title} />
+                      <StepCamera
+                        step={step}
+                        chapterTitle={chapterData.title}
+                        savedVerdict={progress.step_verdicts[String(step.number)]}
+                        onVerified={(v) => saveStepVerdict(step.number, v)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -321,7 +329,14 @@ const Chapter = () => {
         chapterTitle={chapterData.title}
         context={`Theory: ${chapterData.theory.concept}. ${chapterData.theory.explanation}`}
       />
-      <ARViewer open={arOpen} onOpenChange={setArOpen} title={chapterData.title} />
+      <ARViewer
+        open={arOpen}
+        onOpenChange={setArOpen}
+        title={chapterData.title}
+        savedPose={progress.ar_pose}
+        onSavePose={saveArPose}
+        onClearPose={clearArPose}
+      />
     </div>
   );
 };

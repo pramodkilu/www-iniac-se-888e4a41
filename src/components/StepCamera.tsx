@@ -21,12 +21,18 @@ interface VerifyResult {
   tip: string;
 }
 
+interface SavedVerdict extends VerifyResult {
+  verifiedAt: string;
+}
+
 interface StepCameraProps {
   step: Step;
   chapterTitle: string;
+  savedVerdict?: SavedVerdict;
+  onVerified?: (v: VerifyResult) => void;
 }
 
-const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
+const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -34,7 +40,7 @@ const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
   const [cameraOn, setCameraOn] = useState(false);
   const [snapshot, setSnapshot] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<VerifyResult | null>(null);
+  const [result, setResult] = useState<VerifyResult | null>(savedVerdict ?? null);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -43,12 +49,12 @@ const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
   };
 
   useEffect(() => {
-    // reset when step changes
+    // hydrate from saved verdict when step or saved value changes
     setSnapshot(null);
-    setResult(null);
+    setResult(savedVerdict ?? null);
     stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step.number]);
+  }, [step.number, savedVerdict?.verifiedAt]);
 
   useEffect(() => {
     return () => stopCamera();
@@ -113,7 +119,9 @@ const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setResult(data as VerifyResult);
+      const verdict = data as VerifyResult;
+      setResult(verdict);
+      onVerified?.(verdict);
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Verification failed. Please try again.");
@@ -136,6 +144,11 @@ const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
         <CardTitle className="flex items-center gap-2 text-lg">
           <Camera className="h-5 w-5 text-primary" />
           AI Step Check — Step {step.number}
+          {savedVerdict && (
+            <Badge variant="outline" className="ml-auto text-xs">
+              Resumed from last session
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription>
           Show your current build to the camera. Our AI teacher will check if the step looks right.

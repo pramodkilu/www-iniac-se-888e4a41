@@ -5,14 +5,22 @@ import * as THREE from "three";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+interface ARPose {
+  matrix: number[];
+  savedAt: string;
+}
+
 interface ARViewerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  savedPose?: ARPose | null;
+  onSavePose?: (matrix: number[]) => void;
+  onClearPose?: () => void;
 }
 
 // Minimal WebXR AR overlay that places a simple BLIX-cart proxy in the real world.
-const ARViewer = ({ open, onOpenChange, title }: ARViewerProps) => {
+const ARViewer = ({ open, onOpenChange, title, savedPose, onSavePose, onClearPose }: ARViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [supported, setSupported] = useState<boolean | null>(null);
   const [running, setRunning] = useState(false);
@@ -79,6 +87,13 @@ const ARViewer = ({ open, onOpenChange, title }: ARViewerProps) => {
       cart.visible = false;
       scene.add(cart);
 
+      // If a saved pose exists, restore the cart to that position from the start.
+      if (savedPose?.matrix && savedPose.matrix.length === 16) {
+        const m = new THREE.Matrix4().fromArray(savedPose.matrix);
+        cart.position.setFromMatrixPosition(m);
+        cart.visible = true;
+      }
+
       // Reticle
       const reticle = new THREE.Mesh(
         new THREE.RingGeometry(0.08, 0.1, 32).rotateX(-Math.PI / 2),
@@ -102,6 +117,9 @@ const ARViewer = ({ open, onOpenChange, title }: ARViewerProps) => {
         if (reticle.visible) {
           cart.position.setFromMatrixPosition(reticle.matrix);
           cart.visible = true;
+          // Persist the placement so it resumes next time.
+          const arr = Array.from(reticle.matrix.elements) as number[];
+          onSavePose?.(arr);
         }
       };
       session.addEventListener("select", onSelect);
@@ -169,7 +187,15 @@ const ARViewer = ({ open, onOpenChange, title }: ARViewerProps) => {
           </div>
         )}
         {supported && !running && (
-          <Button onClick={startAR} className="w-full">Start AR Session</Button>
+          <div className="space-y-2">
+            {savedPose && (
+              <div className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2 flex items-center justify-between gap-2">
+                <span>Your last placement will be restored when you start.</span>
+                <Button size="sm" variant="ghost" onClick={() => onClearPose?.()}>Reset</Button>
+              </div>
+            )}
+            <Button onClick={startAR} className="w-full">Start AR Session</Button>
+          </div>
         )}
         {running && (
           <p className="text-sm text-muted-foreground">
