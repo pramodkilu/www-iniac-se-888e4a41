@@ -53,8 +53,8 @@ export function useChapterProgress(chapterId: number | undefined) {
         rowIdRef.current = data.id;
         setProgress({
           current_step: data.current_step ?? 1,
-          step_verdicts: (data.step_verdicts as Record<string, StepVerdict>) ?? {},
-          ar_pose: (data.ar_pose as ARPose | null) ?? null,
+          step_verdicts: (data.step_verdicts as unknown as Record<string, StepVerdict>) ?? {},
+          ar_pose: (data.ar_pose as unknown as ARPose | null) ?? null,
         });
       } else {
         rowIdRef.current = null;
