@@ -21,12 +21,18 @@ interface VerifyResult {
   tip: string;
 }
 
+interface SavedVerdict extends VerifyResult {
+  verifiedAt: string;
+}
+
 interface StepCameraProps {
   step: Step;
   chapterTitle: string;
+  savedVerdict?: SavedVerdict;
+  onVerified?: (v: VerifyResult) => void;
 }
 
-const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
+const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -34,7 +40,7 @@ const StepCamera = ({ step, chapterTitle }: StepCameraProps) => {
   const [cameraOn, setCameraOn] = useState(false);
   const [snapshot, setSnapshot] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<VerifyResult | null>(null);
+  const [result, setResult] = useState<VerifyResult | null>(savedVerdict ?? null);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
