@@ -238,7 +238,7 @@ const Chapter = () => {
                   </Card>
 
                   {/* RIGHT — synced step slider, instructions, AI check, AR/AI */}
-                  <div className="space-y-4">
+                  <div className="lg:col-span-2 space-y-4">
                     {/* Step slider */}
                     <Card>
                       <CardHeader className="pb-3">
