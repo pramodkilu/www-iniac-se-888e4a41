@@ -211,102 +211,149 @@ const Chapter = () => {
             <FrictionSimulator />
           </TabsContent>
 
-          {/* Build Tab with 3D Viewer */}
+          {/* Build Tab — side-by-side: 3D viewer || synced step panel */}
           <TabsContent value="build" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Hammer className="h-5 w-5 text-primary" />
-                  Interactive 3D Building Guide
-                </CardTitle>
-                <CardDescription>
-                  Follow the steps below and watch the 3D model as you build your {chapterData.title}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <BlixCartViewer />
-              </CardContent>
-            </Card>
+            {(() => {
+              const totalSteps = chapterData.steps.length;
+              const currentStep = chapterData.steps.find((s) => s.number === activeBuildStep) ?? chapterData.steps[0];
+              const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
+              const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
+              return (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {/* LEFT — 3D viewer */}
+                  <Card className="lg:sticky lg:top-24 lg:self-start">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Hammer className="h-5 w-5 text-primary" />
+                        Interactive 3D Building Guide
+                      </CardTitle>
+                      <CardDescription>
+                        Watch the 3D model as you follow each step.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <BlixCartViewer />
+                    </CardContent>
+                  </Card>
 
-            {/* Step-by-step text guide */}
-            <Card className="border-muted">
-              <CardHeader>
-                <CardTitle className="text-lg">Written Instructions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {chapterData.steps.map((step) => (
-                    <div key={step.number} id={`step-${step.number}`} className="space-y-3 scroll-mt-24">
-                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
-                          {step.number}
+                  {/* RIGHT — synced step slider, instructions, AI check, AR/AI */}
+                  <div className="space-y-4">
+                    {/* Step slider */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">
+                            Step {activeBuildStep} of {totalSteps}
+                          </CardTitle>
+                          <div className="flex items-center gap-1">
+                            <Button size="icon" variant="outline" onClick={goPrev} disabled={activeBuildStep <= 1}>
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="outline" onClick={goNext} disabled={activeBuildStep >= totalSteps}>
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium mb-1">{step.instruction}</p>
-                          {step.detail && (
-                            <p className="text-sm text-muted-foreground mb-2">{step.detail}</p>
-                          )}
-                          {step.pieces.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {step.pieces.map((piece, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {piece}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Slider
+                          value={[activeBuildStep]}
+                          min={1}
+                          max={totalSteps}
+                          step={1}
+                          onValueChange={(v) => setActiveBuildStep(v[0])}
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          {chapterData.steps.map((s) => {
+                            const verified = !!progress.step_verdicts[String(s.number)];
+                            return (
+                              <button
+                                key={s.number}
+                                onClick={() => setActiveBuildStep(s.number)}
+                                className={`w-7 h-7 rounded-full font-semibold transition-colors ${
+                                  s.number === activeBuildStep
+                                    ? "bg-primary text-primary-foreground"
+                                    : verified
+                                    ? "bg-success/20 text-success"
+                                    : "bg-muted hover:bg-muted-foreground/20"
+                                }`}
+                              >
+                                {s.number}
+                              </button>
+                            );
+                          })}
                         </div>
-                      </div>
-                      <StepCamera
-                        step={step}
-                        chapterTitle={chapterData.title}
-                        savedVerdict={progress.step_verdicts[String(step.number)]}
-                        onVerified={(v) => saveStepVerdict(step.number, v)}
-                      />
-                    </div>
-                  ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* Active instruction */}
+                    <Card id={`step-${currentStep.number}`} className="scroll-mt-24 border-primary/20">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">
+                            {currentStep.number}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium mb-2">{currentStep.instruction}</p>
+                            {currentStep.detail && (
+                              <p className="text-sm text-muted-foreground mb-3">{currentStep.detail}</p>
+                            )}
+                            {currentStep.pieces.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {currentStep.pieces.map((piece, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {piece}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* AI step check for the active step */}
+                    <StepCamera
+                      key={currentStep.number}
+                      step={currentStep}
+                      chapterTitle={chapterData.title}
+                      savedVerdict={progress.step_verdicts[String(currentStep.number)]}
+                      onVerified={(v) => saveStepVerdict(currentStep.number, v)}
+                    />
+
+                    {/* AI + AR launch panel */}
+                    <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+                      <CardContent className="pt-6 grid sm:grid-cols-2 gap-3">
+                        <Button
+                          variant="outline"
+                          className="h-auto py-4 flex-col items-start gap-1 border-primary/30 hover:bg-primary/10"
+                          onClick={() => setAiOpen(true)}
+                        >
+                          <div className="flex items-center gap-2 font-semibold">
+                            <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left font-normal">
+                            Chat about Step {currentStep.number}.
+                          </p>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/10"
+                          onClick={() => setArOpen(true)}
+                        >
+                          <div className="flex items-center gap-2 font-semibold">
+                            <Box className="h-5 w-5 text-accent" /> View in AR
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left font-normal">
+                            Place this build in the real world.
+                          </p>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* AI + AR panel — appears right after the build steps */}
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Explore with AI & AR
-                </CardTitle>
-                <CardDescription>
-                  Done building? Ask our AI buddy anything, or place your creation in the real world with AR.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid sm:grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-auto py-5 flex-col items-start gap-1 border-primary/30 hover:bg-primary/10"
-                  onClick={() => setAiOpen(true)}
-                >
-                  <div className="flex items-center gap-2 font-semibold">
-                    <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
-                  </div>
-                  <p className="text-xs text-muted-foreground text-left font-normal">
-                    Chat with your AI tutor about this chapter.
-                  </p>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-auto py-5 flex-col items-start gap-1 border-accent/30 hover:bg-accent/10"
-                  onClick={() => setArOpen(true)}
-                >
-                  <div className="flex items-center gap-2 font-semibold">
-                    <Box className="h-5 w-5 text-accent" /> View in AR
-                  </div>
-                  <p className="text-xs text-muted-foreground text-left font-normal">
-                    Place your BLIX build in the real world.
-                  </p>
-                </Button>
-              </CardContent>
-            </Card>
+              );
+            })()}
           </TabsContent>
 
           {/* Challenge Tab */}
