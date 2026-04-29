@@ -221,9 +221,6 @@ const Chapter = () => {
               const currentStep = chapterData.steps.find((s) => s.number === activeBuildStep) ?? chapterData.steps[0];
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
-              return (
-                <div className="grid gap-6 lg:grid-cols-5">
-                  {/* LEFT — 3D viewer (60%) */}
               const leftSpan =
                 panelMode === "collapsed" ? "lg:col-span-11" : panelMode === "expanded" ? "lg:col-span-5" : "lg:col-span-7";
               const rightSpan =
