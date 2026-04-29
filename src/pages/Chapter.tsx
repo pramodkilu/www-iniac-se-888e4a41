@@ -224,7 +224,20 @@ const Chapter = () => {
               return (
                 <div className="grid gap-6 lg:grid-cols-5">
                   {/* LEFT — 3D viewer (60%) */}
-                  <Card className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+              const leftSpan =
+                panelMode === "collapsed" ? "lg:col-span-11" : panelMode === "expanded" ? "lg:col-span-5" : "lg:col-span-7";
+              const rightSpan =
+                panelMode === "collapsed" ? "lg:col-span-1" : panelMode === "expanded" ? "lg:col-span-7" : "lg:col-span-5";
+              return (
+                <div className="grid gap-6 lg:grid-cols-12 transition-all duration-300">
+                  {/* LEFT — 3D viewer */}
+                  <Card
+                    className={`${leftSpan} lg:sticky lg:top-24 lg:self-start transition-all duration-300`}
+                    onPointerDown={() => {
+                      // Auto-collapse the side panel when the user starts interacting with the 3D guide
+                      if (panelMode === "expanded") setPanelMode("compact");
+                    }}
+                  >
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Hammer className="h-5 w-5 text-primary" />
@@ -239,10 +252,51 @@ const Chapter = () => {
                     </CardContent>
                   </Card>
 
-                  {/* RIGHT — synced step slider, instructions, AI check, AR/AI */}
-                  <div className="lg:col-span-2 space-y-4">
-                    {/* Step slider */}
-                    <Card>
+                  {/* RIGHT — collapsible step panel */}
+                  {panelMode === "collapsed" ? (
+                    <div className={`${rightSpan} lg:sticky lg:top-24 lg:self-start`}>
+                      <Card className="flex flex-col items-center gap-2 p-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setPanelMode("compact")}
+                          aria-label="Open instructions"
+                        >
+                          <PanelRightOpen className="h-5 w-5" />
+                        </Button>
+                        <div className="text-xs font-bold text-primary">{activeBuildStep}</div>
+                        <div className="text-[10px] text-muted-foreground">/ {totalSteps}</div>
+                      </Card>
+                    </div>
+                  ) : (
+                  <div className={`${rightSpan} space-y-4 transition-all duration-300`}>
+                    {/* Panel controls */}
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => setPanelMode(panelMode === "expanded" ? "compact" : "expanded")}
+                        aria-label={panelMode === "expanded" ? "Shrink panel" : "Expand panel"}
+                        title={panelMode === "expanded" ? "Shrink panel" : "Expand panel"}
+                      >
+                        {panelMode === "expanded" ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => setPanelMode("collapsed")}
+                        aria-label="Collapse panel"
+                        title="Collapse panel"
+                      >
+                        <PanelRightClose className="h-4 w-4" />
+                      </Button>
+                    </div>
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg">
