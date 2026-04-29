@@ -323,34 +323,60 @@ const Chapter = () => {
                     />
 
                     {/* AI + AR launch panel */}
-                    <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-                      <CardContent className="pt-6 grid sm:grid-cols-2 gap-3">
-                        <Button
-                          variant="outline"
-                          className="h-auto py-4 flex-col items-start gap-1 border-primary/30 hover:bg-primary/10"
-                          onClick={() => setAiOpen(true)}
-                        >
-                          <div className="flex items-center gap-2 font-semibold">
-                            <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
-                          </div>
-                          <p className="text-xs text-muted-foreground text-left font-normal">
-                            Chat about Step {currentStep.number}.
-                          </p>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/10"
-                          onClick={() => setArOpen(true)}
-                        >
-                          <div className="flex items-center gap-2 font-semibold">
-                            <Box className="h-5 w-5 text-accent" /> View in AR
-                          </div>
-                          <p className="text-xs text-muted-foreground text-left font-normal">
-                            Place this build in the real world.
-                          </p>
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    {(() => {
+                      const verdict = progress.step_verdicts[String(currentStep.number)];
+                      const arUnlocked = verdict?.status === "correct";
+                      return (
+                        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+                          <CardContent className="pt-6 space-y-3">
+                            {!arUnlocked && (
+                              <div className="flex items-start gap-2 p-3 rounded-md bg-muted/60 border border-border text-xs">
+                                <Lightbulb className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                                <p className="text-muted-foreground">
+                                  <span className="font-semibold text-foreground">AR locked for Step {currentStep.number}.</span>{" "}
+                                  {verdict?.status === "incorrect"
+                                    ? `AI marked this step as incorrect — fix it and re-check: "${verdict.tip || verdict.feedback}"`
+                                    : verdict?.status === "needs_review"
+                                    ? `AI needs a clearer photo to verify: "${verdict.tip || verdict.feedback}"`
+                                    : "Take a photo with the AI Step Check above so the AI can verify your build before you place it in AR."}
+                                </p>
+                              </div>
+                            )}
+                            <div className="grid sm:grid-cols-2 gap-3">
+                              <Button
+                                variant="outline"
+                                className="h-auto py-4 flex-col items-start gap-1 border-primary/30 hover:bg-primary/10"
+                                onClick={() => setAiOpen(true)}
+                              >
+                                <div className="flex items-center gap-2 font-semibold">
+                                  <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
+                                </div>
+                                <p className="text-xs text-muted-foreground text-left font-normal">
+                                  Chat about Step {currentStep.number}.
+                                </p>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                disabled={!arUnlocked}
+                                className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/10 disabled:opacity-50"
+                                onClick={() => setArOpen(true)}
+                              >
+                                <div className="flex items-center gap-2 font-semibold">
+                                  <Box className="h-5 w-5 text-accent" />
+                                  {arUnlocked ? "View in AR" : "AR Locked"}
+                                </div>
+                                <p className="text-xs text-muted-foreground text-left font-normal">
+                                  {arUnlocked
+                                    ? "Place this build in the real world."
+                                    : "Verify this step first to unlock."}
+                                </p>
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+
                   </div>
                 </div>
               );
