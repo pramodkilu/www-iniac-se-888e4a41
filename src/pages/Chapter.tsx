@@ -18,6 +18,8 @@ const Chapter = () => {
   const chapterIdNum = Number(id) || 1;
   const [aiOpen, setAiOpen] = useState(false);
   const [arOpen, setArOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("build");
+  const [resumeDismissed, setResumeDismissed] = useState(false);
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
 
   // Sample data for Chapter 1
