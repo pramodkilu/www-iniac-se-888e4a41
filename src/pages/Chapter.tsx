@@ -23,6 +23,8 @@ const Chapter = () => {
   const [resumeDismissed, setResumeDismissed] = useState(false);
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
   const [activeBuildStep, setActiveBuildStep] = useState(1);
+  // Panel mode: 'expanded' = right panel is wider (col-span-3), 'compact' = 40% (col-span-2), 'collapsed' = icon rail only
+  const [panelMode, setPanelMode] = useState<"expanded" | "compact" | "collapsed">("compact");
 
   // Sync slider to saved progress when it loads
   useEffect(() => {
