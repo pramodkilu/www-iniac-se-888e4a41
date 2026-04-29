@@ -22,6 +22,14 @@ const Chapter = () => {
   const [activeTab, setActiveTab] = useState("build");
   const [resumeDismissed, setResumeDismissed] = useState(false);
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
+  const [activeBuildStep, setActiveBuildStep] = useState(1);
+
+  // Sync slider to saved progress when it loads
+  useEffect(() => {
+    if (progress.current_step) {
+      setActiveBuildStep(Math.max(1, progress.current_step));
+    }
+  }, [progress.current_step]);
 
   // Sample data for Chapter 1
   const chapterData = {
