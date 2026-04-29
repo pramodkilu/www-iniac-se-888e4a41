@@ -108,7 +108,51 @@ const Chapter = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <Tabs defaultValue="build" className="space-y-6">
+        {(() => {
+          const totalSteps = chapterData.steps.length;
+          const verdictCount = Object.keys(progress.step_verdicts).length;
+          const resumeStep = Math.min(progress.current_step, totalSteps);
+          const hasProgress = (verdictCount > 0 || progress.current_step > 1) && resumeStep <= totalSteps;
+          const isComplete = progress.current_step > totalSteps;
+          if (!hasProgress || resumeDismissed) return null;
+          const handleResume = () => {
+            setActiveTab("build");
+            setTimeout(() => {
+              const el = document.getElementById(`step-${resumeStep}`);
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.add("ring-2", "ring-primary", "rounded-lg");
+                setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-lg"), 2000);
+              }
+            }, 150);
+          };
+          return (
+            <div className="mb-6 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-accent/5 to-background p-4 flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="h-10 w-10 rounded-full bg-primary/15 text-primary flex items-center justify-center flex-shrink-0">
+                  <BookmarkCheck className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">
+                    {isComplete ? "You finished all the steps!" : `Welcome back — pick up at Step ${resumeStep}`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {verdictCount} of {totalSteps} steps verified by AI.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={handleResume} disabled={isComplete}>
+                  Continue Step {resumeStep}
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => setResumeDismissed(true)} aria-label="Dismiss">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
             <TabsTrigger value="story" className="gap-2">
               <Play className="h-4 w-4" />
