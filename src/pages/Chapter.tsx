@@ -297,6 +297,9 @@ const Chapter = () => {
                         <PanelRightClose className="h-4 w-4" />
                       </Button>
                     </div>
+
+                    {/* Step slider */}
+                    <Card>
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg">
