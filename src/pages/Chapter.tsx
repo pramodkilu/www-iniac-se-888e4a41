@@ -126,6 +126,7 @@ const Chapter = () => {
           if (!hasProgress || resumeDismissed) return null;
           const handleResume = () => {
             setActiveTab("build");
+            setActiveBuildStep(resumeStep);
             setTimeout(() => {
               const el = document.getElementById(`step-${resumeStep}`);
               if (el) {
