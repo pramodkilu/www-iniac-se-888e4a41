@@ -227,7 +227,7 @@ const Chapter = () => {
               <CardContent>
                 <div className="space-y-3">
                   {chapterData.steps.map((step) => (
-                    <div key={step.number} className="space-y-3">
+                    <div key={step.number} id={`step-${step.number}`} className="space-y-3 scroll-mt-24">
                       <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
                           {step.number}
