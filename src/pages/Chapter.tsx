@@ -220,9 +220,9 @@ const Chapter = () => {
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
               return (
-                <div className="grid gap-6 lg:grid-cols-2">
-                  {/* LEFT — 3D viewer */}
-                  <Card className="lg:sticky lg:top-24 lg:self-start">
+                <div className="grid gap-6 lg:grid-cols-5">
+                  {/* LEFT — 3D viewer (60%) */}
+                  <Card className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Hammer className="h-5 w-5 text-primary" />
