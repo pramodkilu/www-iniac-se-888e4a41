@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Maximize2, Minimize2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
 import StoryViewer from "@/components/StoryViewer";
@@ -23,6 +23,8 @@ const Chapter = () => {
   const [resumeDismissed, setResumeDismissed] = useState(false);
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
   const [activeBuildStep, setActiveBuildStep] = useState(1);
+  // Panel mode: 'expanded' = right panel is wider (col-span-3), 'compact' = 40% (col-span-2), 'collapsed' = icon rail only
+  const [panelMode, setPanelMode] = useState<"expanded" | "compact" | "collapsed">("compact");
 
   // Sync slider to saved progress when it loads
   useEffect(() => {
@@ -219,10 +221,20 @@ const Chapter = () => {
               const currentStep = chapterData.steps.find((s) => s.number === activeBuildStep) ?? chapterData.steps[0];
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
+              const leftSpan =
+                panelMode === "collapsed" ? "lg:col-span-11" : panelMode === "expanded" ? "lg:col-span-5" : "lg:col-span-7";
+              const rightSpan =
+                panelMode === "collapsed" ? "lg:col-span-1" : panelMode === "expanded" ? "lg:col-span-7" : "lg:col-span-5";
               return (
-                <div className="grid gap-6 lg:grid-cols-5">
-                  {/* LEFT — 3D viewer (60%) */}
-                  <Card className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+                <div className="grid gap-6 lg:grid-cols-12 transition-all duration-300">
+                  {/* LEFT — 3D viewer */}
+                  <Card
+                    className={`${leftSpan} lg:sticky lg:top-24 lg:self-start transition-all duration-300`}
+                    onPointerDown={() => {
+                      // Auto-collapse the side panel when the user starts interacting with the 3D guide
+                      if (panelMode === "expanded") setPanelMode("compact");
+                    }}
+                  >
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Hammer className="h-5 w-5 text-primary" />
@@ -237,8 +249,52 @@ const Chapter = () => {
                     </CardContent>
                   </Card>
 
-                  {/* RIGHT — synced step slider, instructions, AI check, AR/AI */}
-                  <div className="lg:col-span-2 space-y-4">
+                  {/* RIGHT — collapsible step panel */}
+                  {panelMode === "collapsed" ? (
+                    <div className={`${rightSpan} lg:sticky lg:top-24 lg:self-start`}>
+                      <Card className="flex flex-col items-center gap-2 p-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setPanelMode("compact")}
+                          aria-label="Open instructions"
+                        >
+                          <PanelRightOpen className="h-5 w-5" />
+                        </Button>
+                        <div className="text-xs font-bold text-primary">{activeBuildStep}</div>
+                        <div className="text-[10px] text-muted-foreground">/ {totalSteps}</div>
+                      </Card>
+                    </div>
+                  ) : (
+                  <div className={`${rightSpan} space-y-4 transition-all duration-300`}>
+                    {/* Panel controls */}
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => setPanelMode(panelMode === "expanded" ? "compact" : "expanded")}
+                        aria-label={panelMode === "expanded" ? "Shrink panel" : "Expand panel"}
+                        title={panelMode === "expanded" ? "Shrink panel" : "Expand panel"}
+                      >
+                        {panelMode === "expanded" ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => setPanelMode("collapsed")}
+                        aria-label="Collapse panel"
+                        title="Collapse panel"
+                      >
+                        <PanelRightClose className="h-4 w-4" />
+                      </Button>
+                    </div>
+
                     {/* Step slider */}
                     <Card>
                       <CardHeader className="pb-3">
@@ -378,6 +434,7 @@ const Chapter = () => {
                     })()}
 
                   </div>
+                  )}
                 </div>
               );
             })()}
