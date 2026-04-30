@@ -20,7 +20,19 @@ interface PieceMetadata {
   stepNumber: number;
 }
 
-const BlixCartViewer = () => {
+interface BlixCartViewerProps {
+  chapterId?: number;
+  activeStep?: number; // 1-indexed step from parent, used as key for camera persistence
+}
+
+interface SavedView {
+  rotX: number;
+  rotY: number;
+  camDist: number;
+  autoRotate: boolean;
+}
+
+const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -39,6 +51,52 @@ const BlixCartViewer = () => {
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
   const measurementLinesRef = useRef<THREE.Group | null>(null);
+
+  // Track which step's camera view is currently shown so we can save it before switching
+  const persistedStepRef = useRef<number | null>(null);
+  const isRotatingRef = useRef(isRotating);
+  useEffect(() => { isRotatingRef.current = isRotating; }, [isRotating]);
+
+  const viewStorageKey = (step: number) =>
+    `blix-cart-view:${chapterId ?? "default"}:${step}`;
+
+  const saveCurrentView = (step: number) => {
+    const cart = cartGroupRef.current;
+    const cam = cameraRef.current;
+    if (!cart || !cam) return;
+    const view: SavedView = {
+      rotX: cart.rotation.x,
+      rotY: cart.rotation.y,
+      camDist: cam.position.length(),
+      autoRotate: isRotatingRef.current,
+    };
+    try {
+      localStorage.setItem(viewStorageKey(step), JSON.stringify(view));
+    } catch {}
+  };
+
+  const restoreView = (step: number) => {
+    const cart = cartGroupRef.current;
+    const cam = cameraRef.current;
+    if (!cart || !cam) return false;
+    try {
+      const raw = localStorage.getItem(viewStorageKey(step));
+      if (!raw) return false;
+      const view = JSON.parse(raw) as SavedView;
+      cart.rotation.x = view.rotX;
+      cart.rotation.y = view.rotY;
+      // Preserve current camera direction; just rescale to saved distance
+      const dir = cam.position.clone().normalize();
+      cam.position.copy(dir.multiplyScalar(view.camDist));
+      cam.lookAt(0, 0, 0);
+      // If user had paused rotation when they verified, keep it paused on return
+      setIsRotating(view.autoRotate);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
 
   // Define build steps with REAL BLIX components from PDF
   const buildSteps: BuildStep[] = [
