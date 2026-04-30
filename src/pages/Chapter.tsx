@@ -214,88 +214,33 @@ const Chapter = () => {
             <FrictionSimulator />
           </TabsContent>
 
-          {/* Build Tab — side-by-side: 3D viewer || synced step panel */}
+          {/* Build Tab — 3 columns: 3D viewer | Instructions | Step-Check + AR */}
           <TabsContent value="build" className="space-y-6">
             {(() => {
               const totalSteps = chapterData.steps.length;
               const currentStep = chapterData.steps.find((s) => s.number === activeBuildStep) ?? chapterData.steps[0];
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
-              const leftSpan =
-                panelMode === "collapsed" ? "lg:col-span-11" : panelMode === "expanded" ? "lg:col-span-5" : "lg:col-span-7";
-              const rightSpan =
-                panelMode === "collapsed" ? "lg:col-span-1" : panelMode === "expanded" ? "lg:col-span-7" : "lg:col-span-5";
+              const verdict = progress.step_verdicts[String(currentStep.number)];
+              const arUnlocked = verdict?.status === "correct";
               return (
-                <div className="grid gap-6 lg:grid-cols-12 transition-all duration-300">
-                  {/* LEFT — 3D viewer */}
-                  <Card
-                    className={`${leftSpan} lg:sticky lg:top-24 lg:self-start transition-all duration-300`}
-                    onPointerDown={() => {
-                      // Auto-collapse the side panel when the user starts interacting with the 3D guide
-                      if (panelMode === "expanded") setPanelMode("compact");
-                    }}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                <div className="grid gap-4 lg:grid-cols-12">
+                  {/* COL 1 — 3D viewer (~42%) */}
+                  <Card className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg">
                         <Hammer className="h-5 w-5 text-primary" />
                         Interactive 3D Building Guide
                       </CardTitle>
-                      <CardDescription>
-                        Watch the 3D model as you follow each step.
-                      </CardDescription>
+                      <CardDescription>Watch the 3D model as you follow each step.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-2">
                       <BlixCartViewer />
                     </CardContent>
                   </Card>
 
-                  {/* RIGHT — collapsible step panel */}
-                  {panelMode === "collapsed" ? (
-                    <div className={`${rightSpan} lg:sticky lg:top-24 lg:self-start`}>
-                      <Card className="flex flex-col items-center gap-2 p-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => setPanelMode("compact")}
-                          aria-label="Open instructions"
-                        >
-                          <PanelRightOpen className="h-5 w-5" />
-                        </Button>
-                        <div className="text-xs font-bold text-primary">{activeBuildStep}</div>
-                        <div className="text-[10px] text-muted-foreground">/ {totalSteps}</div>
-                      </Card>
-                    </div>
-                  ) : (
-                  <div className={`${rightSpan} space-y-4 transition-all duration-300`}>
-                    {/* Panel controls */}
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={() => setPanelMode(panelMode === "expanded" ? "compact" : "expanded")}
-                        aria-label={panelMode === "expanded" ? "Shrink panel" : "Expand panel"}
-                        title={panelMode === "expanded" ? "Shrink panel" : "Expand panel"}
-                      >
-                        {panelMode === "expanded" ? (
-                          <Minimize2 className="h-4 w-4" />
-                        ) : (
-                          <Maximize2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={() => setPanelMode("collapsed")}
-                        aria-label="Collapse panel"
-                        title="Collapse panel"
-                      >
-                        <PanelRightClose className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {/* Step slider */}
+                  {/* COL 2 — Instructions (~33%) */}
+                  <div className="lg:col-span-4 space-y-4">
                     <Card>
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
@@ -343,7 +288,6 @@ const Chapter = () => {
                       </CardContent>
                     </Card>
 
-                    {/* Active instruction */}
                     <Card id={`step-${currentStep.number}`} className="scroll-mt-24 border-primary/20">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-3">
@@ -368,73 +312,72 @@ const Chapter = () => {
                         </div>
                       </CardContent>
                     </Card>
-
-                    {/* AI step check for the active step */}
-                    <StepCamera
-                      key={currentStep.number}
-                      step={currentStep}
-                      chapterTitle={chapterData.title}
-                      savedVerdict={progress.step_verdicts[String(currentStep.number)]}
-                      onVerified={(v) => saveStepVerdict(currentStep.number, v)}
-                    />
-
-                    {/* AI + AR launch panel */}
-                    {(() => {
-                      const verdict = progress.step_verdicts[String(currentStep.number)];
-                      const arUnlocked = verdict?.status === "correct";
-                      return (
-                        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-                          <CardContent className="pt-6 space-y-3">
-                            {!arUnlocked && (
-                              <div className="flex items-start gap-2 p-3 rounded-md bg-muted/60 border border-border text-xs">
-                                <Lightbulb className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-                                <p className="text-muted-foreground">
-                                  <span className="font-semibold text-foreground">AR locked for Step {currentStep.number}.</span>{" "}
-                                  {verdict?.status === "incorrect"
-                                    ? `AI marked this step as incorrect — fix it and re-check: "${verdict.tip || verdict.feedback}"`
-                                    : verdict?.status === "needs_review"
-                                    ? `AI needs a clearer photo to verify: "${verdict.tip || verdict.feedback}"`
-                                    : "Take a photo with the AI Step Check above so the AI can verify your build before you place it in AR."}
-                                </p>
-                              </div>
-                            )}
-                            <div className="grid sm:grid-cols-2 gap-3">
-                              <Button
-                                variant="outline"
-                                className="h-auto py-4 flex-col items-start gap-1 border-primary/30 hover:bg-primary/10"
-                                onClick={() => setAiOpen(true)}
-                              >
-                                <div className="flex items-center gap-2 font-semibold">
-                                  <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
-                                </div>
-                                <p className="text-xs text-muted-foreground text-left font-normal">
-                                  Chat about Step {currentStep.number}.
-                                </p>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                disabled={!arUnlocked}
-                                className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/10 disabled:opacity-50"
-                                onClick={() => setArOpen(true)}
-                              >
-                                <div className="flex items-center gap-2 font-semibold">
-                                  <Box className="h-5 w-5 text-accent" />
-                                  {arUnlocked ? "View in AR" : "AR Locked"}
-                                </div>
-                                <p className="text-xs text-muted-foreground text-left font-normal">
-                                  {arUnlocked
-                                    ? "Place this build in the real world."
-                                    : "Verify this step first to unlock."}
-                                </p>
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })()}
-
                   </div>
-                  )}
+
+                  {/* COL 3 — Step Check + AR (always visible, ~25%) */}
+                  <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-24 lg:self-start">
+                    <Card className="border-primary/20">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          AI Step Check
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          Verify Step {currentStep.number} with a photo.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <StepCamera
+                          key={currentStep.number}
+                          step={currentStep}
+                          chapterTitle={chapterData.title}
+                          savedVerdict={verdict}
+                          onVerified={(v) => saveStepVerdict(currentStep.number, v)}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-accent/30 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Box className="h-4 w-4 text-accent" />
+                          AR & AI Buddy
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-2 space-y-3">
+                        {!arUnlocked && (
+                          <div className="flex items-start gap-2 p-2.5 rounded-md bg-muted/60 border border-border text-xs">
+                            <Lightbulb className="h-3.5 w-3.5 text-accent flex-shrink-0 mt-0.5" />
+                            <p className="text-muted-foreground leading-snug">
+                              <span className="font-semibold text-foreground">AR locked.</span>{" "}
+                              {verdict?.status === "incorrect"
+                                ? `Fix & re-check: "${verdict.tip || verdict.feedback}"`
+                                : verdict?.status === "needs_review"
+                                ? `Need clearer photo: "${verdict.tip || verdict.feedback}"`
+                                : "Verify this step above first."}
+                            </p>
+                          </div>
+                        )}
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start gap-2 border-primary/30 hover:bg-primary/10"
+                          onClick={() => setAiOpen(true)}
+                        >
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          <span className="text-sm">Ask AI Buddy</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          disabled={!arUnlocked}
+                          className="w-full justify-start gap-2 border-accent/30 hover:bg-accent/10 disabled:opacity-50"
+                          onClick={() => setArOpen(true)}
+                        >
+                          <Box className="h-4 w-4 text-accent" />
+                          <span className="text-sm">{arUnlocked ? "View in AR" : "AR Locked"}</span>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               );
             })()}
