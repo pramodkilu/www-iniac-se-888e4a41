@@ -233,7 +233,7 @@ const Chapter = () => {
                       <CardDescription>Watch the 3D model as you follow each step.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-2">
-                      <BlixCartViewer />
+                      <BlixCartViewer chapterId={chapterIdNum} activeStep={activeBuildStep} />
                     </CardContent>
                   </Card>
 
