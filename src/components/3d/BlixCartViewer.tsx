@@ -481,6 +481,39 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
     setVisibleComponents(initialVisibility);
   }, []);
 
+  // Sync internal step with parent's activeStep, and persist/restore camera per step.
+  // activeStep from parent is 1-indexed; internal currentStep is 0-indexed.
+  useEffect(() => {
+    if (activeStep == null) return;
+    const targetIdx = Math.max(0, Math.min(buildSteps.length - 1, activeStep - 1));
+    if (targetIdx === currentStep && persistedStepRef.current === targetIdx) return;
+
+    // Save the view of the step we're leaving (after refs are ready)
+    if (persistedStepRef.current != null && cartGroupRef.current && cameraRef.current) {
+      saveCurrentView(persistedStepRef.current);
+    }
+
+    setCurrentStep(targetIdx);
+
+    // Defer restore until after the step's pieces re-render
+    requestAnimationFrame(() => {
+      const restored = restoreView(targetIdx);
+      persistedStepRef.current = targetIdx;
+      // If nothing saved yet, leave default camera/rotation untouched
+      void restored;
+    });
+  }, [activeStep]);
+
+  // Persist current view on unmount
+  useEffect(() => {
+    return () => {
+      if (persistedStepRef.current != null) {
+        saveCurrentView(persistedStepRef.current);
+      }
+    };
+  }, []);
+
+
   // Update cart based on current step
   useEffect(() => {
     if (!sceneRef.current || !cartGroupRef.current) return;
