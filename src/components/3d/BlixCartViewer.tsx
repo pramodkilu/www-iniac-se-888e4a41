@@ -648,6 +648,91 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
     }
   };
 
+  // Export current step's view as a shareable base64 code
+  const handleShareView = async () => {
+    const cart = cartGroupRef.current;
+    const cam = cameraRef.current;
+    if (!cart || !cam) return;
+    const payload = {
+      v: 1,
+      c: chapterId ?? null,
+      s: currentStep + 1,
+      rotX: Number(cart.rotation.x.toFixed(4)),
+      rotY: Number(cart.rotation.y.toFixed(4)),
+      camDist: Number(cam.position.length().toFixed(4)),
+      autoRotate: isRotatingRef.current,
+    };
+    let code = "";
+    try {
+      code = btoa(JSON.stringify(payload));
+    } catch {
+      code = JSON.stringify(payload);
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success(`View for Step ${currentStep + 1} copied to clipboard`);
+    } catch {
+      // Clipboard blocked — fall through to dialog so user can copy manually
+    }
+    setShareDialog({ open: true, mode: "export", code });
+  };
+
+  const handleImportView = () => {
+    setShareDialog({ open: true, mode: "import", code: "" });
+  };
+
+  const applyImportedCode = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      toast.error("Paste a view code first");
+      return;
+    }
+    let parsed: any;
+    try {
+      parsed = JSON.parse(atob(trimmed));
+    } catch {
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch {
+        toast.error("That doesn't look like a valid view code");
+        return;
+      }
+    }
+    const cart = cartGroupRef.current;
+    const cam = cameraRef.current;
+    if (!cart || !cam) return;
+    if (typeof parsed.rotX !== "number" || typeof parsed.rotY !== "number" || typeof parsed.camDist !== "number") {
+      toast.error("View code is missing required fields");
+      return;
+    }
+    // If the code targets a different step, jump to it (within bounds)
+    const targetStep = typeof parsed.s === "number" ? Math.max(1, Math.min(buildSteps.length, parsed.s)) : currentStep + 1;
+    if (targetStep - 1 !== currentStep) {
+      setCurrentStep(targetStep - 1);
+    }
+    requestAnimationFrame(() => {
+      cart.rotation.x = parsed.rotX;
+      cart.rotation.y = parsed.rotY;
+      const dir = cam.position.clone().normalize();
+      if (dir.lengthSq() === 0) dir.set(1, 0.6, 1).normalize();
+      cam.position.copy(dir.multiplyScalar(parsed.camDist));
+      cam.lookAt(0, 0, 0);
+      setIsRotating(!!parsed.autoRotate);
+      // Persist as the saved view for this step
+      try {
+        localStorage.setItem(viewStorageKey(targetStep - 1), JSON.stringify({
+          rotX: parsed.rotX,
+          rotY: parsed.rotY,
+          camDist: parsed.camDist,
+          autoRotate: !!parsed.autoRotate,
+        }));
+      } catch {}
+      persistedStepRef.current = targetStep - 1;
+      toast.success(`Loaded view for Step ${targetStep}`);
+      setShareDialog((s) => ({ ...s, open: false }));
+    });
+  };
+
   const toggleComponentVisibility = (stepIndex: number) => {
     setVisibleComponents(prev => ({
       ...prev,
