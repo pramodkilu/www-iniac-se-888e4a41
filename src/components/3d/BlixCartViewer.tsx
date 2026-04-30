@@ -44,6 +44,11 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
   const currentStepPiecesRef = useRef<THREE.Group[]>([]);
   
   const [currentStep, setCurrentStep] = useState(0);
+  const [shareDialog, setShareDialog] = useState<{ open: boolean; mode: "export" | "import"; code: string }>({
+    open: false,
+    mode: "export",
+    code: "",
+  });
   const [isRotating, setIsRotating] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [isExploded, setIsExploded] = useState(false);
