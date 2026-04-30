@@ -5,7 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ChevronRight, RotateCcw, ZoomIn, ZoomOut, Maximize2, Ruler } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, ChevronRight, RotateCcw, ZoomIn, ZoomOut, Maximize2, Ruler, Share2, Download } from "lucide-react";
+import { toast } from "sonner";
 
 interface BuildStep {
   number: number;
@@ -41,6 +44,11 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
   const currentStepPiecesRef = useRef<THREE.Group[]>([]);
   
   const [currentStep, setCurrentStep] = useState(0);
+  const [shareDialog, setShareDialog] = useState<{ open: boolean; mode: "export" | "import"; code: string }>({
+    open: false,
+    mode: "export",
+    code: "",
+  });
   const [isRotating, setIsRotating] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [isExploded, setIsExploded] = useState(false);
@@ -640,6 +648,91 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
     }
   };
 
+  // Export current step's view as a shareable base64 code
+  const handleShareView = async () => {
+    const cart = cartGroupRef.current;
+    const cam = cameraRef.current;
+    if (!cart || !cam) return;
+    const payload = {
+      v: 1,
+      c: chapterId ?? null,
+      s: currentStep + 1,
+      rotX: Number(cart.rotation.x.toFixed(4)),
+      rotY: Number(cart.rotation.y.toFixed(4)),
+      camDist: Number(cam.position.length().toFixed(4)),
+      autoRotate: isRotatingRef.current,
+    };
+    let code = "";
+    try {
+      code = btoa(JSON.stringify(payload));
+    } catch {
+      code = JSON.stringify(payload);
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success(`View for Step ${currentStep + 1} copied to clipboard`);
+    } catch {
+      // Clipboard blocked — fall through to dialog so user can copy manually
+    }
+    setShareDialog({ open: true, mode: "export", code });
+  };
+
+  const handleImportView = () => {
+    setShareDialog({ open: true, mode: "import", code: "" });
+  };
+
+  const applyImportedCode = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      toast.error("Paste a view code first");
+      return;
+    }
+    let parsed: any;
+    try {
+      parsed = JSON.parse(atob(trimmed));
+    } catch {
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch {
+        toast.error("That doesn't look like a valid view code");
+        return;
+      }
+    }
+    const cart = cartGroupRef.current;
+    const cam = cameraRef.current;
+    if (!cart || !cam) return;
+    if (typeof parsed.rotX !== "number" || typeof parsed.rotY !== "number" || typeof parsed.camDist !== "number") {
+      toast.error("View code is missing required fields");
+      return;
+    }
+    // If the code targets a different step, jump to it (within bounds)
+    const targetStep = typeof parsed.s === "number" ? Math.max(1, Math.min(buildSteps.length, parsed.s)) : currentStep + 1;
+    if (targetStep - 1 !== currentStep) {
+      setCurrentStep(targetStep - 1);
+    }
+    requestAnimationFrame(() => {
+      cart.rotation.x = parsed.rotX;
+      cart.rotation.y = parsed.rotY;
+      const dir = cam.position.clone().normalize();
+      if (dir.lengthSq() === 0) dir.set(1, 0.6, 1).normalize();
+      cam.position.copy(dir.multiplyScalar(parsed.camDist));
+      cam.lookAt(0, 0, 0);
+      setIsRotating(!!parsed.autoRotate);
+      // Persist as the saved view for this step
+      try {
+        localStorage.setItem(viewStorageKey(targetStep - 1), JSON.stringify({
+          rotX: parsed.rotX,
+          rotY: parsed.rotY,
+          camDist: parsed.camDist,
+          autoRotate: !!parsed.autoRotate,
+        }));
+      } catch {}
+      persistedStepRef.current = targetStep - 1;
+      toast.success(`Loaded view for Step ${targetStep}`);
+      setShareDialog((s) => ({ ...s, open: false }));
+    });
+  };
+
   const toggleComponentVisibility = (stepIndex: number) => {
     setVisibleComponents(prev => ({
       ...prev,
@@ -751,8 +844,27 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
               variant="secondary"
               onClick={handleReset}
               className="shadow-lg bg-card"
+              title="Reset rotation"
             >
               <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleShareView}
+              className="shadow-lg bg-card"
+              title={`Share Step ${currentStep + 1} view`}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleImportView}
+              className="shadow-lg bg-card"
+              title="Import shared view"
+            >
+              <Download className="h-4 w-4" />
             </Button>
           </div>
 
@@ -827,6 +939,48 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
           🖱️ Click and drag to rotate • Scroll or use buttons to zoom • Hover over pieces to identify • Use controls to explore
         </p>
       </Card>
+
+      {/* Share / Import view dialog */}
+      <Dialog open={shareDialog.open} onOpenChange={(o) => setShareDialog((s) => ({ ...s, open: o }))}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {shareDialog.mode === "export" ? `Share Step ${currentStep + 1} view` : "Import a shared view"}
+            </DialogTitle>
+            <DialogDescription>
+              {shareDialog.mode === "export"
+                ? "Send this code to a teammate so they can verify the same parts from your exact angle and zoom."
+                : "Paste a view code below to jump to that step and angle."}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={shareDialog.code}
+            onChange={(e) => setShareDialog((s) => ({ ...s, code: e.target.value }))}
+            readOnly={shareDialog.mode === "export"}
+            rows={4}
+            className="font-mono text-xs"
+            placeholder={shareDialog.mode === "import" ? "Paste view code here…" : ""}
+          />
+          <DialogFooter className="gap-2 sm:gap-2">
+            {shareDialog.mode === "export" ? (
+              <Button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(shareDialog.code);
+                    toast.success("Copied to clipboard");
+                  } catch {
+                    toast.error("Couldn't copy — select and copy manually");
+                  }
+                }}
+              >
+                Copy code
+              </Button>
+            ) : (
+              <Button onClick={() => applyImportedCode(shareDialog.code)}>Load view</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
