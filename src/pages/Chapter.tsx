@@ -118,7 +118,7 @@ const Chapter = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className={`container mx-auto px-4 py-8 ${activeTab === "build" ? "max-w-[1600px]" : "max-w-6xl"}`}>
         {(() => {
           const totalSteps = chapterData.steps.length;
           const verdictCount = Object.keys(progress.step_verdicts).length;
