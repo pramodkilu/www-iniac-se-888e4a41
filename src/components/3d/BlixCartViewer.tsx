@@ -939,6 +939,48 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
           🖱️ Click and drag to rotate • Scroll or use buttons to zoom • Hover over pieces to identify • Use controls to explore
         </p>
       </Card>
+
+      {/* Share / Import view dialog */}
+      <Dialog open={shareDialog.open} onOpenChange={(o) => setShareDialog((s) => ({ ...s, open: o }))}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {shareDialog.mode === "export" ? `Share Step ${currentStep + 1} view` : "Import a shared view"}
+            </DialogTitle>
+            <DialogDescription>
+              {shareDialog.mode === "export"
+                ? "Send this code to a teammate so they can verify the same parts from your exact angle and zoom."
+                : "Paste a view code below to jump to that step and angle."}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={shareDialog.code}
+            onChange={(e) => setShareDialog((s) => ({ ...s, code: e.target.value }))}
+            readOnly={shareDialog.mode === "export"}
+            rows={4}
+            className="font-mono text-xs"
+            placeholder={shareDialog.mode === "import" ? "Paste view code here…" : ""}
+          />
+          <DialogFooter className="gap-2 sm:gap-2">
+            {shareDialog.mode === "export" ? (
+              <Button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(shareDialog.code);
+                    toast.success("Copied to clipboard");
+                  } catch {
+                    toast.error("Couldn't copy — select and copy manually");
+                  }
+                }}
+              >
+                Copy code
+              </Button>
+            ) : (
+              <Button onClick={() => applyImportedCode(shareDialog.code)}>Load view</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
