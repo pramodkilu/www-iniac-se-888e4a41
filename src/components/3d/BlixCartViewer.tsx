@@ -844,8 +844,27 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
               variant="secondary"
               onClick={handleReset}
               className="shadow-lg bg-card"
+              title="Reset rotation"
             >
               <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleShareView}
+              className="shadow-lg bg-card"
+              title={`Share Step ${currentStep + 1} view`}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={handleImportView}
+              className="shadow-lg bg-card"
+              title="Import shared view"
+            >
+              <Download className="h-4 w-4" />
             </Button>
           </div>
 
