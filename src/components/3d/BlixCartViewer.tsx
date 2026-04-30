@@ -5,7 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ChevronRight, RotateCcw, ZoomIn, ZoomOut, Maximize2, Ruler } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { ChevronLeft, ChevronRight, RotateCcw, ZoomIn, ZoomOut, Maximize2, Ruler, Share2, Download } from "lucide-react";
+import { toast } from "sonner";
 
 interface BuildStep {
   number: number;
