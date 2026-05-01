@@ -337,10 +337,9 @@ const Curriculum = () => {
                     <thead className="bg-muted/50">
                       <tr className="text-left text-xs font-semibold text-muted-foreground">
                         <th className="px-4 py-3 w-12">#</th>
-                        <th className="px-4 py-3">Course Project</th>
-                        <th className="px-4 py-3">Concepts</th>
-                        <th className="px-4 py-3">Skills Developed</th>
-                        <th className="px-4 py-3">Skolverket Alignment</th>
+                        <th className="px-4 py-3">Course</th>
+                        <th className="px-4 py-3">Project</th>
+                        <th className="px-4 py-3">Concept</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -352,6 +351,11 @@ const Curriculum = () => {
                           }`}
                         >
                           <td className="px-4 py-4 text-sm font-medium text-muted-foreground">{s.n}</td>
+                          <td className="px-4 py-4">
+                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                              {s.course}
+                            </span>
+                          </td>
                           <td className="px-4 py-4">
                             <p
                               className={`font-medium text-sm ${
@@ -365,10 +369,6 @@ const Curriculum = () => {
                             <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-medium ${s.conceptColor}`}>
                               {s.concept}
                             </span>
-                          </td>
-                          <td className="px-4 py-4 text-sm text-muted-foreground max-w-xs">{s.skills}</td>
-                          <td className="px-4 py-4 text-xs text-muted-foreground max-w-sm leading-relaxed">
-                            {s.skolverket}
                           </td>
                         </tr>
                       ))}
