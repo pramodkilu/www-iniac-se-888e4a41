@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, RefreshCw, Sparkles, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Camera, RefreshCw, Sparkles, CheckCircle2, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,10 @@ interface StepCameraProps {
   chapterTitle: string;
   savedVerdict?: SavedVerdict;
   onVerified?: (v: VerifyResult) => void;
+  onAdvance?: () => void;
 }
 
-const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCameraProps) => {
+const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified, onAdvance }: StepCameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
