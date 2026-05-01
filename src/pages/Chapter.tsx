@@ -331,6 +331,7 @@ const Chapter = () => {
                           chapterTitle={chapterData.title}
                           savedVerdict={verdict}
                           onVerified={(v) => saveStepVerdict(currentStep.number, v)}
+                          onAdvance={() => setActiveBuildStep((s) => Math.min(totalSteps, s + 1))}
                         />
                       </CardContent>
                     </Card>
