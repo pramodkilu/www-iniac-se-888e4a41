@@ -21,51 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
+import { grades } from "@/data/blixSessions";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-interface Session {
-  n: number;
-  project: string;
-  concept: string;
-  conceptColor: string;
-  skills: string;
-  skolverket: string;
-  highlight?: boolean;
-}
-
-interface GradeData {
-  grade: number;
-  stadium: "1–3" | "4–6" | "7–9";
-  sessionCount: number;
-  sessions: Session[];
-}
-
-// ─── Grade data (preserves the existing structure shown in screenshots) ──────
-const grades: GradeData[] = [
-  {
-    grade: 1,
-    stadium: "1–3",
-    sessionCount: 30,
-    sessions: [
-      { n: 1, project: "Wheeling Cart", concept: "Simple Machines", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Problem Solving", skolverket: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
-      { n: 2, project: "Aerodynamics Car", concept: "Air Friction", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Problem Solving, Critical Thinking", skolverket: "Lgr22 1–3: Fysik – Kraft & rörelse; Digital kompetens – AI, mönsterigenkänning & databehandling" },
-      { n: 3, project: "Challenge: Ladder Checkpoint -1", concept: "Checkpoint", conceptColor: "bg-orange-100 text-orange-700", skills: "Problem solving, Creativity, Initiative", skolverket: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system (Teknik/Matematik)", highlight: true },
-      { n: 4, project: "Trebuchet", concept: "Action & Reactions", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Problem Solving, Critical Thinking", skolverket: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
-      { n: 5, project: "Sign Board", concept: "Coding & Decoding", conceptColor: "bg-orange-100 text-orange-700", skills: "Problem solving, Creativity, Communication", skolverket: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system (Teknik/Matematik)" },
-      { n: 6, project: "Single suspension Car", concept: "Construction Skill", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Critical Thinking", skolverket: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
-      { n: 7, project: "Most stable tower", concept: "Structure & Base", conceptColor: "bg-orange-100 text-orange-700", skills: "Creativity, Initiative", skolverket: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
-      { n: 8, project: "Lift", concept: "Construction Skill", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy", skolverket: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
-      { n: 9, project: "Money", concept: "Counting", conceptColor: "bg-orange-100 text-orange-700", skills: "Numeracy", skolverket: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik" },
-    ],
-  },
-  { grade: 2, stadium: "1–3", sessionCount: 30, sessions: [] },
-  { grade: 3, stadium: "1–3", sessionCount: 30, sessions: [] },
-  { grade: 4, stadium: "4–6", sessionCount: 32, sessions: [] },
-  { grade: 5, stadium: "4–6", sessionCount: 32, sessions: [] },
-  { grade: 6, stadium: "4–6", sessionCount: 32, sessions: [] },
-  { grade: 7, stadium: "7–9", sessionCount: 36, sessions: [] },
-  { grade: 8, stadium: "7–9", sessionCount: 36, sessions: [] },
-];
 
 // ─── Module data (from Blix Educator Set leaflet) ────────────────────────────
 interface Module {
@@ -380,10 +337,9 @@ const Curriculum = () => {
                     <thead className="bg-muted/50">
                       <tr className="text-left text-xs font-semibold text-muted-foreground">
                         <th className="px-4 py-3 w-12">#</th>
-                        <th className="px-4 py-3">Course Project</th>
-                        <th className="px-4 py-3">Concepts</th>
-                        <th className="px-4 py-3">Skills Developed</th>
-                        <th className="px-4 py-3">Skolverket Alignment</th>
+                        <th className="px-4 py-3">Course</th>
+                        <th className="px-4 py-3">Project</th>
+                        <th className="px-4 py-3">Concept</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -395,6 +351,11 @@ const Curriculum = () => {
                           }`}
                         >
                           <td className="px-4 py-4 text-sm font-medium text-muted-foreground">{s.n}</td>
+                          <td className="px-4 py-4">
+                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                              {s.course}
+                            </span>
+                          </td>
                           <td className="px-4 py-4">
                             <p
                               className={`font-medium text-sm ${
@@ -408,10 +369,6 @@ const Curriculum = () => {
                             <span className={`inline-block text-xs px-2.5 py-1 rounded-full font-medium ${s.conceptColor}`}>
                               {s.concept}
                             </span>
-                          </td>
-                          <td className="px-4 py-4 text-sm text-muted-foreground max-w-xs">{s.skills}</td>
-                          <td className="px-4 py-4 text-xs text-muted-foreground max-w-sm leading-relaxed">
-                            {s.skolverket}
                           </td>
                         </tr>
                       ))}
