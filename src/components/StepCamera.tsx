@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, RefreshCw, Sparkles, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Camera, RefreshCw, Sparkles, CheckCircle2, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,10 @@ interface StepCameraProps {
   chapterTitle: string;
   savedVerdict?: SavedVerdict;
   onVerified?: (v: VerifyResult) => void;
+  onAdvance?: () => void;
 }
 
-const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCameraProps) => {
+const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified, onAdvance }: StepCameraProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -130,13 +131,14 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCamera
     }
   };
 
-  const statusMeta = result
-    ? result.status === "correct"
-      ? { color: "text-success", bg: "bg-success/10 border-success/30", icon: CheckCircle2, label: "Great job!" }
-      : result.status === "incorrect"
-      ? { color: "text-destructive", bg: "bg-destructive/10 border-destructive/30", icon: XCircle, label: "Not quite" }
-      : { color: "text-accent", bg: "bg-accent/10 border-accent/30", icon: AlertCircle, label: "Let's double-check" }
-    : null;
+  const tryAgain = () => {
+    setSnapshot(null);
+    setResult(null);
+    startCamera();
+  };
+
+  const showResult = !!result;
+  const isPass = result?.status === "correct";
 
   return (
     <Card className="border-primary/20">
@@ -144,7 +146,7 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCamera
         <CardTitle className="flex items-center gap-2 text-lg">
           <Camera className="h-5 w-5 text-primary" />
           AI Step Check — Step {step.number}
-          {savedVerdict && (
+          {savedVerdict && !showResult && (
             <Badge variant="outline" className="ml-auto text-xs">
               Resumed from last session
             </Badge>
@@ -167,69 +169,97 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified }: StepCamera
           )}
         </div>
 
-        <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden border">
-          {snapshot ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={snapshot} alt="Captured build" className="w-full h-full object-contain bg-black" />
-          ) : (
-            <video
-              ref={videoRef}
-              playsInline
-              muted
-              className={cn("w-full h-full object-cover", !cameraOn && "hidden")}
-            />
-          )}
-          {!snapshot && !cameraOn && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Camera className="h-10 w-10" />
-              <p className="text-sm">Start the camera to take a photo of your build</p>
+        {showResult ? (
+          isPass ? (
+            <div className="rounded-lg border border-success/40 bg-success/10 p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-success/20 p-2">
+                  <CheckCircle2 className="h-6 w-6 text-success" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="font-semibold text-success">
+                    Step {step.number} looks correct! You can move to Step {step.number + 1}.
+                  </p>
+                  {result?.feedback && (
+                    <p className="text-sm text-muted-foreground">{result.feedback}</p>
+                  )}
+                </div>
+              </div>
+              <Button
+                onClick={() => onAdvance?.()}
+                className="w-full gap-2 bg-success text-success-foreground hover:bg-success/90"
+              >
+                Next Step <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-          )}
-          <canvas ref={canvasRef} className="hidden" />
-        </div>
+          ) : (
+            <div className="rounded-lg border border-accent/40 bg-accent/10 p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-accent/20 p-2">
+                  <AlertCircle className="h-6 w-6 text-accent" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="font-semibold text-accent">Let's fix this</p>
+                  <p className="text-sm">
+                    {result?.tip || result?.feedback || "Re-check the orientation of the highlighted pieces and try again."}
+                  </p>
+                </div>
+              </div>
+              <Button onClick={tryAgain} variant="outline" className="w-full gap-2">
+                <RefreshCw className="h-4 w-4" /> Try Again
+              </Button>
+            </div>
+          )
+        ) : (
+          <>
+            <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden border">
+              {snapshot ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={snapshot} alt="Captured build" className="w-full h-full object-contain bg-black" />
+              ) : (
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  className={cn("w-full h-full object-cover", !cameraOn && "hidden")}
+                />
+              )}
+              {!snapshot && !cameraOn && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <Camera className="h-10 w-10" />
+                  <p className="text-sm">Start the camera to take a photo of your build</p>
+                </div>
+              )}
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
 
-        <div className="flex flex-wrap gap-2">
-          {!cameraOn && !snapshot && (
-            <Button onClick={startCamera} className="gap-2">
-              <Camera className="h-4 w-4" /> Start Camera
-            </Button>
-          )}
-          {cameraOn && (
-            <>
-              <Button onClick={capture} className="gap-2">
-                <Camera className="h-4 w-4" /> Capture
-              </Button>
-              <Button variant="outline" onClick={stopCamera}>Cancel</Button>
-            </>
-          )}
-          {snapshot && (
-            <>
-              <Button onClick={verify} disabled={loading} className="gap-2">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {loading ? "Checking..." : "Verify with AI"}
-              </Button>
-              <Button variant="outline" onClick={retake} className="gap-2">
-                <RefreshCw className="h-4 w-4" /> Retake
-              </Button>
-            </>
-          )}
-        </div>
-
-        {result && statusMeta && (
-          <div className={cn("border rounded-lg p-4 flex gap-3", statusMeta.bg)}>
-            <statusMeta.icon className={cn("h-6 w-6 flex-shrink-0", statusMeta.color)} />
-            <div className="flex-1 space-y-1">
-              <p className={cn("font-semibold", statusMeta.color)}>
-                {statusMeta.label} <span className="text-xs text-muted-foreground font-normal">
-                  ({Math.round(result.confidence * 100)}% confident)
-                </span>
-              </p>
-              <p className="text-sm">{result.feedback}</p>
-              {result.tip && (
-                <p className="text-sm text-muted-foreground"><strong>Tip:</strong> {result.tip}</p>
+            <div className="flex flex-wrap gap-2">
+              {!cameraOn && !snapshot && (
+                <Button onClick={startCamera} className="gap-2">
+                  <Camera className="h-4 w-4" /> Start Camera
+                </Button>
+              )}
+              {cameraOn && (
+                <>
+                  <Button onClick={capture} className="gap-2">
+                    <Camera className="h-4 w-4" /> Capture
+                  </Button>
+                  <Button variant="outline" onClick={stopCamera}>Cancel</Button>
+                </>
+              )}
+              {snapshot && (
+                <>
+                  <Button onClick={verify} disabled={loading} className="gap-2">
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    {loading ? "Checking..." : "Verify with AI"}
+                  </Button>
+                  <Button variant="outline" onClick={retake} className="gap-2">
+                    <RefreshCw className="h-4 w-4" /> Retake
+                  </Button>
+                </>
               )}
             </div>
-          </div>
+          </>
         )}
       </CardContent>
     </Card>
