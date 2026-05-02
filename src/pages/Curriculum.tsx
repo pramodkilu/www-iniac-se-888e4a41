@@ -268,7 +268,7 @@ const componentBoxes: KitBox[] = [
     title: "Logic Blocks, Discovering Electricity, Junior Electronics",
     subtitle: "E-circuits, logic blocks & junior electronics — 2 sets per kit",
     color: "bg-yellow-500",
-    image: "/curriculum/box1.jpg",
+    image: "/box1.jpg",
     groups: [
       {
         group: "Logic Blocks (screenless coding)",
@@ -327,7 +327,7 @@ const componentBoxes: KitBox[] = [
     title: "Marble Stem",
     subtitle: "Marble-run construction kit — 1 set per kit",
     color: "bg-blue-500",
-    image: "/curriculum/box2.jpg",
+    image: "/box2.jpg",
     groups: [
       {
         group: "Marble Stem track parts",
@@ -357,7 +357,7 @@ const componentBoxes: KitBox[] = [
     title: "Discovering Electronics & Boffin Basic Electronics",
     subtitle: "Digital ICs, PCBs, ESP32 — 2 sets of ICs / 1 set of boards",
     color: "bg-purple-500",
-    image: "/curriculum/box3.jpg",
+    image: "/box3.jpg",
     groups: [
       {
         group: "Integrated Circuits (digital logic)",
@@ -412,7 +412,7 @@ const componentBoxes: KitBox[] = [
     title: "Plastic Construction Parts",
     subtitle: "Pillars, connectors, gears, wheels — 2 sets per kit",
     color: "bg-green-500",
-    image: "/curriculum/box4.jpg",
+    image: "/box4.jpg",
     groups: [
       {
         group: "Pillars (load-bearing beams)",
@@ -480,7 +480,7 @@ const componentBoxes: KitBox[] = [
     title: "Accessories",
     subtitle: "Stationery, magnets, motors, batteries — 1 set per kit",
     color: "bg-orange-500",
-    image: "/curriculum/box5.jpg",
+    image: "/box5.jpg",
     groups: [
       {
         group: "Stationery & consumables",
@@ -527,7 +527,7 @@ const componentBoxes: KitBox[] = [
     title: "Big Construction Parts",
     subtitle: "Base plates and wheels — 1 set per kit",
     color: "bg-emerald-500",
-    image: "/curriculum/box6.jpg",
+    image: "/box6.jpg",
     groups: [
       {
         group: "Plates & wheels",
