@@ -944,6 +944,20 @@ const Curriculum = () => {
                                   key={item.id}
                                   className="border border-border rounded-lg p-3 bg-card hover:border-primary/40 hover:shadow-sm transition-all"
                                 >
+                                  {/* Component thumbnail */}
+                                  <div className="mb-2 rounded overflow-hidden bg-white border border-border">
+                                    <img
+                                      src={`/curriculum/components/${item.id}.jpg`}
+                                      alt={item.name}
+                                      loading="lazy"
+                                      className="w-full h-auto block"
+                                      onError={(e) => {
+                                        // Fallback if image missing
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+
                                   <div className="flex items-start justify-between gap-2 mb-1.5">
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-1.5 flex-wrap">
