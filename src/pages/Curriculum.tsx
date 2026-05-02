@@ -917,13 +917,26 @@ const Curriculum = () => {
                     {isOpen && (
                       <div className="px-5 pb-5 pt-2 bg-background border-t border-border space-y-6">
                         {/* Reference photo from leaflet */}
-                        <div className="rounded-lg overflow-hidden bg-white border border-border">
+                        <div className="rounded-lg overflow-hidden bg-white border border-border relative">
                           <img
                             src={box.image}
                             alt={`${box.box} – ${box.title}`}
                             loading="lazy"
                             className="w-full h-auto block"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              img.style.display = 'none';
+                              const ph = img.nextElementSibling as HTMLElement | null;
+                              if (ph) ph.style.display = 'flex';
+                            }}
                           />
+                          <div
+                            style={{ display: 'none' }}
+                            className="aspect-[16/9] w-full items-center justify-center flex-col gap-2 bg-gradient-to-br from-muted/60 to-muted text-muted-foreground"
+                          >
+                            <Package className="w-10 h-10 opacity-60" />
+                            <span className="text-xs font-medium">{box.box} reference image coming soon</span>
+                          </div>
                         </div>
 
                         {/* Each functional group of components */}
@@ -950,12 +963,21 @@ const Curriculum = () => {
                                       src={`/curriculum/components/${item.id}.jpg`}
                                       alt={item.name}
                                       loading="lazy"
-                                      className="w-full h-auto block"
+                                      className="w-full h-24 object-contain block"
                                       onError={(e) => {
-                                        // Fallback if image missing
-                                        e.currentTarget.style.display = 'none';
+                                        const img = e.currentTarget;
+                                        img.style.display = 'none';
+                                        const ph = img.nextElementSibling as HTMLElement | null;
+                                        if (ph) ph.style.display = 'flex';
                                       }}
                                     />
+                                    <div
+                                      style={{ display: 'none' }}
+                                      className="h-24 w-full items-center justify-center flex-col gap-1 bg-gradient-to-br from-muted/50 to-muted/80 text-muted-foreground"
+                                    >
+                                      <Package className="w-6 h-6 opacity-60" />
+                                      <span className="font-mono text-[10px] font-semibold">{item.code}</span>
+                                    </div>
                                   </div>
 
                                   <div className="flex items-start justify-between gap-2 mb-1.5">
