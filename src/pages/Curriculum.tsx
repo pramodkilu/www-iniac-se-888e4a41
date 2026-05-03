@@ -1054,6 +1054,38 @@ const Curriculum = () => {
           </div>
         )}
 
+        {/* ─── 3D GALLERY TAB ───────────────────────────────────────────── */}
+        {activeTab === "gallery3d" && (
+          <div>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Interactive 3D Gallery</h2>
+              <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+                Explore Blix kit components in 3D. Drag any model to rotate, or toggle auto-rotate.
+                A live preview of every part across the six boxes.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 bg-muted/50 rounded-full p-1">
+                <button
+                  onClick={() => setGalleryAutoRotate(true)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    galleryAutoRotate ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Auto-Rotate
+                </button>
+                <button
+                  onClick={() => setGalleryAutoRotate(false)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    !galleryAutoRotate ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Manual
+                </button>
+              </div>
+            </div>
+            <ThreeDGallery autoRotate={galleryAutoRotate} />
+          </div>
+        )}
+
         {/* Footer CTA */}
         <div className="mt-12 text-center border-t border-border pt-8">
           <p className="text-sm text-muted-foreground mb-3">
