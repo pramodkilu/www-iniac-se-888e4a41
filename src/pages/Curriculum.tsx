@@ -633,6 +633,7 @@ const Curriculum = () => {
               { id: "modules", label: "Modules Covered", icon: <Layers className="w-4 h-4" /> },
               { id: "tools", label: "Software & Tools", icon: <Monitor className="w-4 h-4" /> },
               { id: "kit", label: "Kit Components", icon: <Package className="w-4 h-4" /> },
+              { id: "gallery3d", label: "3D Gallery", icon: <Boxes className="w-4 h-4" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
