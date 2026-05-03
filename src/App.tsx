@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import Index from "./pages/Index";
 import Chapter from "./pages/Chapter";
 import Auth from "./pages/Auth";
@@ -25,28 +26,30 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/chapter/:id" element={<Chapter />} />
-            <Route path="/roboliga/register" element={<RoboLigaRegister />} />
-            <Route path="/education" element={<Education />} />
-            <Route path="/programs" element={<Programs />} />
-            <Route path="/curriculum" element={<Curriculum />} />
-            {/* Dashboard routes */}
-            <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
-            <Route path="/admin/*" element={<AdminDashboard />} />
-            <Route path="/teacher/*" element={<TeacherDashboard />} />
-            <Route path="/student/*" element={<StudentDashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <LanguageProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/chapter/:id" element={<Chapter />} />
+              <Route path="/roboliga/register" element={<RoboLigaRegister />} />
+              <Route path="/education" element={<Education />} />
+              <Route path="/programs" element={<Programs />} />
+              <Route path="/curriculum" element={<Curriculum />} />
+              {/* Dashboard routes */}
+              <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
+              <Route path="/admin/*" element={<AdminDashboard />} />
+              <Route path="/teacher/*" element={<TeacherDashboard />} />
+              <Route path="/student/*" element={<StudentDashboard />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </LanguageProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
