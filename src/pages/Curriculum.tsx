@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
+import ThreeDGallery from "@/components/ThreeDGallery";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Session {
@@ -569,8 +570,9 @@ const categoryStyle: Record<ComponentCategory, string> = {
 // ─── Page ────────────────────────────────────────────────────────────────────
 const Curriculum = () => {
   const [selectedGrade, setSelectedGrade] = useState(1);
-  const [activeTab, setActiveTab] = useState<"sessions" | "modules" | "tools" | "kit">("sessions");
+  const [activeTab, setActiveTab] = useState<"sessions" | "modules" | "tools" | "kit" | "gallery3d">("sessions");
   const [openBox, setOpenBox] = useState<string | null>(null);
+  const [galleryAutoRotate, setGalleryAutoRotate] = useState(true);
 
   const totalSessions = grades.reduce((sum, g) => sum + g.sessionCount, 0);
   const current = grades.find((g) => g.grade === selectedGrade)!;
@@ -632,6 +634,7 @@ const Curriculum = () => {
               { id: "modules", label: "Modules Covered", icon: <Layers className="w-4 h-4" /> },
               { id: "tools", label: "Software & Tools", icon: <Monitor className="w-4 h-4" /> },
               { id: "kit", label: "Kit Components", icon: <Package className="w-4 h-4" /> },
+              { id: "gallery3d", label: "3D Gallery", icon: <Boxes className="w-4 h-4" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1048,6 +1051,38 @@ const Curriculum = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* ─── 3D GALLERY TAB ───────────────────────────────────────────── */}
+        {activeTab === "gallery3d" && (
+          <div>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Interactive 3D Gallery</h2>
+              <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+                Explore Blix kit components in 3D. Drag any model to rotate, or toggle auto-rotate.
+                A live preview of every part across the six boxes.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 bg-muted/50 rounded-full p-1">
+                <button
+                  onClick={() => setGalleryAutoRotate(true)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    galleryAutoRotate ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Auto-Rotate
+                </button>
+                <button
+                  onClick={() => setGalleryAutoRotate(false)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    !galleryAutoRotate ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Manual
+                </button>
+              </div>
+            </div>
+            <ThreeDGallery autoRotate={galleryAutoRotate} />
           </div>
         )}
 
