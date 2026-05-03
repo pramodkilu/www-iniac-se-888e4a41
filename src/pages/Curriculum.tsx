@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
+import ThreeDGallery from "@/components/ThreeDGallery";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Session {
