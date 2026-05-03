@@ -13,6 +13,8 @@ import StepCamera from "@/components/StepCamera";
 import AIAssistant from "@/components/AIAssistant";
 import ARViewer from "@/components/ARViewer";
 import { useChapterProgress } from "@/hooks/useChapterProgress";
+import { getChapter, tr, LGR22_STRANDS, SDG_INFO, chapterComponents } from "@/data/chapters";
+import { useLanguage, useUIStrings } from "@/i18n/LanguageContext";
 
 const Chapter = () => {
   const { id } = useParams();
@@ -23,6 +25,11 @@ const Chapter = () => {
   const [resumeDismissed, setResumeDismissed] = useState(false);
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
   const [activeBuildStep, setActiveBuildStep] = useState(1);
+  const { lang } = useLanguage();
+  const ui = useUIStrings();
+
+  // Pull chapter from the bilingual data file
+  const chapter = getChapter(chapterIdNum);
 
   // Sync slider to saved progress when it loads
   useEffect(() => {
@@ -31,66 +38,69 @@ const Chapter = () => {
     }
   }, [progress.current_step]);
 
-  // Sample data for Chapter 1
-  const chapterData = {
-    id: 1,
-    title: "Cart With Wheels",
-    description: "Learn about friction and motion by building a wheeled cart",
-    difficulty: "Easy",
-    category: "Mechanics",
-    story: {
-      title: "The Old Man's Problem",
-      content: "Once upon a time, an old man needed to move his heavy possessions from one place to another. Pushing them along the ground was so difficult! Then he had a brilliant idea - what if he used wheels?"
-    },
-    theory: {
-      concept: "Friction",
-      explanation: "Friction is the force that opposes motion between two surfaces. When you slide something heavy on the ground, there's a lot of friction. But when you add wheels, the friction is greatly reduced, making it much easier to move!",
-      experiment: "Try sliding a book across your desk, then try rolling it on pencils. Which way is easier? That's the difference friction makes!"
-    },
-    steps: [
-      { 
-        number: 1, 
-        instruction: "Take the P7X11 U-shaped pillar and lay it flat as your base structure", 
-        pieces: ["P7X11"],
-        detail: "This will be the main frame of your cart. Notice the multiple holes - these will hold other components."
-      },
-      { 
-        number: 2, 
-        instruction: "Insert two CT2 connectors into the bottom holes of the base pillar", 
-        pieces: ["CT2", "CT2"],
-        detail: "These connectors will hold the axle holders in place. Push them in firmly until they click."
-      },
-      { 
-        number: 3, 
-        instruction: "Attach two CT3 axle holders to the CT2 connectors", 
-        pieces: ["CT3", "CT3"],
-        detail: "The CT3 holders have round holes for the axle shafts to pass through."
-      },
-      { 
-        number: 4, 
-        instruction: "Slide two SH170 axle shafts through the CT3 holders", 
-        pieces: ["SH170", "SH170"],
-        detail: "The shafts should move freely through the holders - this is what allows the wheels to spin."
-      },
-      { 
-        number: 5, 
-        instruction: "Push four wheels onto the ends of both axle shafts", 
-        pieces: ["Wheel x4"],
-        detail: "Make sure the wheels are pushed all the way onto the shafts and can spin freely."
-      },
-      {
-        number: 6,
-        instruction: "Test your cart by pushing it on a smooth surface!",
-        pieces: [],
-        detail: "Notice how easily it rolls compared to sliding something without wheels. That's reduced friction!"
-      }
-    ],
-    challenge: {
-      title: "Distance Challenge",
-      description: "Push your cart on different surfaces (smooth desk, rough carpet, bumpy ground) and measure how far it travels. Which surface has the most friction? The least?",
-      xp: 100
-    }
-  };
+  // Guard: chapter not found
+  if (!chapter) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Chapter not found</h1>
+          <p className="text-muted-foreground mb-4">No content exists for chapter {id}.</p>
+          <Link to="/"><Button>Back to home</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Resolve translated content once
+  const chapterTitle = tr(chapter.title, lang);
+  const chapterDescription = tr(chapter.subtitle, lang);
+  const conceptText = tr(chapter.theory.concept, lang);
+  const explanationText = tr(chapter.theory.explanation, lang);
+  const challengeTitle = tr(chapter.challenge.title, lang);
+  const challengeDescription = tr(chapter.challenge.description, lang);
+
+  // The theory tab originally had an "experiment" field. Map this to the first
+  // realWorldExample if it exists, falling back to a hint or empty string.
+  const experimentText =
+    chapter.theory.realWorldExamples.length > 0
+      ? tr(chapter.theory.realWorldExamples[0], lang)
+      : chapter.challenge.hint
+        ? tr(chapter.challenge.hint, lang)
+        : "";
+
+  // Adapt build steps from chapters.ts shape -> shape Chapter.tsx already uses.
+  // Chapter.tsx originally read step.number, step.instruction, step.detail, step.pieces.
+  // chapters.ts uses step.stepNumber, step.title, step.description, step.components.
+  const adaptedSteps = chapter.build.steps.map((s) => ({
+    number: s.stepNumber,
+    instruction: tr(s.title, lang),
+    detail: tr(s.description, lang),
+    pieces: s.components,
+  }));
+
+  // For chapters where detailed steps haven't been written yet (sessions 2-30
+  // mostly use the shorthand format with empty steps[] arrays), synthesize
+  // placeholder steps from build.totalSteps so the UI still renders.
+  const steps =
+    adaptedSteps.length > 0
+      ? adaptedSteps
+      : Array.from({ length: chapter.build.totalSteps || 1 }, (_, i) => ({
+          number: i + 1,
+          instruction:
+            lang === "sv"
+              ? `Steg ${i + 1} — detaljer kommer snart.`
+              : `Step ${i + 1} — details coming soon.`,
+          detail:
+            lang === "sv"
+              ? "Den fullständiga byggsekvensen läggs till här när den är klar."
+              : "The full build sequence will be added here when ready.",
+          pieces: [] as string[],
+        }));
+
+  // Difficulty / category keep static defaults for now (could be moved into
+  // chapters.ts later — leaving as-is to preserve existing visual badges).
+  const difficulty = "Easy";
+  const category = tr(chapter.theory.concept, lang);
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,12 +114,18 @@ const Chapter = () => {
               </Button>
             </Link>
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline">Chapter {id}</Badge>
-                <Badge className="bg-success text-success-foreground">{chapterData.difficulty}</Badge>
-                <Badge variant="secondary">{chapterData.category}</Badge>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <Badge variant="outline">{ui.chapter} {id}</Badge>
+                <Badge className="bg-success text-success-foreground">{difficulty}</Badge>
+                <Badge variant="secondary">{category}</Badge>
+                {chapter.isCheckpoint && (
+                  <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30">
+                    {ui.checkpoint}
+                  </Badge>
+                )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold">{chapterData.title}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">{chapterTitle}</h1>
+              <p className="text-sm text-muted-foreground mt-1">{chapterDescription}</p>
             </div>
           </div>
         </div>
@@ -118,7 +134,7 @@ const Chapter = () => {
       {/* Main Content */}
       <main className={`container mx-auto px-4 py-8 ${activeTab === "build" ? "max-w-[1600px]" : "max-w-6xl"}`}>
         {(() => {
-          const totalSteps = chapterData.steps.length;
+          const totalSteps = steps.length;
           const verdictCount = Object.keys(progress.step_verdicts).length;
           const resumeStep = Math.min(progress.current_step, totalSteps);
           const hasProgress = (verdictCount > 0 || progress.current_step > 1) && resumeStep <= totalSteps;
@@ -144,16 +160,20 @@ const Chapter = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">
-                    {isComplete ? "You finished all the steps!" : `Welcome back — pick up at Step ${resumeStep}`}
+                    {isComplete
+                      ? lang === "sv" ? "Du har klarat alla steg!" : "You finished all the steps!"
+                      : lang === "sv" ? `Välkommen tillbaka — fortsätt vid steg ${resumeStep}` : `Welcome back — pick up at Step ${resumeStep}`}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {verdictCount} of {totalSteps} steps verified by AI.
+                    {lang === "sv"
+                      ? `${verdictCount} av ${totalSteps} steg verifierade av AI.`
+                      : `${verdictCount} of ${totalSteps} steps verified by AI.`}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button size="sm" onClick={handleResume} disabled={isComplete}>
-                  Continue Step {resumeStep}
+                  {lang === "sv" ? `Fortsätt steg ${resumeStep}` : `Continue Step ${resumeStep}`}
                 </Button>
                 <Button size="icon" variant="ghost" onClick={() => setResumeDismissed(true)} aria-label="Dismiss">
                   <X className="h-4 w-4" />
@@ -162,29 +182,58 @@ const Chapter = () => {
             </div>
           );
         })()}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
             <TabsTrigger value="story" className="gap-2">
               <Play className="h-4 w-4" />
-              <span className="hidden sm:inline">Story</span>
+              <span className="hidden sm:inline">{ui.story}</span>
             </TabsTrigger>
             <TabsTrigger value="theory" className="gap-2">
               <Lightbulb className="h-4 w-4" />
-              <span className="hidden sm:inline">Theory</span>
+              <span className="hidden sm:inline">{ui.theory}</span>
             </TabsTrigger>
             <TabsTrigger value="build" className="gap-2">
               <Hammer className="h-4 w-4" />
-              <span className="hidden sm:inline">Build</span>
+              <span className="hidden sm:inline">{ui.build}</span>
             </TabsTrigger>
             <TabsTrigger value="challenge" className="gap-2">
               <Trophy className="h-4 w-4" />
-              <span className="hidden sm:inline">Challenge</span>
+              <span className="hidden sm:inline">{ui.challenge}</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Story Tab */}
           <TabsContent value="story" className="space-y-6">
             <StoryViewer />
+            {/* Bilingual story intro / dialogue from chapters.ts */}
+            {chapter.story.intro && (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-sm italic text-muted-foreground mb-4">{tr(chapter.story.intro, lang)}</p>
+                  {chapter.story.dialogue.length > 0 && (
+                    <div className="space-y-2">
+                      {chapter.story.dialogue.map((d, i) => (
+                        <div key={i} className="flex gap-3 items-start">
+                          <div className="w-8 h-8 rounded-full bg-muted text-xs flex items-center justify-center flex-shrink-0 font-medium">
+                            {d.speaker[0]}
+                          </div>
+                          <div className="bg-muted/50 px-3 py-2 rounded-lg text-sm flex-1">
+                            <span className="text-xs font-semibold text-muted-foreground mr-2">{d.speaker}:</span>
+                            {tr(d.text, lang)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {chapter.story.conclusion && (
+                    <div className="mt-4 p-3 bg-muted/30 rounded-lg text-sm italic text-muted-foreground">
+                      {tr(chapter.story.conclusion, lang)}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Theory Tab */}
@@ -193,30 +242,122 @@ const Chapter = () => {
               <CardHeader className="bg-gradient-to-r from-secondary/10 to-success/10">
                 <CardTitle className="flex items-center gap-2">
                   <Lightbulb className="h-5 w-5 text-secondary" />
-                  Understanding {chapterData.theory.concept}
+                  {lang === "sv" ? `Förstå ${conceptText}` : `Understanding ${conceptText}`}
                 </CardTitle>
-                <CardDescription>Learn the science behind this project</CardDescription>
+                <CardDescription>
+                  {lang === "sv" ? "Lär dig vetenskapen bakom projektet" : "Learn the science behind this project"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">What is {chapterData.theory.concept}?</h3>
-                  <p className="text-muted-foreground">{chapterData.theory.explanation}</p>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {lang === "sv" ? `Vad är ${conceptText}?` : `What is ${conceptText}?`}
+                  </h3>
+                  <p className="text-muted-foreground">{explanationText}</p>
                 </div>
-                <div className="p-4 bg-accent/10 border-l-4 border-accent rounded">
-                  <h4 className="font-semibold mb-2">Try This Experiment:</h4>
-                  <p className="text-sm">{chapterData.theory.experiment}</p>
+                {experimentText && (
+                  <div className="p-4 bg-accent/10 border-l-4 border-accent rounded">
+                    <h4 className="font-semibold mb-2">
+                      {lang === "sv" ? "Prova det här:" : "Try This Experiment:"}
+                    </h4>
+                    <p className="text-sm">{experimentText}</p>
+                  </div>
+                )}
+
+                {/* Real-world examples (if present) */}
+                {chapter.theory.realWorldExamples.length > 1 && (
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                      {ui.realWorldExamples}
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      {chapter.theory.realWorldExamples.slice(1).map((ex, i) => (
+                        <li key={i}>{tr(ex, lang)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* New vocabulary words */}
+                {chapter.theory.newWords.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                      {ui.newWords}
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {chapter.theory.newWords.map((w, i) => (
+                        <Badge key={i} variant="secondary" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                          {tr(w, lang)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Curriculum alignment panel — Lgr22 + SDG */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{ui.lgr22Alignment} & {ui.sdgGoals}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                    {ui.lgr22Alignment}
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {chapter.lgr22.strands.map((k) => (
+                      <Badge
+                        key={k}
+                        variant="outline"
+                        className="bg-blue-500/5 text-blue-700 dark:text-blue-300 border-blue-500/30"
+                      >
+                        {LGR22_STRANDS[k][lang]}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                    {ui.sdgGoals}
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {chapter.sdgs.map((n) => {
+                      const sdg = SDG_INFO[n];
+                      return (
+                        <span
+                          key={n}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border"
+                          style={{
+                            background: `${sdg.color}1A`,
+                            color: sdg.color,
+                            borderColor: `${sdg.color}66`,
+                          }}
+                        >
+                          <span
+                            className="w-4 h-4 rounded-full text-[9px] flex items-center justify-center text-white font-bold"
+                            style={{ background: sdg.color }}
+                          >
+                            {n}
+                          </span>
+                          {sdg[lang]}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-            
+
             <FrictionSimulator />
           </TabsContent>
 
           {/* Build Tab — 3 columns: 3D viewer | Instructions | Step-Check + AR */}
           <TabsContent value="build" className="space-y-6">
             {(() => {
-              const totalSteps = chapterData.steps.length;
-              const currentStep = chapterData.steps.find((s) => s.number === activeBuildStep) ?? chapterData.steps[0];
+              const totalSteps = steps.length;
+              const currentStep = steps.find((s) => s.number === activeBuildStep) ?? steps[0];
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
               const verdict = progress.step_verdicts[String(currentStep.number)];
@@ -228,9 +369,11 @@ const Chapter = () => {
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-lg">
                         <Hammer className="h-5 w-5 text-primary" />
-                        Interactive 3D Building Guide
+                        {lang === "sv" ? "Interaktiv 3D-byggguide" : "Interactive 3D Building Guide"}
                       </CardTitle>
-                      <CardDescription>Watch the 3D model as you follow each step.</CardDescription>
+                      <CardDescription>
+                        {lang === "sv" ? "Följ 3D-modellen för varje steg." : "Watch the 3D model as you follow each step."}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-2">
                       <BlixCartViewer chapterId={chapterIdNum} activeStep={activeBuildStep} />
@@ -243,7 +386,7 @@ const Chapter = () => {
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg">
-                            Step {activeBuildStep} of {totalSteps}
+                            {ui.step} {activeBuildStep} {ui.of} {totalSteps}
                           </CardTitle>
                           <div className="flex items-center gap-1">
                             <Button size="icon" variant="outline" onClick={goPrev} disabled={activeBuildStep <= 1}>
@@ -264,7 +407,7 @@ const Chapter = () => {
                           onValueChange={(v) => setActiveBuildStep(v[0])}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          {chapterData.steps.map((s) => {
+                          {steps.map((s) => {
                             const verified = !!progress.step_verdicts[String(s.number)];
                             return (
                               <button
@@ -318,17 +461,19 @@ const Chapter = () => {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-primary" />
-                          AI Step Check
+                          {lang === "sv" ? "AI-stegkontroll" : "AI Step Check"}
                         </CardTitle>
                         <CardDescription className="text-xs">
-                          Verify Step {currentStep.number} with a photo.
+                          {lang === "sv"
+                            ? `Verifiera steg ${currentStep.number} med ett foto.`
+                            : `Verify Step ${currentStep.number} with a photo.`}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-2">
                         <StepCamera
                           key={currentStep.number}
                           step={currentStep}
-                          chapterTitle={chapterData.title}
+                          chapterTitle={chapterTitle}
                           savedVerdict={verdict}
                           onVerified={(v) => saveStepVerdict(currentStep.number, v)}
                           onAdvance={() => setActiveBuildStep((s) => Math.min(totalSteps, s + 1))}
@@ -340,7 +485,7 @@ const Chapter = () => {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
                           <Box className="h-4 w-4 text-accent" />
-                          AR & AI Buddy
+                          {lang === "sv" ? "AR & AI-kompis" : "AR & AI Buddy"}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-2 space-y-3">
@@ -348,12 +493,14 @@ const Chapter = () => {
                           <div className="flex items-start gap-2 p-2.5 rounded-md bg-muted/60 border border-border text-xs">
                             <Lightbulb className="h-3.5 w-3.5 text-accent flex-shrink-0 mt-0.5" />
                             <p className="text-muted-foreground leading-snug">
-                              <span className="font-semibold text-foreground">AR locked.</span>{" "}
+                              <span className="font-semibold text-foreground">
+                                {lang === "sv" ? "AR låst." : "AR locked."}
+                              </span>{" "}
                               {verdict?.status === "incorrect"
-                                ? `Fix & re-check: "${verdict.tip || verdict.feedback}"`
+                                ? `${lang === "sv" ? "Åtgärda och kontrollera igen:" : "Fix & re-check:"} "${verdict.tip || verdict.feedback}"`
                                 : verdict?.status === "needs_review"
-                                ? `Need clearer photo: "${verdict.tip || verdict.feedback}"`
-                                : "Verify this step above first."}
+                                ? `${lang === "sv" ? "Behöver tydligare foto:" : "Need clearer photo:"} "${verdict.tip || verdict.feedback}"`
+                                : lang === "sv" ? "Verifiera detta steg först." : "Verify this step above first."}
                             </p>
                           </div>
                         )}
@@ -363,7 +510,7 @@ const Chapter = () => {
                           onClick={() => setAiOpen(true)}
                         >
                           <Sparkles className="h-4 w-4 text-primary" />
-                          <span className="text-sm">Ask AI Buddy</span>
+                          <span className="text-sm">{lang === "sv" ? "Fråga AI-kompisen" : "Ask AI Buddy"}</span>
                         </Button>
                         <Button
                           variant="outline"
@@ -372,7 +519,11 @@ const Chapter = () => {
                           onClick={() => setArOpen(true)}
                         >
                           <Box className="h-4 w-4 text-accent" />
-                          <span className="text-sm">{arUnlocked ? "View in AR" : "AR Locked"}</span>
+                          <span className="text-sm">
+                            {arUnlocked
+                              ? (lang === "sv" ? "Visa i AR" : "View in AR")
+                              : (lang === "sv" ? "AR låst" : "AR Locked")}
+                          </span>
                         </Button>
                       </CardContent>
                     </Card>
@@ -388,20 +539,35 @@ const Chapter = () => {
               <CardHeader className="bg-gradient-to-r from-accent/20 to-primary/20">
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-accent" />
-                  {chapterData.challenge.title}
+                  {challengeTitle}
                 </CardTitle>
-                <CardDescription>Complete this challenge to earn XP and unlock the next chapter!</CardDescription>
+                <CardDescription>
+                  {lang === "sv"
+                    ? "Klara utmaningen för att tjäna XP och låsa upp nästa kapitel!"
+                    : "Complete this challenge to earn XP and unlock the next chapter!"}
+                </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
-                <p className="text-lg mb-6">{chapterData.challenge.description}</p>
-                
+                <p className="text-lg mb-6">{challengeDescription}</p>
+
+                {chapter.challenge.hint && (
+                  <div className="mb-6 p-4 bg-amber-500/10 border-l-4 border-amber-500 rounded">
+                    <p className="text-xs uppercase tracking-wide font-semibold text-amber-700 dark:text-amber-300 mb-1">
+                      {ui.hint}
+                    </p>
+                    <p className="text-sm">{tr(chapter.challenge.hint, lang)}</p>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between p-4 bg-card rounded-lg border-2 border-accent">
                   <div>
-                    <p className="text-sm text-muted-foreground">Reward</p>
-                    <p className="text-2xl font-bold text-accent">{chapterData.challenge.xp} XP</p>
+                    <p className="text-sm text-muted-foreground">
+                      {lang === "sv" ? "Belöning" : "Reward"}
+                    </p>
+                    <p className="text-2xl font-bold text-accent">100 XP</p>
                   </div>
                   <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    Complete Challenge
+                    {lang === "sv" ? "Klara utmaningen" : "Complete Challenge"}
                   </Button>
                 </div>
 
@@ -412,10 +578,12 @@ const Chapter = () => {
                     onClick={() => setAiOpen(true)}
                   >
                     <div className="flex items-center gap-2 font-semibold">
-                      <Sparkles className="h-5 w-5 text-primary" /> Ask AI Buddy
+                      <Sparkles className="h-5 w-5 text-primary" /> {lang === "sv" ? "Fråga AI-kompisen" : "Ask AI Buddy"}
                     </div>
                     <p className="text-xs text-muted-foreground text-left font-normal">
-                      Stuck? Chat with your AI tutor about this chapter.
+                      {lang === "sv"
+                        ? "Fastnat? Chatta med din AI-handledare om kapitlet."
+                        : "Stuck? Chat with your AI tutor about this chapter."}
                     </p>
                   </Button>
                   <Button
@@ -424,10 +592,12 @@ const Chapter = () => {
                     onClick={() => setArOpen(true)}
                   >
                     <div className="flex items-center gap-2 font-semibold">
-                      <Box className="h-5 w-5 text-accent" /> View in AR
+                      <Box className="h-5 w-5 text-accent" /> {lang === "sv" ? "Visa i AR" : "View in AR"}
                     </div>
                     <p className="text-xs text-muted-foreground text-left font-normal">
-                      Place your BLIX build in the real world using your camera.
+                      {lang === "sv"
+                        ? "Placera ditt BLIX-bygge i verkligheten med kameran."
+                        : "Place your BLIX build in the real world using your camera."}
                     </p>
                   </Button>
                 </div>
@@ -441,26 +611,28 @@ const Chapter = () => {
           <Link to="/">
             <Button variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Chapters
+              {lang === "sv" ? "Tillbaka till kapitel" : "Back to Chapters"}
             </Button>
           </Link>
-          <Button disabled className="opacity-50">
-            Next Chapter
-            <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
-          </Button>
+          <Link to={`/chapter/${chapterIdNum + 1}`}>
+            <Button>
+              {lang === "sv" ? "Nästa kapitel" : "Next Chapter"}
+              <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
+            </Button>
+          </Link>
         </div>
       </main>
 
       <AIAssistant
         open={aiOpen}
         onOpenChange={setAiOpen}
-        chapterTitle={chapterData.title}
-        context={`Theory: ${chapterData.theory.concept}. ${chapterData.theory.explanation}`}
+        chapterTitle={chapterTitle}
+        context={`Theory: ${conceptText}. ${explanationText}`}
       />
       <ARViewer
         open={arOpen}
         onOpenChange={setArOpen}
-        title={chapterData.title}
+        title={chapterTitle}
         savedPose={progress.ar_pose}
         onSavePose={saveArPose}
         onClearPose={clearArPose}
