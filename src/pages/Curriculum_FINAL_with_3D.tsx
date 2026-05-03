@@ -22,6 +22,26 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 
+// Allow <model-viewer> custom element in JSX
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "model-viewer": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement> & {
+          src?: string;
+          alt?: string;
+          "camera-controls"?: boolean;
+          "auto-rotate"?: boolean;
+          "auto-rotate-delay"?: string | number;
+          "rotation-per-second"?: string;
+          loading?: "auto" | "lazy" | "eager";
+        },
+        HTMLElement
+      >;
+    }
+  }
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Session {
   n: number;
