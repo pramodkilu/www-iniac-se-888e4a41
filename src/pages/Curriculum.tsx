@@ -569,8 +569,9 @@ const categoryStyle: Record<ComponentCategory, string> = {
 // ─── Page ────────────────────────────────────────────────────────────────────
 const Curriculum = () => {
   const [selectedGrade, setSelectedGrade] = useState(1);
-  const [activeTab, setActiveTab] = useState<"sessions" | "modules" | "tools" | "kit">("sessions");
+  const [activeTab, setActiveTab] = useState<"sessions" | "modules" | "tools" | "kit" | "gallery3d">("sessions");
   const [openBox, setOpenBox] = useState<string | null>(null);
+  const [galleryAutoRotate, setGalleryAutoRotate] = useState(true);
 
   const totalSessions = grades.reduce((sum, g) => sum + g.sessionCount, 0);
   const current = grades.find((g) => g.grade === selectedGrade)!;
