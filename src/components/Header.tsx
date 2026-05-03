@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +69,9 @@ const Header = () => {
 
           {/* Auth Section */}
           <div className="hidden lg:flex items-center gap-2">
+            {/* Language toggle */}
+            <LanguageSwitcher />
+
             {loading ? (
               <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : user ? (
@@ -142,7 +146,13 @@ const Header = () => {
                   {item.label}
                 </Link>
               ))}
-              
+
+              {/* Mobile Language Switcher */}
+              <div className="px-4 py-2 border-t border-border mt-2 pt-3 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Language:</span>
+                <LanguageSwitcher />
+              </div>
+
               {/* Mobile Auth */}
               <div className="border-t border-border mt-2 pt-2">
                 {user ? (
