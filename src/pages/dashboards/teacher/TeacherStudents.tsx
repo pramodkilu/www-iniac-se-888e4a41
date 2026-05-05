@@ -207,33 +207,107 @@ const TeacherStudents = () => {
                     {timeline.length === 0 ? (
                       <p className="text-gray-500 text-sm text-center py-8">No completions yet.</p>
                     ) : (
-                      <div className="relative pl-6 space-y-3 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
-                        {timeline.map((d, i) => {
-                          const ch = allChapters.find(x => x.id === d.chapter_id);
-                          const prev = i > 0 ? new Date(timeline[i - 1].completed_at) : null;
-                          const cur = new Date(d.completed_at);
-                          const gap = prev ? Math.round((cur.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)) : null;
-                          return (
-                            <div key={d.id} className="relative">
-                              <span className="absolute -left-[18px] top-1.5 w-3 h-3 rounded-full bg-cyan-400 ring-2 ring-slate-900" />
-                              <div className="bg-white/5 rounded px-3 py-2">
-                                <div className="flex justify-between items-center text-sm">
-                                  <span className="text-white font-medium">
-                                    Ch {d.chapter_id}: {ch?.title?.en || '—'}
-                                  </span>
-                                  <span className="text-gray-500 text-xs">
-                                    {cur.toLocaleDateString()}
-                                  </span>
-                                </div>
-                                <div className="flex gap-3 mt-1 text-xs text-gray-400">
-                                  <span>Grade {d.grade_id}</span>
-                                  {gap !== null && <span>· +{gap}d since previous</span>}
-                                </div>
+                      <>
+                        <div className="flex flex-wrap gap-1 mb-3 sticky top-0 bg-slate-900 pb-2 z-10">
+                          {([
+                            { v: 'latest', label: 'Latest first' },
+                            { v: 'oldest', label: 'Oldest first' },
+                            { v: 'chapter', label: 'By chapter' },
+                            { v: 'grade', label: 'By grade' },
+                          ] as const).map(opt => (
+                            <button
+                              key={opt.v}
+                              onClick={() => setTimelineMode(opt.v)}
+                              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                timelineMode === opt.v
+                                  ? 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300'
+                                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {(timelineMode === 'latest' || timelineMode === 'oldest') ? (
+                          (() => {
+                            const sorted = [...timeline].sort((a, b) => {
+                              const da = new Date(a.completed_at).getTime();
+                              const db = new Date(b.completed_at).getTime();
+                              return timelineMode === 'latest' ? db - da : da - db;
+                            });
+                            return (
+                              <div className="relative pl-6 space-y-3 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
+                                {sorted.map((d, i) => {
+                                  const ch = allChapters.find(x => x.id === d.chapter_id);
+                                  const prev = i > 0 ? new Date(sorted[i - 1].completed_at) : null;
+                                  const cur = new Date(d.completed_at);
+                                  const gap = prev ? Math.round(Math.abs(cur.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                                  return (
+                                    <div key={d.id} className="relative">
+                                      <span className="absolute -left-[18px] top-1.5 w-3 h-3 rounded-full bg-cyan-400 ring-2 ring-slate-900" />
+                                      <div className="bg-white/5 rounded px-3 py-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                          <span className="text-white font-medium">Ch {d.chapter_id}: {ch?.title?.en || '—'}</span>
+                                          <span className="text-gray-500 text-xs">{cur.toLocaleDateString()}</span>
+                                        </div>
+                                        <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                                          <span>Grade {d.grade_id}</span>
+                                          {gap !== null && <span>· {gap}d gap</span>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
+                            );
+                          })()
+                        ) : (() => {
+                          const groupKey = (d: any) =>
+                            timelineMode === 'chapter' ? `Chapter ${d.chapter_id}` : `Grade ${d.grade_id}`;
+                          const groups: Record<string, any[]> = {};
+                          [...timeline]
+                            .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+                            .forEach(d => {
+                              const k = groupKey(d);
+                              (groups[k] ||= []).push(d);
+                            });
+                          const keys = Object.keys(groups).sort((a, b) => {
+                            const na = parseInt(a.replace(/\D/g, ''), 10);
+                            const nb = parseInt(b.replace(/\D/g, ''), 10);
+                            return na - nb;
+                          });
+                          return (
+                            <div className="space-y-4">
+                              {keys.map(k => (
+                                <div key={k}>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h5 className="text-sm font-semibold text-cyan-300">{k}</h5>
+                                    <span className="text-xs text-gray-500">{groups[k].length} completed</span>
+                                  </div>
+                                  <div className="space-y-1.5 pl-2 border-l border-white/10">
+                                    {groups[k].map(d => {
+                                      const ch = allChapters.find(x => x.id === d.chapter_id);
+                                      return (
+                                        <div key={d.id} className="bg-white/5 rounded px-3 py-2 ml-2 text-sm flex justify-between items-center">
+                                          <span className="text-white truncate">
+                                            {timelineMode === 'chapter'
+                                              ? `Grade ${d.grade_id}`
+                                              : `Ch ${d.chapter_id}: ${ch?.title?.en || '—'}`}
+                                          </span>
+                                          <span className="text-gray-500 text-xs shrink-0 ml-2">
+                                            {new Date(d.completed_at).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           );
-                        })}
-                      </div>
+                        })()}
+                      </>
                     )}
                   </TabsContent>
                 </Tabs>
