@@ -11,7 +11,7 @@ import Header from "@/components/Header";
 import BuildGuide from "@/components/BuildGuide";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package } from "lucide-react";
+import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package, ChevronLeft, ChevronRight } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type MainTab     = "preview" | "components" | "sdg";
@@ -100,33 +100,58 @@ function ChapterPreview() {
   const [sel, setSel] = useState<Chapter>(chapters[0]);
   const [tab, setTab] = useState<PreviewTab>("story");
 
+  const selIdx = chapters.findIndex(c => c.id === sel.id);
+  const goPrev = () => { if (selIdx > 0) setSel(chapters[selIdx - 1]); };
+  const goNext = () => { if (selIdx < chapters.length - 1) setSel(chapters[selIdx + 1]); };
+
+  // Chapters that have full step data
+  const hasSteps = (ch: Chapter) => ch.build.steps.length > 0;
+
   return (
     <div className="flex gap-0 border border-border rounded-xl overflow-hidden bg-card" style={{ minHeight: 560 }}>
-      {/* Left: chapter list */}
+      {/* Left: chapter list — clicking a chapter NEVER resets the active tab */}
       <div className="w-56 flex-shrink-0 border-r border-border overflow-y-auto bg-muted/20">
         {chapters.map((ch, i) => (
           <button
             key={ch.id}
-            onClick={() => { setSel(ch); setTab("story"); }}
+            onClick={() => setSel(ch)}
             className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/50 transition-colors flex items-start gap-2 ${
               sel.id === ch.id ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/50 text-muted-foreground"
             } ${ch.isCheckpoint ? "italic" : ""}`}
           >
             <span className="shrink-0 text-xs text-muted-foreground w-5 mt-0.5">{i + 1}.</span>
-            <span className="leading-tight">{tr(ch.title, "en")}</span>
+            <span className="leading-tight flex-1">{tr(ch.title, "en")}</span>
+            {/* Dot shows chapters with full 3D build data */}
+            {hasSteps(ch) && (
+              <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5" title="Has 3D build steps" />
+            )}
           </button>
         ))}
       </div>
 
       {/* Right: detail */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 border-b border-border">
-          <p className="text-xs text-muted-foreground mb-1">
-            Chapter {sel.id} of {chapters.length}{sel.isCheckpoint ? " · Checkpoint" : ""}
-          </p>
-          <h2 className="text-2xl font-bold text-foreground">{tr(sel.title, "en")}</h2>
-          <p className="text-sm text-muted-foreground">{tr(sel.subtitle, "en")}</p>
+        <div className="px-6 pt-5 pb-3 border-b border-border flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground mb-1">
+              Chapter {sel.id} of {chapters.length}{sel.isCheckpoint ? " · Checkpoint" : ""}
+              {hasSteps(sel) && <span className="ml-2 text-orange-500 font-semibold">● Full 3D build</span>}
+            </p>
+            <h2 className="text-2xl font-bold text-foreground leading-tight">{tr(sel.title, "en")}</h2>
+            <p className="text-sm text-muted-foreground">{tr(sel.subtitle, "en")}</p>
+          </div>
+          {/* Prev / Next chapter arrows */}
+          <div className="flex gap-1 shrink-0 pt-1">
+            <button onClick={goPrev} disabled={selIdx === 0}
+              className="w-7 h-7 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button onClick={goNext} disabled={selIdx === chapters.length - 1}
+              className="w-7 h-7 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Tab bar */}
@@ -143,8 +168,8 @@ function ChapterPreview() {
           />
         </div>
 
-        {/* Tab content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Tab content — Build gets full width, others stay padded */}
+        <div className={`flex-1 overflow-y-auto ${tab === "build" ? "p-4" : "px-6 py-4"}`}>
           {tab === "story" && (
             <div className="space-y-3 max-w-2xl">
               <p className="text-sm italic text-muted-foreground leading-relaxed">{tr(sel.story.intro, "en")}</p>
