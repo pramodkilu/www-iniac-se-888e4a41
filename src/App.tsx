@@ -19,6 +19,8 @@ import NotFound from "./pages/NotFound";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import TeacherDashboard from "./pages/dashboards/TeacherDashboard";
+import TeacherStudents from "./pages/dashboards/teacher/TeacherStudents";
+import TeacherProgress from "./pages/dashboards/teacher/TeacherProgress";
 import StudentDashboard from "./pages/dashboards/StudentDashboard";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,9 @@ const App = () => (
               {/* Dashboard routes */}
               <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
               <Route path="/admin/*" element={<AdminDashboard />} />
+              <Route path="/teacher" element={<TeacherDashboard />} />
+              <Route path="/teacher/students" element={<TeacherStudents />} />
+              <Route path="/teacher/progress" element={<TeacherProgress />} />
               <Route path="/teacher/*" element={<TeacherDashboard />} />
               <Route path="/student/*" element={<StudentDashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
