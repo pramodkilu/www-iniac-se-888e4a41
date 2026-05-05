@@ -8,8 +8,9 @@ import {
   type Chapter,
 } from "@/data/chapters";
 import Header from "@/components/Header";
+import BuildGuide from "@/components/BuildGuide";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ function ChapterPreview() {
               { id: "challenge", label: "Challenge", icon: <Trophy className="w-3.5 h-3.5" /> },
             ]}
             active={tab}
-            onChange={setTab}
+            onChange={(t) => setTab(t)}
           />
         </div>
 
@@ -225,40 +226,8 @@ function ChapterPreview() {
           )}
 
           {tab === "build" && (
-            <div className="max-w-2xl space-y-3">
-              <div className="flex items-center gap-3 mb-1">
-                <p className="font-semibold text-foreground">{tr(sel.build.modelName, "en")}</p>
-                <Badge variant="outline">{sel.build.totalSteps} steps</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{tr(sel.build.description, "en")}</p>
-              {sel.build.steps.length > 0 ? (
-                sel.build.steps.map(step => (
-                  <div key={step.stepNumber} className="border border-border rounded-lg p-3 bg-muted/20">
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center shrink-0">
-                        {step.stepNumber}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground">{tr(step.title, "en")}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{tr(step.description, "en")}</p>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {step.components.map((c, i) => (
-                            <span key={i} className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <Card className="bg-muted/30">
-                  <CardContent className="py-5 text-center text-sm text-muted-foreground">
-                    Detailed build steps ({sel.build.totalSteps} total) available in the student build guide.
-                  </CardContent>
-                </Card>
-              )}
+            <div className="w-full">
+              <BuildGuide chapter={sel} />
             </div>
           )}
 
@@ -316,7 +285,7 @@ function ComponentMap() {
           { id: "totals",       label: "Kit totals",    icon: <BarChart2 className="w-3.5 h-3.5" /> },
         ]}
         active={sub}
-        onChange={setSub}
+        onChange={(t) => setSub(t)}
         small
       />
 
@@ -470,7 +439,7 @@ function KitSDG() {
           { id: "sdg-coverage", label: "SDG coverage",        icon: <BarChart2 className="w-3.5 h-3.5" /> },
         ]}
         active={sub}
-        onChange={setSub}
+        onChange={(t) => setSub(t)}
         small
       />
 
@@ -596,7 +565,7 @@ const KitPlanning = () => {
       {/* Sticky tab bar */}
       <div className="sticky top-16 z-20 bg-background/95 backdrop-blur border-b border-border">
         <div className="container mx-auto px-4 py-3 max-w-5xl">
-          <TabBar tabs={mainTabs} active={main} onChange={setMain} />
+          <TabBar tabs={mainTabs} active={main} onChange={(t) => setMain(t)} />
         </div>
       </div>
 
