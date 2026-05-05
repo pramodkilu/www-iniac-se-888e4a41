@@ -52,7 +52,6 @@ const categoryColor: Record<ComponentCategory, number> = {
   "tool":               0x64748b,
 };
 
-// per-id overrides for items that need a more specific appearance
 const idShape: Partial<Record<string, Shape>> = {
   "marbles":          "sphere",
   "donut-magnet":     "torus",
@@ -116,10 +115,9 @@ const boxAccent: Record<string, string> = {
 function buildMesh(item: KitComponent): THREE.Mesh {
   const shape: Shape = idShape[item.id] ?? categoryShape[item.category];
   const color: number = idColor[item.id] ?? categoryColor[item.category];
-
   const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.25 });
-  let geom: THREE.BufferGeometry;
 
+  let geom: THREE.BufferGeometry;
   switch (shape) {
     case "cylinder": geom = new THREE.CylinderGeometry(0.55, 0.55, 1.5, 32); break;
     case "sphere":   geom = new THREE.SphereGeometry(0.9, 32, 32); break;
@@ -128,11 +126,12 @@ function buildMesh(item: KitComponent): THREE.Mesh {
     case "flatbox":  geom = new THREE.BoxGeometry(1.8, 0.3, 1.2); break;
     default:         geom = new THREE.BoxGeometry(1.4, 1.4, 1.4);
   }
-
   return new THREE.Mesh(geom, mat);
 }
 
 // ─── ModelCard ────────────────────────────────────────────────────────────────
+
+const H = 160; // canvas height in px
 
 interface CardProps {
   item: KitComponent;
@@ -142,7 +141,6 @@ interface CardProps {
 const ModelCard = ({ item, autoRotate }: CardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef(autoRotate);
-  const visibleRef = useRef(false);
 
   useEffect(() => { rotRef.current = autoRotate; }, [autoRotate]);
 
@@ -150,98 +148,114 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
     const container = containerRef.current;
     if (!container) return;
 
-    const W = container.clientWidth || 200;
-    const H = 160;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 100);
-    camera.position.set(3, 2, 3.5);
-    camera.lookAt(0, 0, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(W, H);
-    container.appendChild(renderer.domElement);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const key = new THREE.DirectionalLight(0xffffff, 1.0);
-    key.position.set(5, 5, 5);
-    scene.add(key);
-    const fillColor = idColor[item.id] ?? categoryColor[item.category];
-    const fill = new THREE.DirectionalLight(fillColor, 0.35);
-    fill.position.set(-3, 3, -3);
-    scene.add(fill);
-
-    const mesh = buildMesh(item);
-    scene.add(mesh);
-
-    // drag-to-rotate
+    let frame = 0;
+    let renderer: THREE.WebGLRenderer | null = null;
+    let mesh: THREE.Mesh | null = null;
     let dragging = false;
     let lastX = 0;
     let lastY = 0;
 
+    // pointer handlers defined here so they can reference current mesh/renderer
     const onDown = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
-      if (!dragging) return;
+      if (!dragging || !mesh) return;
       mesh.rotation.y += (e.clientX - lastX) * 0.01;
       mesh.rotation.x += (e.clientY - lastY) * 0.01;
-      lastX = e.clientX;
-      lastY = e.clientY;
+      lastX = e.clientX; lastY = e.clientY;
     };
     const onUp = (e: PointerEvent) => {
       dragging = false;
       try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
     };
 
-    const canvas = renderer.domElement;
-    canvas.style.cursor = "grab";
-    canvas.addEventListener("pointerdown", onDown);
-    canvas.addEventListener("pointermove", onMove);
-    canvas.addEventListener("pointerup", onUp);
-    canvas.addEventListener("pointercancel", onUp);
+    // Lazy init — only create the WebGL context when the card enters the viewport.
+    // Browsers cap WebGL contexts at ~16; creating all 70+ at once causes silent failures.
+    const initRenderer = () => {
+      if (renderer) return; // already initialised
 
-    // only render + animate when in viewport
+      const W = Math.max(container.clientWidth, 1);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 100);
+      camera.position.set(3, 2, 3.5);
+      camera.lookAt(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(W, H);
+
+      const canvas = renderer.domElement;
+      canvas.style.cursor = "grab";
+      canvas.addEventListener("pointerdown", onDown);
+      canvas.addEventListener("pointermove", onMove);
+      canvas.addEventListener("pointerup", onUp);
+      canvas.addEventListener("pointercancel", onUp);
+      container.appendChild(canvas);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const key = new THREE.DirectionalLight(0xffffff, 1.0);
+      key.position.set(5, 5, 5);
+      scene.add(key);
+      const fillColor = idColor[item.id] ?? categoryColor[item.category];
+      const fill = new THREE.DirectionalLight(fillColor, 0.35);
+      fill.position.set(-3, 3, -3);
+      scene.add(fill);
+
+      mesh = buildMesh(item);
+      scene.add(mesh);
+
+      const handleResize = () => {
+        if (!renderer || !container) return;
+        const w = Math.max(container.clientWidth, 1);
+        camera.aspect = w / H;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, H);
+      };
+      window.addEventListener("resize", handleResize);
+
+      const animate = () => {
+        frame = requestAnimationFrame(animate);
+        if (!renderer) return;
+        if (rotRef.current && !dragging && mesh) mesh.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      // store resize cleanup on the renderer object so the outer cleanup can reach it
+      (renderer as THREE.WebGLRenderer & { _onResize?: () => void })._onResize = handleResize;
+    };
+
+    // Observe — pre-load 50 px before the card enters the viewport
     const observer = new IntersectionObserver(
-      ([entry]) => { visibleRef.current = entry.isIntersecting; },
-      { threshold: 0.1 }
+      ([entry]) => { if (entry.isIntersecting) initRenderer(); },
+      { threshold: 0, rootMargin: "50px" }
     );
     observer.observe(container);
-
-    let frame = 0;
-    const animate = () => {
-      frame = requestAnimationFrame(animate);
-      if (!visibleRef.current) return;
-      if (rotRef.current && !dragging) mesh.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!container) return;
-      const w = container.clientWidth;
-      camera.aspect = w / H;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, H);
-    };
-    window.addEventListener("resize", handleResize);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener("resize", handleResize);
-      canvas.removeEventListener("pointerdown", onDown);
-      canvas.removeEventListener("pointermove", onMove);
-      canvas.removeEventListener("pointerup", onUp);
-      canvas.removeEventListener("pointercancel", onUp);
-      mesh.geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
-      renderer.dispose();
-      canvas.parentNode?.removeChild(canvas);
+
+      if (renderer) {
+        const r = renderer as THREE.WebGLRenderer & { _onResize?: () => void };
+        if (r._onResize) window.removeEventListener("resize", r._onResize);
+
+        const canvas = r.domElement;
+        canvas.removeEventListener("pointerdown", onDown);
+        canvas.removeEventListener("pointermove", onMove);
+        canvas.removeEventListener("pointerup", onUp);
+        canvas.removeEventListener("pointercancel", onUp);
+        canvas.parentNode?.removeChild(canvas);
+
+        mesh?.geometry.dispose();
+        (mesh?.material as THREE.Material | undefined)?.dispose();
+        r.dispose();
+        renderer = null;
+        mesh = null;
+      }
     };
   }, [item]);
 
@@ -251,7 +265,7 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
     <div className="rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all p-3 group">
       <div
         ref={containerRef}
-        className="w-full h-[160px] rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 mb-3 overflow-hidden"
+        className="w-full h-[160px] rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-primary/5 dark:to-accent/5 mb-3 overflow-hidden"
       />
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-1">
