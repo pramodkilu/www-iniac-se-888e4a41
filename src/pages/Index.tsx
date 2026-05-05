@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import HeroSlider from "@/components/HeroSlider";
+import LandingSections from "@/components/LandingSections";
 import SDGSection from "@/components/SDGSection";
 import PlatformFeatures from "@/components/PlatformFeatures";
 import StatsSection from "@/components/StatsSection";
@@ -10,7 +10,7 @@ const Index = () => {
     <div className="min-h-screen">
       <Header />
       <div className="pt-16">
-        <HeroSlider />
+        <LandingSections />
         <SDGSection />
         <PlatformFeatures />
         <StatsSection />
