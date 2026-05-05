@@ -718,7 +718,7 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
                   <span className="font-bold text-[12px] text-orange-600">Let's fix this</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-relaxed mb-2">
-                  Some components may not be fully connected. Try zooming out so all pieces are visible in the frame.
+                  Please take a picture in a well-lit area and make sure the robot is clearly visible in the photo.
                 </p>
               </div>
             )}
