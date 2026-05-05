@@ -17,6 +17,7 @@ const TeacherStudents = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<any | null>(null);
+  const [timelineMode, setTimelineMode] = useState<'latest' | 'oldest' | 'chapter' | 'grade'>('latest');
 
   useEffect(() => {
     (async () => {
