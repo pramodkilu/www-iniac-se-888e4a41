@@ -42,31 +42,350 @@ interface GradeData {
   sessions: Session[];
 }
 
-// ─── Grade data (preserves the existing structure shown in screenshots) ──────
+// ─── Grade data — all 240 sessions sourced from the Blix Educator Set leaflet ─
+
+// Concept-colour shorthands
+const cJR  = "bg-orange-100 text-orange-700";   // Junior Robotics
+const cJE  = "bg-yellow-100 text-yellow-800";   // Junior Electronics / Electricity
+const cJA  = "bg-sky-100 text-sky-700";         // Junior Aviation
+const cDM  = "bg-blue-100 text-blue-700";       // Discovering Motion
+const cDEC = "bg-amber-100 text-amber-800";     // Discovering Electricity
+const cMB  = "bg-cyan-100 text-cyan-700";       // Marble STEM
+const cLB  = "bg-purple-100 text-purple-700";   // Logic Blocks
+const cDE  = "bg-violet-100 text-violet-700";   // Discovering Electronics
+const cESP = "bg-indigo-100 text-indigo-700";   // ESP32 / Boffin
+const cAI  = "bg-pink-100 text-pink-700";       // Artificial Intelligence
+const cTC  = "bg-emerald-100 text-emerald-700"; // Tinkercad / VR / 3-D
+const cPY  = "bg-green-100 text-green-700";     // Python Block Coding
+const cDS  = "bg-rose-100 text-rose-700";       // Data Science
+const cCP  = "bg-red-100 text-red-700";         // Checkpoint (+ highlight)
+const cEC  = "bg-slate-100 text-slate-700";     // Electronics Circuits
+
+// Skills shorthands
+const sJR  = "Scientific literacy, Problem Solving";
+const sJE  = "Scientific literacy, Investigation";
+const sJA  = "Scientific literacy, Creativity";
+const sDM  = "Scientific literacy, Problem Solving, Critical Thinking";
+const sDEC = "Scientific literacy, Investigation, Critical Thinking";
+const sLB  = "Computational thinking, Problem Solving";
+const sDE  = "Scientific literacy, Computational thinking, Critical Thinking";
+const sESP = "Computational thinking, Programming, Problem Solving";
+const sAI  = "Computational thinking, Critical Thinking, Data literacy";
+const sPY  = "Computational thinking, Programming";
+const sDS  = "Data literacy, Mathematical thinking, Critical Thinking";
+const sMB  = "Scientific literacy, Problem Solving, Design thinking";
+const sCP  = "Problem solving, Creativity, Initiative";
+const sTC  = "Creativity, Design thinking, Digital literacy";
+const sHAI = "Computational thinking, Programming, Critical Thinking";
+
+// Lgr22 shorthands
+const lg13JR  = "Lgr22 1–3: Teknik – Mekanismer & konstruktioner";
+const lg13JE  = "Lgr22 1–3: Fysik – Elektricitet & magnetism";
+const lg13JA  = "Lgr22 1–3: Fysik – Kraft & rörelse";
+const lg13CP  = "Lgr22 1–3: Tvärvetenskapligt arbetsområde";
+const lg46DM  = "Lgr22 4–6: Teknik – Mekanismer; Fysik – Kraft & rörelse";
+const lg46DEC = "Lgr22 4–6: Fysik – Elektricitet; Teknik – Elektronik";
+const lg46LB  = "Lgr22 4–6: Programmering – Algoritmer & digitala system";
+const lg46MB  = "Lgr22 4–6: Teknik – Konstruktion & mekanismer";
+const lg46TC  = "Lgr22 4–6: Digital kompetens – AR/VR & 3D-design";
+const lg46CP  = "Lgr22 4–6: Tvärvetenskapligt arbetsområde";
+const lg79DE  = "Lgr22 7–9: Teknik – Elektronik & digitala system";
+const lg79ESP = "Lgr22 7–9: Programmering – Inbyggda system & IoT";
+const lg79AI  = "Lgr22 7–9: Digital kompetens – AI & maskininlärning";
+const lg79PY  = "Lgr22 7–9: Matematik & programmering – Python";
+const lg79DS  = "Lgr22 7–9: Matematik – Statistik & dataanalys";
+const lg79HAI = "Lgr22 7–9: Digital kompetens – AI-hårdvara & robotik";
+const lg79CP  = "Lgr22 7–9: Tvärvetenskapligt arbetsområde";
+
 const grades: GradeData[] = [
+  // ── Grade 1 ───────────────────────────────────────────────────────────────
   {
-    grade: 1,
-    stadium: "1–3",
-    sessionCount: 30,
+    grade: 1, stadium: "1–3", sessionCount: 30,
     sessions: [
-      { n: 1, project: "Wheeling Cart", concept: "Simple Machines", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Problem Solving", skolverket: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
-      { n: 2, project: "Aerodynamics Car", concept: "Air Friction", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Problem Solving, Critical Thinking", skolverket: "Lgr22 1–3: Fysik – Kraft & rörelse; Digital kompetens – AI, mönsterigenkänning & databehandling" },
-      { n: 3, project: "Challenge: Ladder Checkpoint -1", concept: "Checkpoint", conceptColor: "bg-orange-100 text-orange-700", skills: "Problem solving, Creativity, Initiative", skolverket: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system (Teknik/Matematik)", highlight: true },
-      { n: 4, project: "Trebuchet", concept: "Action & Reactions", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Problem Solving, Critical Thinking", skolverket: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
-      { n: 5, project: "Sign Board", concept: "Coding & Decoding", conceptColor: "bg-orange-100 text-orange-700", skills: "Problem solving, Creativity, Communication", skolverket: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system (Teknik/Matematik)" },
-      { n: 6, project: "Single suspension Car", concept: "Construction Skill", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy, Critical Thinking", skolverket: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
-      { n: 7, project: "Most stable tower", concept: "Structure & Base", conceptColor: "bg-orange-100 text-orange-700", skills: "Creativity, Initiative", skolverket: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
-      { n: 8, project: "Lift", concept: "Construction Skill", conceptColor: "bg-orange-100 text-orange-700", skills: "Scientific literacy", skolverket: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
-      { n: 9, project: "Money", concept: "Counting", conceptColor: "bg-orange-100 text-orange-700", skills: "Numeracy", skolverket: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik" },
+      { n:  1, project: "Cart with wheel & axle",                      concept: "Simple Machines",            conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  2, project: "Aerodynamics Car",                            concept: "Air Friction",               conceptColor: cJR,  skills: sDM,  skolverket: lg13JA },
+      { n:  3, project: "Challenge: Ladder (Checkpoint-1)",            concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n:  4, project: "Trebuchet",                                   concept: "Action & Reactions",         conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n:  5, project: "Sign Board",                                  concept: "Coding & Decoding",          conceptColor: cJR,  skills: sLB,  skolverket: lg13CP },
+      { n:  6, project: "Single Suspension Car",                       concept: "Construction Skill",         conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  7, project: "Cart with wheel & axle",                      concept: "Structure & Base",           conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  8, project: "Most Stable Tower",                           concept: "Construction Skill",         conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  9, project: "Lift",                                        concept: "Counting",                   conceptColor: cJR,  skills: "Numeracy, Problem Solving", skolverket: lg13JR },
+      { n: 10, project: "Money",                                       concept: "Power",                      conceptColor: cJR,  skills: "Scientific literacy, Numeracy", skolverket: lg13JR },
+      { n: 11, project: "Bear Trap",                                   concept: "Elasticity",                 conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 12, project: "Challenge: Pasta Maker (Checkpoint-2)",       concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 13, project: "Merry Go Round",                              concept: "Rotation",                   conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 14, project: "Spinning Top",                                concept: "Energy Transfer",            conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 15, project: "Lock & Key",                                  concept: "Meshing of Gears",           conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 16, project: "Trundle Wheel",                               concept: "Motion Conversion",          conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 17, project: "Zipline Ride",                                concept: "Gravity",                    conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 18, project: "Dancing Robot",                               concept: "Types of Movements",         conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 19, project: "Digital Clock",                               concept: "Display",                    conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 20, project: "Earth, Moon & Sun",                           concept: "Orbit",                      conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 21, project: "Find the Path",                               concept: "Sequence",                   conceptColor: cJR,  skills: sLB,  skolverket: lg13CP },
+      { n: 22, project: "Challenge: Foldable Scale (Checkpoint-3)",    concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 23, project: "Weight Measuring Device",                     concept: "Balance",                    conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 24, project: "Ploughing Machine",                           concept: "Motor",                      conceptColor: cJR,  skills: sJR,  skolverket: lg13JE },
+      { n: 25, project: "Challenge: Goalkeeper & Kicker (Checkpoint-4)", concept: "Checkpoint",               conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 26, project: "Launcher",                                    concept: "Time",                       conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 27, project: "Make your First Circuit",                     concept: "Intro to Electricity",       conceptColor: cJE,  skills: sJE,  skolverket: lg13JE },
+      { n: 28, project: "Conductors & Insulators",                     concept: "Loops",                      conceptColor: cJE,  skills: sJE,  skolverket: lg13JE },
+      { n: 29, project: "Balloon Rockets",                             concept: "Thrust",                     conceptColor: cJA,  skills: sJA,  skolverket: lg13JA },
+      { n: 30, project: "Paper Plane",                                 concept: "Forces on Plane",            conceptColor: cJA,  skills: sJA,  skolverket: lg13JA },
     ],
   },
-  { grade: 2, stadium: "1–3", sessionCount: 30, sessions: [] },
-  { grade: 3, stadium: "1–3", sessionCount: 30, sessions: [] },
-  { grade: 4, stadium: "4–6", sessionCount: 32, sessions: [] },
-  { grade: 5, stadium: "4–6", sessionCount: 32, sessions: [] },
-  { grade: 6, stadium: "4–6", sessionCount: 32, sessions: [] },
-  { grade: 7, stadium: "7–9", sessionCount: 36, sessions: [] },
-  { grade: 8, stadium: "7–9", sessionCount: 36, sessions: [] },
+  // ── Grade 2 ───────────────────────────────────────────────────────────────
+  {
+    grade: 2, stadium: "1–3", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "Cart with wheel & axle",                      concept: "Simple Machines",            conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  2, project: "Car",                                         concept: "Structure & Base",           conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  3, project: "Scarecrow",                                   concept: "Links",                      conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  4, project: "Double Suspension Car",                       concept: "Shock",                      conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n:  5, project: "Challenge: Bridge (Checkpoint-1)",            concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n:  6, project: "Maze",                                        concept: "Directions",                 conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n:  7, project: "Single Suspension Car",                       concept: "Shock & Impact",             conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n:  8, project: "Challenge: Tower (Checkpoint-2)",             concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n:  9, project: "Scissor Arm",                                 concept: "Pivot",                      conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 10, project: "Coding & Decoding",                           concept: "Intro to Binary",            conceptColor: cJR,  skills: sLB,  skolverket: lg13CP },
+      { n: 11, project: "Dancing Bird",                                concept: "Bevel Gear",                 conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 12, project: "Transport Trolley",                           concept: "Application of Rack Gear",   conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 13, project: "Fishing Rod",                                 concept: "Arm & Lever",                conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 14, project: "Coin Bank",                                   concept: "Conveyor Belt",              conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 15, project: "Challenge: X-RAY Baggage Scanner (Checkpoint-3)", concept: "Checkpoint",            conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 16, project: "Pencil Sharpener",                            concept: "Circular Motion",            conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 17, project: "The Fun Ride",                                concept: "Construction",               conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 18, project: "Bow and Arrow",                               concept: "Elasticity",                 conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 19, project: "Tool Kit",                                    concept: "Symmetry",                   conceptColor: cJR,  skills: sJR,  skolverket: lg13JR },
+      { n: 20, project: "Challenge: Candy Box (Checkpoint-4)",         concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 21, project: "Movable Bridge",                              concept: "Pulley",                     conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 22, project: "Shovel and Wheelbarrow",                      concept: "Application of Gears",       conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 23, project: "Cleaning Device",                             concept: "Application of Circular Motion", conceptColor: cJR, skills: sDM, skolverket: lg13JR },
+      { n: 24, project: "Well",                                        concept: "Pulley System",              conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 25, project: "Gripper",                                     concept: "Joint & Pivot",              conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 26, project: "Skipping Man",                                concept: "Frictionless Connector",     conceptColor: cJR,  skills: sDM,  skolverket: lg13JR },
+      { n: 27, project: "Stirrer Machine",                             concept: "Rotational Motion",          conceptColor: cJE,  skills: sJE,  skolverket: lg13JE },
+      { n: 28, project: "Crawler",                                     concept: "Synchronous Walking Mechanism", conceptColor: cJE, skills: sJE, skolverket: lg13JE },
+      { n: 29, project: "Airplane",                                    concept: "Construction with Symmetry", conceptColor: cJA,  skills: sJA,  skolverket: lg13JA },
+      { n: 30, project: "Challenge: Motorbike (Checkpoint-5)",         concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+    ],
+  },
+  // ── Grade 3 ───────────────────────────────────────────────────────────────
+  {
+    grade: 3, stadium: "1–3", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "Counter Balance Model",                       concept: "Lever",                      conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  2, project: "Ramp Working Model",                          concept: "Inclined Plane",             conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  3, project: "Pulley System",                               concept: "Pulley",                     conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  4, project: "Power Press Machine",                         concept: "Screw",                      conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  5, project: "Basic Car",                                   concept: "Wheels & Axles",             conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  6, project: "Trebuchet",                                   concept: "Energy Conversion",          conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  7, project: "Challenge: Finding the Range (Checkpoint-1)", concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n:  8, project: "Launcher",                                    concept: "Elastic Properties",         conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n:  9, project: "Locomotive Coach",                            concept: "Joints & Pull",              conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n: 10, project: "Giant Wheel",                                 concept: "Rotation & Revolution",      conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n: 11, project: "Mono Rail",                                   concept: "Rack Gear",                  conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n: 12, project: "Merry Go Round",                              concept: "Application of Motion",      conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n: 13, project: "Crazy Bot with Vibration",                    concept: "Randomness",                 conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n: 14, project: "Balance Scale",                               concept: "Counterweight",              conceptColor: cDM,  skills: sDM,  skolverket: lg13JR },
+      { n: 15, project: "Challenge: Grabber (Checkpoint-2)",           concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 16, project: "Basic Circuits",                              concept: "Atom & Electrons",           conceptColor: cDEC, skills: sDEC, skolverket: lg13JE },
+      { n: 17, project: "Conductors & Insulators",                     concept: "Properties of Material",     conceptColor: cDEC, skills: sDEC, skolverket: lg13JE },
+      { n: 18, project: "Water Overflow Alarm",                        concept: "Closed & Open Loop",         conceptColor: cDEC, skills: sDEC, skolverket: lg13JE },
+      { n: 19, project: "Polarity",                                    concept: "Uni & Bidirectional",        conceptColor: cDEC, skills: sDEC, skolverket: lg13JE },
+      { n: 20, project: "Challenge: Party Doorbell (Checkpoint-3)",    concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 21, project: "Piezo-electricity",                           concept: "Energy Transformation",      conceptColor: cDEC, skills: sDEC, skolverket: lg13JE },
+      { n: 22, project: "Challenge: House Supply System (Checkpoint-4)", concept: "Checkpoint",               conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+      { n: 23, project: "First Marble Track",                          concept: "Structure & Planning",       conceptColor: cMB,  skills: sMB,  skolverket: lg13JR },
+      { n: 24, project: "Fastest & Slowest Tracks",                    concept: "Construction Techniques",    conceptColor: cMB,  skills: sMB,  skolverket: lg13JR },
+      { n: 25, project: "Path Finder",                                 concept: "Possibilities",              conceptColor: cMB,  skills: sMB,  skolverket: lg13JR },
+      { n: 26, project: "Series & Parallel Circuits",                  concept: "Human Circuits",             conceptColor: cJE,  skills: sJE,  skolverket: lg13JE },
+      { n: 27, project: "Buzz Wire Loop Game",                         concept: "Continuity Testing",         conceptColor: cJE,  skills: sJE,  skolverket: lg13JE },
+      { n: 28, project: "Tone Generator Box",                          concept: "Resistances",                conceptColor: cJE,  skills: sJE,  skolverket: lg13JE },
+      { n: 29, project: "Biggest Conductor Ever",                      concept: "Earth's Conducting Property", conceptColor: cJE, skills: sJE,  skolverket: lg13JE },
+      { n: 30, project: "Challenge: Make an Instrument (Checkpoint-5)", concept: "Checkpoint",                conceptColor: cCP,  skills: sCP,  skolverket: lg13CP, highlight: true },
+    ],
+  },
+  // ── Grade 4 ───────────────────────────────────────────────────────────────
+  {
+    grade: 4, stadium: "4–6", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "Balloon Powered Car",                         concept: "Thrust",                     conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  2, project: "Swing",                                       concept: "Periodic Motion",            conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  3, project: "Power Press Machine",                         concept: "Crank & Slider",             conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  4, project: "4-wheel Drive Car",                           concept: "Introduction to Gears",      conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  5, project: "Make Me Fast, Make Me Slow",                  concept: "Change of Gear",             conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  6, project: "Spinning Top",                                concept: "Applications of Gears",      conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  7, project: "Challenge: Fastest Car (Checkpoint-1)",       concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg46CP, highlight: true },
+      { n:  8, project: "Follower Car",                                concept: "Reflection",                 conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n:  9, project: "Automatic Dispenser",                         concept: "Sensors & Actuators",        conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 10, project: "Challenge: Shy Robot (Checkpoint-2)",         concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg46CP, highlight: true },
+      { n: 11, project: "Stroboscopic Effect",                         concept: "Frequency",                  conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 12, project: "Voltage & Current",                           concept: "Potential Difference",       conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 13, project: "Series & Parallel Circuit",                   concept: "Current & Voltage",          conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 14, project: "Secret Morse Codes",                          concept: "Binary Codes",               conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 15, project: "OHM's Law",                                   concept: "Resistance",                 conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 16, project: "Short Not Circuit",                           concept: "Short Circuit",              conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 17, project: "AND & OR Gates",                              concept: "Gates",                      conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 18, project: "Universal Gates",                             concept: "NAND & NOR",                 conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 19, project: "Tone Generator Card (Checkpoint-1)",          concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg46CP, highlight: true },
+      { n: 20, project: "Resistance in Series & Parallel",             concept: "Total Resistance",           conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 21, project: "Magnetic Compass",                            concept: "Magnetism & Polarity",       conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 22, project: "Dynamo",                                      concept: "Motor & Its Features",       conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 23, project: "Super Vibrator",                              concept: "Lever",                      conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 24, project: "Big Bulley the Small",                        concept: "Current Bypass",             conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 25, project: "Fuse",                                        concept: "Electrical Safety",          conceptColor: cEC,  skills: sDEC, skolverket: lg46DEC },
+      { n: 26, project: "First Marble Track",                          concept: "Structure & Planning",       conceptColor: cMB,  skills: sMB,  skolverket: lg46MB },
+      { n: 27, project: "Propulsion Mechanism",                        concept: "Newton's Cradle",            conceptColor: cMB,  skills: sMB,  skolverket: lg46MB },
+      { n: 28, project: "Alternating Switch",                          concept: "Mechanical Switch",          conceptColor: cMB,  skills: sMB,  skolverket: lg46MB },
+      { n: 29, project: "Lifting Mechanism-1",                         concept: "Impact",                     conceptColor: cMB,  skills: sMB,  skolverket: lg46MB },
+      { n: 30, project: "Concentric Circle Track",                     concept: "Infinite Loop",              conceptColor: cMB,  skills: sMB,  skolverket: lg46MB },
+    ],
+  },
+  // ── Grade 5 ───────────────────────────────────────────────────────────────
+  {
+    grade: 5, stadium: "4–6", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "Waving Robot",                                concept: "Link & Joint Mechanism",     conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  2, project: "Power Press Machine",                         concept: "Cam & Follower",             conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  3, project: "Scissor Lift",                                concept: "Power & Velocity",           conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  4, project: "Rack & Pinion Lift",                          concept: "Mechanical Advantage",       conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  5, project: "Kicker Robot",                                concept: "Digital Circuits",           conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n:  6, project: "Challenge: Guard Robot (Checkpoint-1)",       concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg46CP, highlight: true },
+      { n:  7, project: "Make Me Fast / Make Me Slow",                 concept: "Gears",                      conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  8, project: "Speed Multiplier",                            concept: "Torque vs Speed-1",          conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n:  9, project: "Speed Reduction",                             concept: "Torque vs Speed-2",          conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n: 10, project: "Gear Changing Car",                           concept: "Three Speed Car",            conceptColor: cDM,  skills: sDM,  skolverket: lg46DM },
+      { n: 11, project: "AC vs DC",                                    concept: "Intro to Electricity",       conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 12, project: "ON & Fadeeee",                                concept: "Intro to Capacitors",        conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 13, project: "Capacitance in Series & Parallel",            concept: "Total Capacitance",          conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 14, project: "Sound Effects",                               concept: "Components & Its Effects",   conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 15, project: "LDR Operated LED",                            concept: "Light Spectrum",             conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 16, project: "Voltage Divider",                             concept: "Circuit Application",        conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 17, project: "Potentiometer",                               concept: "Variable Voltage",           conceptColor: cDEC, skills: sDEC, skolverket: lg46DEC },
+      { n: 18, project: "Monorail",                                    concept: "Switch Block",               conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 19, project: "Sliding Bed",                                 concept: "Rack Gear",                  conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 20, project: "Refrigerator",                                concept: "Light Spectrum",             conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 21, project: "Smart Box",                                   concept: "Application of Infrared",    conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 22, project: "Autonomous Car",                              concept: "Not Gate",                   conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 23, project: "Musical Robot",                               concept: "Truth Table",                conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 24, project: "Challenge: Obstacle Avoider (Checkpoint-2)",  concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg46CP, highlight: true },
+      { n: 25, project: "Line Follower Robot",                         concept: "Infrared Decision Making",   conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 26, project: "Wheel Sorting Machine",                       concept: "Design Thinking",            conceptColor: cLB,  skills: sLB,  skolverket: lg46LB },
+      { n: 27, project: "Harry Potter's Owl",                          concept: "Hollow & Grouping",          conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+      { n: 28, project: "Challenge: Design Your Avatar",               concept: "Orbital Camera",             conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+      { n: 29, project: "Intro to AR/VR",                              concept: "Motion & Alignment",         conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+      { n: 30, project: "Hogwarts Calling",                            concept: "Motion & Alignment",         conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+    ],
+  },
+  // ── Grade 6 ───────────────────────────────────────────────────────────────
+  {
+    grade: 6, stadium: "4–6", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "AND Gate",                                    concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  2, project: "OR Gate",                                     concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  3, project: "NOT Gate",                                    concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  4, project: "NAND Gate",                                   concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  5, project: "NOR Gate",                                    concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  6, project: "XOR Gate",                                    concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  7, project: "XNOR Gate",                                   concept: "Truth Table",                conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  8, project: "SOP Circuit",                                 concept: "Deduction of Logical Functions", conceptColor: cDE, skills: sDE, skolverket: lg79DE },
+      { n:  9, project: "Introduction to Boffin v2",                   concept: "Controllers",                conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 10, project: "Blinky Bot",                                  concept: "Events & Time Sleep",        conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 11, project: "What if you press a button",                  concept: "Input Controlled Output",    conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 12, project: "ON & OFF Switch Using IR",                    concept: "IR Sensor",                  conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 13, project: "Giant Wheel with Speed Control",              concept: "PWM & Duty Cycle",           conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 14, project: "Giant Wheel with Counter",                    concept: "Variables",                  conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 15, project: "Roll a Dice",                                 concept: "Serial Monitor",             conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 16, project: "Challenge: Game of Housie (Checkpoint)",      concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg79CP, highlight: true },
+      { n: 17, project: "Line Follower Bot",                           concept: "Calibration & Reflection",   conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 18, project: "Advance Line Follower Bot",                   concept: "Two IR Sensors",             conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 19, project: "Swing Controller",                            concept: "Conveyor Belt",              conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 20, project: "Automatic Hand Sanitizer",                    concept: "Conveyor Belt",              conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 21, project: "Living and Non-living Things",                concept: "Sound Recognition",          conceptColor: cAI,  skills: sAI,  skolverket: lg79AI },
+      { n: 22, project: "Home Automation",                             concept: "Sound Recognition",          conceptColor: cAI,  skills: sAI,  skolverket: lg79AI },
+      { n: 23, project: "Covid Battle",                                concept: "Sound Recognition",          conceptColor: cAI,  skills: sAI,  skolverket: lg79AI },
+      { n: 24, project: "Sign Language",                               concept: "Gesture Recognition",        conceptColor: cAI,  skills: sAI,  skolverket: lg79AI },
+      { n: 25, project: "Phone Security App",                          concept: "Face Recognition",           conceptColor: cAI,  skills: sAI,  skolverket: lg79AI },
+      { n: 26, project: "Mood Oriented Playlist",                      concept: "Face Recognition",           conceptColor: cAI,  skills: sAI,  skolverket: lg79AI },
+      { n: 27, project: "Introduction to AR/VR",                       concept: "Angular Displacement",       conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+      { n: 28, project: "Harry Potter Owl Designing",                  concept: "Vertical Alignment",         conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+      { n: 29, project: "Hogwarts Calling",                            concept: "Camera as Sprite",           conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+      { n: 30, project: "Design Your Avatar",                          concept: "Lateral Displacement",       conceptColor: cTC,  skills: sTC,  skolverket: lg46TC },
+    ],
+  },
+  // ── Grade 7 ───────────────────────────────────────────────────────────────
+  {
+    grade: 7, stadium: "7–9", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "Introduction to Turtle Programming",          concept: "List and Tuples",            conceptColor: cPY,  skills: sPY,  skolverket: lg79PY },
+      { n:  2, project: "Snowflakes",                                  concept: "Input & Data Types",         conceptColor: cPY,  skills: sPY,  skolverket: lg79PY },
+      { n:  3, project: "Investment Returns",                          concept: "Power & Velocity",           conceptColor: cPY,  skills: sPY,  skolverket: lg79PY },
+      { n:  4, project: "Guess the Word",                              concept: "List and Tuples",            conceptColor: cPY,  skills: sPY,  skolverket: lg79PY },
+      { n:  5, project: "Locate Me",                                   concept: "Functions",                  conceptColor: cPY,  skills: sPY,  skolverket: lg79PY },
+      { n:  6, project: "Challenge: Make a Calculator (Checkpoint-1)", concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg79CP, highlight: true },
+      { n:  7, project: "Introduction to Basic Gates",                 concept: "Logic Operations",           conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  8, project: "Introduction to Universal Gates",             concept: "Logic Operations",           conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  9, project: "Introduction to Ex-OR and Ex-NOR",            concept: "Logic Operations",           conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 10, project: "Multiplexers",                                concept: "Logic Operations",           conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 11, project: "Demultiplexers",                              concept: "Logic Operations",           conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 12, project: "Introduction to Statistics",                  concept: "Data Collection",            conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 13, project: "Descriptive and Inferential Statistics",       concept: "Data Representation",        conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 14, project: "Central Tendency",                            concept: "Inferences",                 conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 15, project: "Measure of Dispersion",                       concept: "Outliers",                   conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 16, project: "SOP Circuit",                                 concept: "Combinational Circuit-1",    conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 17, project: "POS Circuit",                                 concept: "Combinational Circuit-2",    conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 18, project: "SOP using Universal Gates",                   concept: "Implementation of Circuits-1", conceptColor: cDE, skills: sDE, skolverket: lg79DE },
+      { n: 19, project: "POS using Universal Gates",                   concept: "Implementation of Circuits-2", conceptColor: cDE, skills: sDE, skolverket: lg79DE },
+      { n: 20, project: "Covariance and Correlation",                  concept: "Data Dependencies",          conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 21, project: "Interquartile Range",                         concept: "Maximum Density of Data",    conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 22, project: "Probability Theory-1",                        concept: "Chances & Occurrences-1",    conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 23, project: "Probability Theory-2",                        concept: "Chances & Occurrences-2",    conceptColor: cDS,  skills: sDS,  skolverket: lg79DS },
+      { n: 24, project: "K-map Reduction",                             concept: "Graphical Representation",   conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 25, project: "K-map Reduction (SOP)",                       concept: "Graphical Rep. – Maxterms",  conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 26, project: "K-map Reduction (POS)",                       concept: "Graphical Rep. – Maxterms",  conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 27, project: "Challenge-1 (Checkpoint-2)",                  concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg79CP, highlight: true },
+      { n: 28, project: "Combinational Circuits Using MUX",            concept: "Interconversion of Circuits", conceptColor: cDE, skills: sDE,  skolverket: lg79DE },
+      { n: 29, project: "555 Timer",                                   concept: "Time Constant, Frequency",   conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 30, project: "Challenge-2 (Checkpoint-3)",                  concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg79CP, highlight: true },
+    ],
+  },
+  // ── Grade 8 ───────────────────────────────────────────────────────────────
+  {
+    grade: 8, stadium: "7–9", sessionCount: 30,
+    sessions: [
+      { n:  1, project: "Introduction to Interface",                   concept: "Controllers",                conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n:  2, project: "Blinking LED",                                concept: "Events & Time Sleep",        conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n:  3, project: "What if you press a Button?",                 concept: "Input Controlled Output",    conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n:  4, project: "Giant Wheel with Speed Control",              concept: "IR Sensor",                  conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n:  5, project: "Introduction to Basic Gates",                 concept: "Logic Operations",           conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  6, project: "Introduction to Universal Gates",             concept: "NAND & NOR",                 conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  7, project: "Introduction to Ex-OR and Ex-NOR",            concept: "Boolean Expression of Gates", conceptColor: cDE, skills: sDE,  skolverket: lg79DE },
+      { n:  8, project: "Multiplexer",                                 concept: "Multiple Inputs to Output",  conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n:  9, project: "Demultiplexer",                               concept: "Single Input to Multiple Channels", conceptColor: cDE, skills: sDE, skolverket: lg79DE },
+      { n: 10, project: "Introduction to Codeskool",                   concept: "AI Interface",               conceptColor: cAI,  skills: sHAI, skolverket: lg79HAI },
+      { n: 11, project: "Face Controlled Toll Booth",                  concept: "Web-based Recognition",      conceptColor: cAI,  skills: sHAI, skolverket: lg79HAI },
+      { n: 12, project: "Food Dispenser Using Image Recognition",       concept: "Servo Motor",                conceptColor: cAI,  skills: sHAI, skolverket: lg79HAI },
+      { n: 13, project: "Rock, Paper and Scissor",                     concept: "Gesture Recognition",        conceptColor: cAI,  skills: sHAI, skolverket: lg79HAI },
+      { n: 14, project: "Voice Controlled Car",                        concept: "Voice Detection",            conceptColor: cAI,  skills: sHAI, skolverket: lg79HAI },
+      { n: 15, project: "Gesture Control Arm",                         concept: "Gesture Recognition",        conceptColor: cAI,  skills: sHAI, skolverket: lg79HAI },
+      { n: 16, project: "Challenge: Hardware AI (Checkpoint-1)",       concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg79CP, highlight: true },
+      { n: 17, project: "555 Timer",                                   concept: "Time Constant, Frequency",   conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 18, project: "Astable Multivibrator",                       concept: "Timer Mode-1",               conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 19, project: "Monostable Multivibrator",                    concept: "Timer Mode-2",               conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 20, project: "Bistable Multivibrator",                      concept: "Timer Mode-3",               conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 21, project: "K-map Reduction",                             concept: "Graphical Representation",   conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 22, project: "7 Segment Display",                           concept: "Common Cathode & Common Anode", conceptColor: cDE, skills: sDE, skolverket: lg79DE },
+      { n: 23, project: "Challenge: 7 Segment Display (Checkpoint-2)", concept: "Checkpoint",                 conceptColor: cCP,  skills: sCP,  skolverket: lg79CP, highlight: true },
+      { n: 24, project: "Half Adder",                                  concept: "Binary Addition",            conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 25, project: "Full Adder",                                  concept: "Binary Addition with Carry", conceptColor: cDE,  skills: sDE,  skolverket: lg79DE },
+      { n: 26, project: "Introduction to Thonny",                      concept: "IOT – Intro to Interface",   conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 27, project: "Motor Controls",                              concept: "MicroPython using Hardware",  conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 28, project: "WiFi Connection",                             concept: "Setting up of Network",      conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 29, project: "Create a Webpage",                            concept: "IOT – HTML & CSS",           conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+      { n: 30, project: "Wifi Controlled LED",                         concept: "IOT – Wireless Connection",  conceptColor: cESP, skills: sESP, skolverket: lg79ESP },
+    ],
+  },
 ];
 
 // ─── Module data (from Blix Educator Set leaflet) ────────────────────────────
