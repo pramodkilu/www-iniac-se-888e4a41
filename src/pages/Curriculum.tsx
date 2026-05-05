@@ -1038,13 +1038,18 @@ const Curriculum = () => {
         )}
 
         {/* Footer CTA */}
-        <div className="mt-12 text-center border-t border-border pt-8">
-          <p className="text-sm text-muted-foreground mb-3">
-            Want a deeper look at the mechanisms students build during competitions?
+        <div className="mt-12 border-t border-border pt-8 flex flex-wrap items-center justify-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            Explore chapter previews, the component heatmap, and SDG alignment:
           </p>
+          <Link to="/kit-planning">
+            <Button variant="default" size="sm">
+              Open Curriculum Explorer →
+            </Button>
+          </Link>
           <Link to="/creators-guide">
             <Button variant="outline" size="sm">
-              View Creator&apos;s Guide →
+              Creator&apos;s Guide →
             </Button>
           </Link>
         </div>
