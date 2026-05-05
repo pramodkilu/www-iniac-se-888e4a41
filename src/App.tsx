@@ -19,6 +19,8 @@ import NotFound from "./pages/NotFound";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import TeacherDashboard from "./pages/dashboards/TeacherDashboard";
+import TeacherStudents from "./pages/dashboards/teacher/TeacherStudents";
+import TeacherProgress from "./pages/dashboards/teacher/TeacherProgress";
 import StudentDashboard from "./pages/dashboards/StudentDashboard";
 
 const queryClient = new QueryClient();
