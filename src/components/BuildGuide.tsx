@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2, Cpu } from "lucide-react";
 import { type Chapter, tr } from "@/data/chapters";
 import { useNavigate } from "react-router-dom";
-import { useComponentDetector, type VerifyResult } from "@/hooks/useComponentDetector";
+import type { VerifyResult } from "@/hooks/useComponentDetector";
 import type { ResearchNavState } from "@/pages/AIResearch";
 
 // ─── Component connections ────────────────────────────────────────────────────
@@ -589,7 +589,9 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
   const [modelResult,    setModelResult]    = useState<VerifyResult | null>(null);
   const [checking,       setChecking]       = useState<"api" | "model" | null>(null);
 
-  const { status: modelStatus, mode: modelMode } = useComponentDetector();
+  // Model loads on the research page — no pre-load here to avoid WebGL conflict with Three.js
+  const modelStatus = "idle" as const;
+  const modelMode   = "none"  as const;
 
   const comps = step ? parseComps(step.components) : [];
   // Generated canvas fallback (used only when 3D snapshot not yet ready)
@@ -781,14 +783,14 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
                   <span>{checking === "api" ? "Checking…" : "Claude Vision"}</span>
                   <span className="text-[9px] font-normal opacity-75">AI Vision API</span>
                 </button>
-                <button onClick={checkMLModel} disabled={checking !== null || modelStatus !== "ready"}
+                <button onClick={checkMLModel} disabled={checking !== null}
                   className="flex flex-col items-center gap-0.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-[11px] font-bold py-2.5 px-2 rounded-xl transition-colors">
                   {checking === "model"
                     ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
                     : <Cpu className="w-4 h-4 mb-0.5" />}
-                  <span>{checking === "model" ? "Running…" : modelStatus === "loading" ? "Loading…" : "INIAC-ML"}</span>
+                  <span>{checking === "model" ? "Running…" : "INIAC-ML"}</span>
                   <span className="text-[9px] font-normal opacity-75">
-                    {modelMode === "custom" ? "Custom Model" : modelStatus === "loading" ? "Initialising" : "COCO-SSD Demo"}
+                    {modelMode === "custom" ? "Custom Model" : "COCO-SSD Demo"}
                   </span>
                 </button>
               </div>

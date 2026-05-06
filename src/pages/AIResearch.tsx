@@ -294,12 +294,22 @@ export default function AIResearch() {
               </div>
               <div className="space-y-2">
                 <ResultPanel result={modelResult} label="🤖 INIAC-ML" accent="orange" loading={loadingModel} />
-                {!modelResult && !loadingModel && (
+                {!modelResult && !loadingModel && modelStatus !== "unavailable" && (
                   <button onClick={runMLModel} disabled={modelStatus !== "ready"}
                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
                     <Cpu className="w-3.5 h-3.5" />
-                    {modelStatus === "loading" ? "Loading model…" : "Run INIAC-ML"}
+                    {modelStatus === "loading" ? "Loading COCO-SSD model…" : "Run INIAC-ML"}
                   </button>
+                )}
+                {modelStatus === "loading" && (
+                  <p className="text-[10px] text-gray-400 text-center animate-pulse">
+                    Downloading model (~8 MB)…
+                  </p>
+                )}
+                {modelStatus === "unavailable" && !modelResult && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-[11px] text-red-600">
+                    ⚠ INIAC-ML model failed to load. Check your connection and refresh.
+                  </div>
                 )}
               </div>
             </div>

@@ -99,9 +99,20 @@ export function useComponentDetector() {
     };
 
     const loadCoco = async () => {
-      await import("@tensorflow/tfjs-backend-webgl");
+      const tf = await import("@tensorflow/tfjs");
+      // Try WebGL first; fall back to CPU to avoid conflicts with Three.js WebGL contexts
+      try {
+        await import("@tensorflow/tfjs-backend-webgl");
+        await tf.setBackend("webgl");
+        await tf.ready();
+      } catch {
+        await import("@tensorflow/tfjs-backend-cpu");
+        await tf.setBackend("cpu");
+        await tf.ready();
+      }
       const cocoSsd = await import("@tensorflow-models/coco-ssd");
-      const model = await cocoSsd.load({ base: "mobilenet_v2" });
+      // mobilenet_v1 loads faster (~8MB vs ~25MB) — fine for demo purposes
+      const model = await cocoSsd.load({ base: "mobilenet_v1" });
       if (!cancelled) {
         cocoModelRef.current = model;
         setMode("demo");
@@ -111,11 +122,13 @@ export function useComponentDetector() {
 
     if (CUSTOM_MODEL_URL) {
       loadCustom().catch(() => {
-        // Custom model failed → fall back to COCO demo
         if (!cancelled) loadCoco().catch(() => { if (!cancelled) setStatus("unavailable"); });
       });
     } else {
-      loadCoco().catch(() => { if (!cancelled) setStatus("unavailable"); });
+      loadCoco().catch((e) => {
+        console.warn("[ComponentDetector] Failed to load COCO-SSD:", e);
+        if (!cancelled) setStatus("unavailable");
+      });
     }
 
     return () => { cancelled = true; };
