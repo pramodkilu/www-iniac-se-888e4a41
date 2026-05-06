@@ -239,170 +239,486 @@ export const chapters: Chapter[] = [
     sdgs: [6, 9],
   },
 
-  // ---------------------------------------------------------------------
-  // The remaining 29 sessions follow the SAME shape as Session 1 above.
-  // To keep this file readable, sessions 2-30 use a compact "shorthand"
-  // that Lovable / your build tool can expand at runtime via the helper
-  // function below. Full bilingual content is preserved.
-  // ---------------------------------------------------------------------
+  // ─── Chapters 2–30: fully expanded ────────────────────────────────────────
 
+  // Ch2
+  {
+    id: 2, slug: "aerodynamics-car", isCheckpoint: false,
+    title: t("Aerodynamics Car", "Aerodynamisk bil"),
+    subtitle: t("Build a fast, fuel-efficient car", "Bygg en snabb, bränsleeffektiv bil"),
+    story: {
+      intro: t("Laya, Kit and Rob spot a slow old truck puffing smoke on a steep hill. The driver looks worried.", "Laya, Kit och Rob ser en gammal långsam lastbil som puttar rök uppför en brant backe. Föraren ser orolig ut."),
+      dialogue: [
+        { speaker: "Driver", text: t("This old truck burns so much fuel going uphill. I can barely afford it!", "Den här gamla lastbilen bränner så mycket bränsle i backen. Jag har knappt råd!") },
+        { speaker: "Laya",  text: t("The shape of a vehicle makes a huge difference. Flat fronts create lots of air resistance.", "Fordonets form gör stor skillnad. Platta fronter skapar mycket luftmotstånd.") },
+        { speaker: "Kit",   text: t("Race cars have pointed noses and smooth curves to cut through air easily!", "Racerbilar har spetsiga nosar och mjuka kurvor för att lätt skära genom luften!") },
+        { speaker: "Rob",   text: t("Let's build an aerodynamic car and show how a better shape saves energy.", "Vi bygger en aerodynamisk bil och visar hur en bättre form sparar energi.") },
+      ],
+      conclusion: t("The driver was amazed — a smooth shape really does travel further with less effort!", "Föraren blev förvånad — en slät form tar verkligen längre sträcka med mindre ansträngning!"),
+    },
+    theory: {
+      concept: t("Air friction (Aerodynamics)", "Luftmotstånd (Aerodynamik)"),
+      explanation: t("The faster we move, the more air resists our motion. Race cars and aeroplanes are designed to cut through air with the least resistance. Aerodynamics is the study of how objects move through air.", "Ju snabbare vi rör oss, desto mer motstår luften. Racerbilar och flygplan är formade för att skära genom luften med minst motstånd. Aerodynamik handlar om hur föremål rör sig genom luft."),
+      realWorldExamples: [
+        t("Racing cars have low, pointed noses to slice through air", "Racerbilar har låga, spetsiga nosar för att skära genom luft"),
+        t("Birds tuck their wings to dive faster", "Fåglar fäller in vingarna för att dyka snabbare"),
+        t("Cyclists crouch low on their bikes to reduce drag", "Cyklister sitter lågt på cykeln för att minska luftmotståndet"),
+      ],
+      newWords: [t("Aerodynamics", "Aerodynamik"), t("Drag", "Luftmotstånd"), t("Streamlined", "Strömlinjeformad"), t("Resistance", "Motstånd")],
+    },
+    build: {
+      modelName: t("Aerodynamic Car", "Aerodynamisk bil"),
+      description: t("Build a sleek, low-profile car with mudguards and smooth axles.", "Bygg en slank, lågprofilbil med stänkskärmar och smidiga axlar."),
+      totalSteps: 10,
+      steps: [
+        { stepNumber: 1, title: t("Build the base frame", "Bygg basramen"), description: t("Place two P11 beams parallel and connect with CT2 at each end.", "Lägg två P11-balkar parallellt och anslut med CT2 i varje ände."), components: ["P11 x2", "CT2 x4"] },
+        { stepNumber: 2, title: t("Add front connectors", "Lägg till frontanslutningar"), description: t("Attach CT3 pieces to the front corners of the frame.", "Fäst CT3-delar i framhörnen av ramen."), components: ["CT3 x2"] },
+        { stepNumber: 3, title: t("Build rear connectors", "Bygg bakanslutningar"), description: t("Attach CT3 to the rear corners to mirror the front.", "Fäst CT3 i bakhörnen för att spegla framsidan."), components: ["CT3 x2"] },
+        { stepNumber: 4, title: t("Add side struts", "Lägg till sidostöttor"), description: t("Connect P3 pieces along both sides for rigidity.", "Anslut P3-delar längs båda sidorna för styvhet."), components: ["P3 x4", "CT2 x4"] },
+        { stepNumber: 5, title: t("Attach axle mounts", "Fäst axelhållare"), description: t("Press TW1 twist connectors onto each axle position.", "Tryck TW1-vridkopplingar på varje axelposition."), components: ["TW1 x4"] },
+        { stepNumber: 6, title: t("Add side supports", "Lägg till sidostöd"), description: t("Reinforce each side with a P5 piece.", "Förstärk varje sida med en P5-bit."), components: ["P5 x3", "CT2 x4"] },
+        { stepNumber: 7, title: t("Insert front axle", "Sätt in frontaxel"), description: t("Slide a SH100 shaft through the front TW1 mounts.", "Skjut en SH100-axel genom de främre TW1-hållarna."), components: ["SH100 x1"] },
+        { stepNumber: 8, title: t("Insert rear axle", "Sätt in bakaxel"), description: t("Slide the second SH100 shaft through the rear mounts.", "Skjut den andra SH100-axeln genom de bakre hållarna."), components: ["SH100 x1"] },
+        { stepNumber: 9, title: t("Mount all wheels", "Montera alla hjul"), description: t("Press a wheel onto each end of both axles.", "Tryck fast ett hjul i varje ände på båda axlarna."), components: ["Wheel x4"] },
+        { stepNumber: 10, title: t("Add mudguards", "Lägg till stänkskärmar"), description: t("Clip the left and right mudguards over the rear wheels.", "Klicka fast vänster och höger stänkskärm över bakhjulen."), components: ["Mudguard Left x1", "Mudguard Right x1"] },
+      ],
+    },
+    challenge: { title: t("Design Your Dream Car", "Designa din drömbil"), description: t("Draw a car for Laya and Kit. The road is good and the distance is long. What features make it fastest?", "Rita en bil för Laya och Kit. Vägen är bra och avståndet långt. Vilka egenskaper gör den snabbast?"), hint: t("Think about the front shape, roof height, and tyre width.", "Tänk på frontformen, takhöjden och däckbredden.") },
+    lgr22: { strands: ["fys_kraft"], rawSpreadsheet: "Lgr22 1–3: Fysik – Kraft & rörelse" },
+    sdgs: [7, 9, 13],
+  },
+
+  // Ch3
+  {
+    id: 3, slug: "challenge-ladder", isCheckpoint: true,
+    title: t("Challenge: Ladder", "Utmaning: Stege"),
+    subtitle: t("Rescue a cat stuck high in a tree", "Rädda en katt som sitter högt i ett träd"),
+    story: {
+      intro: t("A cat is stranded high in a tree! Rob calculates the rescue ladder must be exactly 18 holes long.", "En katt sitter fast högt i ett träd! Rob räknar ut att räddningsstegen måste vara exakt 18 hål lång."),
+      dialogue: [
+        { speaker: "Rob",      text: t("My calculation says the ladder must be exactly 18 holes. Not 17, not 19!", "Min uträkning säger att stegen måste vara exakt 18 hål. Inte 17, inte 19!") },
+        { speaker: "Laya",     text: t("We have P3, P5, P7, and P11 pieces. Can we combine them to reach 18?", "Vi har P3-, P5-, P7- och P11-bitar. Kan vi kombinera dem för att nå 18?") },
+        { speaker: "Kit",      text: t("P11 + P7 = 18! But wait — P5 + P5 + P5 + P3 = 18 too!", "P11 + P7 = 18! Men vänta — P5 + P5 + P5 + P3 = 18 också!") },
+        { speaker: "Narrator", text: t("There are many ways to reach 18 — the cat is saved!", "Det finns många sätt att nå 18 — katten är räddad!") },
+      ],
+      conclusion: t("The cat purrs safely on the ground — maths saves the day!", "Katten spinner tryggt på marken — matematiken räddar dagen!"),
+    },
+    theory: {
+      concept: t("Sequencing & decoding (Checkpoint)", "Sekvenser & avkodning (Avstämning)"),
+      explanation: t("Rob's calculation says the ladder must be exactly 18 holes long. This is a problem-solving challenge — combine P3, P5, P7 and P11 plates to reach exactly 18 holes.", "Robs uträkning säger att stegen måste vara exakt 18 hål lång. Det här är en problemlösningsutmaning — kombinera P3-, P5-, P7- och P11-plattor för att nå exakt 18 hål."),
+      realWorldExamples: [
+        t("Builders use standard plank sizes to reach exact heights", "Byggare använder standardstorlekar för att nå exakta höjder"),
+        t("Recipes combine exact amounts to make the right quantity", "Recept kombinerar exakta mängder för att nå rätt mängd"),
+        t("Computer code uses sequences of steps to solve problems", "Datorkod använder sekvenser av steg för att lösa problem"),
+      ],
+      newWords: [t("Sequence", "Sekvens"), t("Combination", "Kombination"), t("Algorithm", "Algoritm")],
+    },
+    build: {
+      modelName: t("18-Hole Ladder", "Stege med 18 hål"),
+      description: t("Combine Blix beams to build a ladder that is exactly 18 holes long.", "Kombinera Blix-balkar för att bygga en stege som är exakt 18 hål lång."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build the 18-hole ladder", "Bygg stegen med 18 hål"), description: t("Find a combination of P3, P5, P7 and P11 pieces that totals exactly 18 holes. Try more than one solution!", "Hitta en kombination av P3-, P5-, P7- och P11-bitar som totalt ger exakt 18 hål. Prova mer än en lösning!"), components: ["P3 x1", "P5 x1", "P7 x1", "P11 x1"] },
+      ],
+    },
+    challenge: { title: t("The 18-Hole Rule", "18-hålsregeln"), description: t("Build a ladder exactly 18 holes long. Find more than one combination!", "Bygg en stege som är exakt 18 hål lång. Hitta mer än en kombination!"), hint: t("List all combinations: which ones use the fewest pieces?", "Lista alla kombinationer: vilka använder färst bitar?") },
+    lgr22: { strands: ["prog"], rawSpreadsheet: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system" },
+    sdgs: [4, 15],
+  },
+
+  // Ch4
+  {
+    id: 4, slug: "trebuchet", isCheckpoint: false,
+    title: t("Trebuchet", "Trebuchet"),
+    subtitle: t("Launch Rob across the valley", "Skjut Rob över dalen"),
+    story: {
+      intro: t("The team reaches a wide valley. There is no bridge — Rob has an idea involving a very big lever.", "Laget når en bred dal. Det finns ingen bro — Rob har en idé med en mycket stor hävstång."),
+      dialogue: [
+        { speaker: "Rob",  text: t("A trebuchet uses a lever and counterweight to launch objects. I'll fly across!", "En trebuchet använder hävstång och motvikt för att skjuta föremål. Jag flyger över!") },
+        { speaker: "Laya", text: t("The heavy side falls down — that makes the long arm swing up and launch you!", "Den tunga sidan faller ner — det gör att den långa armen svänger upp och skjuter dig!") },
+        { speaker: "Kit",  text: t("Castles used trebuchets to throw heavy rocks at walls. Much more powerful than a catapult.", "Slott använde trebuchets för att kasta tunga stenar mot murar. Mycket kraftfullare än en katapult.") },
+        { speaker: "Rob",  text: t("Ready! On three… one… two… WHEEE!", "Klar! På tre… ett… två… WEEEE!") },
+      ],
+      conclusion: t("Rob lands safely on the other side — physics is amazing!", "Rob landar säkert på andra sidan — fysik är fantastiskt!"),
+    },
+    theory: {
+      concept: t("Action & reaction (Levers)", "Verkan & reaktion (Hävstänger)"),
+      explanation: t("A trebuchet uses a lever and counterweight to throw heavy objects. When the heavy end falls, the long arm swings up and launches the projectile in a parabolic path.", "En trebuchet använder hävstång och motvikt för att kasta tunga föremål. När den tunga änden faller, svingar den långa armen upp och skjuter projektilen i en parabelbana."),
+      realWorldExamples: [
+        t("A see-saw is a simple lever — the heavy end goes down", "En gungbräda är en enkel hävstång — den tunga änden går ner"),
+        t("A bottle opener uses a lever to pop caps with little force", "En flasköppnare använder hävstång för att popa kapsyler med lite kraft"),
+        t("Cranes use counterweights to lift heavy loads safely", "Kranar använder motvikter för att lyfta tunga laster säkert"),
+      ],
+      newWords: [t("Lever", "Hävstång"), t("Counterweight", "Motvikt"), t("Pivot", "Stödpunkt"), t("Projectile", "Projektil")],
+    },
+    build: {
+      modelName: t("Trebuchet", "Trebuchet"),
+      description: t("Build a working trebuchet with a pivot arm and counterweight.", "Bygg en fungerande trebuchet med en pivotarm och motvikt."),
+      totalSteps: 10,
+      steps: [
+        { stepNumber: 1, title: t("Build the base", "Bygg basen"), description: t("Lay two P11 beams flat and join them with CT2 at each end.", "Lägg två P11-balkar platt och foga ihop dem med CT2 i varje ände."), components: ["P11 x2", "CT2 x4"] },
+        { stepNumber: 2, title: t("Build the side towers", "Bygg sidotornen"), description: t("Attach P7 beams vertically at each end of the base.", "Fäst P7-balkar vertikalt i varje ände av basen."), components: ["P7 x2", "CT3 x4"] },
+        { stepNumber: 3, title: t("Add U-pillar supports", "Lägg till U-pelare"), description: t("Insert PU5x7 pillars inside each tower for stability.", "Sätt in PU5x7-pelare inuti varje torn för stabilitet."), components: ["PU5x7 x2", "CT3 x2"] },
+        { stepNumber: 4, title: t("Connect tower tops", "Anslut tornens topp"), description: t("Bridge the two towers with CH2 connectors at the top.", "Brygga de två tornen med CH2-kopplingar högst upp."), components: ["CH2 x2", "CT3 x2"] },
+        { stepNumber: 5, title: t("Assemble the pivot arm", "Montera pivotarmen"), description: t("Take the P7x11 U-pillar and lay it as the throwing arm.", "Ta P7x11-U-pelaren och lägg den som kastarm."), components: ["P7x11 x1"] },
+        { stepNumber: 6, title: t("Mount the pivot shaft", "Montera pivotaxeln"), description: t("Slide SH100 through the arm centre and CH2 on each side.", "Skjut SH100 genom armens centrum och CH2 på varje sida."), components: ["SH100 x1", "CH2 x2"] },
+        { stepNumber: 7, title: t("Attach the arm supports", "Fäst armstöden"), description: t("Add CT2 and P5 to reinforce the arm on both sides.", "Lägg till CT2 och P5 för att förstärka armen på båda sidor."), components: ["CT2 x2", "P5 x2"] },
+        { stepNumber: 8, title: t("Build the sling guide", "Bygg slungguiden"), description: t("Add P5 pieces at the tip of the throwing arm.", "Lägg till P5-bitar vid spetsen av kastarmen."), components: ["P5 x2"] },
+        { stepNumber: 9, title: t("Add arm stops", "Lägg till armstopp"), description: t("Clip P3 pieces as stops to limit arm travel.", "Klicka fast P3-bitar som stopp för att begränsa armens rörelse."), components: ["P3 x2"] },
+        { stepNumber: 10, title: t("Test and balance", "Testa och balansera"), description: t("Pull the short arm down and release. Adjust the counterweight position for best launch.", "Dra ner den korta armen och släpp. Justera motviktens position för bästa kast."), components: [] },
+      ],
+    },
+    challenge: { title: t("Bring Rob Back", "Hämta tillbaka Rob"), description: t("How will you bring Rob back? Think about ropes and pulleys.", "Hur ska du hämta tillbaka Rob? Tänk på rep och block."), hint: t("A pulley reverses the direction of force — pull down to lift up!", "Ett block vänder kraftens riktning — dra ner för att lyfta upp!") },
+    lgr22: { strands: ["tva"], rawSpreadsheet: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
+    sdgs: [4, 9],
+  },
+
+  // Ch5
+  {
+    id: 5, slug: "sign-board", isCheckpoint: false,
+    title: t("Sign Board", "Skyltbräda"),
+    subtitle: t("Communicate using shapes", "Kommunicera med former"),
+    story: {
+      intro: t("The team arrives at a crossroads in the middle of nowhere. A confused farmer needs directions but speaks a different language.", "Laget kommer till en vägkorsning i mitten av ingenstans. En förvirrad bonde behöver vägvisning men talar ett annat språk."),
+      dialogue: [
+        { speaker: "Farmer", text: t("I need to find the market but I cannot read the signs here!", "Jag måste hitta marknaden men kan inte läsa skyltarna här!") },
+        { speaker: "Laya",   text: t("Shapes work in any language — a triangle always means warning, a circle means rule!", "Former fungerar på alla språk — en triangel betyder alltid varning, en cirkel betyder regel!") },
+        { speaker: "Kit",    text: t("Traffic signs use shapes so everyone understands, even without words.", "Trafikskyltar använder former så alla förstår, även utan ord.") },
+        { speaker: "Rob",    text: t("Let's build a sign board with shapes the farmer can recognise.", "Vi bygger en skylt med former som bonden kan känna igen.") },
+      ],
+      conclusion: t("The farmer finds the market — shapes really are a universal language!", "Bonden hittar marknaden — former är verkligen ett universellt språk!"),
+    },
+    theory: {
+      concept: t("Coding & decoding (Visual signals)", "Kodning & avkodning (Visuella signaler)"),
+      explanation: t("When sound doesn't work, shapes can carry meaning. Triangle, rectangle, square — anyone can recognise a shape, no matter their language. This is the basis of sign language and traffic signs.", "När ljud inte fungerar kan former bära mening. Triangel, rektangel, kvadrat — vem som helst kan känna igen en form, oavsett språk. Det här är grunden för teckenspråk och trafikskyltar."),
+      realWorldExamples: [
+        t("Traffic signs use shapes: triangles for warning, circles for rules", "Trafikskyltar använder former: trianglar för varning, cirklar för regler"),
+        t("Airport symbols help travellers who speak any language", "Flygplatssymboler hjälper resenärer som talar vilket språk som helst"),
+        t("Emoji are modern picture symbols understood worldwide", "Emoji är moderna bildsymboler som förstås världen över"),
+      ],
+      newWords: [t("Symbol", "Symbol"), t("Decode", "Avkoda"), t("Signal", "Signal"), t("Pattern", "Mönster")],
+    },
+    build: {
+      modelName: t("Shape Sign Boards", "Formskyltar"),
+      description: t("Build three sign boards using different plate combinations.", "Bygg tre skyltar med olika platkombinationer."),
+      totalSteps: 3,
+      steps: [
+        { stepNumber: 1, title: t("Build the tall sign post", "Bygg den höga skyltstolpen"), description: t("Stack five long plates end-to-end to form the tall sign pole.", "Stapla fem långa plattor ände-till-ände för att forma den höga skyltstolpen."), components: ["Long plates x5"] },
+        { stepNumber: 2, title: t("Add horizontal cross bars", "Lägg till horisontella tvärbalkar"), description: t("Attach two short plates across the pole to form sign arms.", "Fäst två korta plattor tvärs över stolpen för att forma skyltstammar."), components: ["Short plates x2"] },
+        { stepNumber: 3, title: t("Mount the sign faces", "Montera skyltytorna"), description: t("Clip four equal plates onto the arms as the sign display surfaces.", "Klicka fast fyra lika plattor på armarna som skyltens visningssidor."), components: ["Equal plates x4"] },
+      ],
+    },
+    challenge: { title: t("Design Your Own Sign", "Designa din egen skylt"), description: t("Invent a new road sign using only shapes. What does it mean?", "Uppfinn en ny vägskylt med enbart former. Vad betyder den?"), hint: t("Use triangles for danger, circles for must-do, squares for information.", "Använd trianglar för fara, cirklar för måste-göra, kvadrater för information.") },
+    lgr22: { strands: ["prog"], rawSpreadsheet: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system" },
+    sdgs: [4, 11],
+  },
+
+  // Ch6
+  {
+    id: 6, slug: "suspension-car", isCheckpoint: false,
+    title: t("All-Terrain Suspension Car", "Terrängbil med fjädring"),
+    subtitle: t("Drive over rocky roads without breaking", "Kör på steniga vägar utan att gå sönder"),
+    story: {
+      intro: t("The path to the North Pole turns bumpy and rocky. Kit needs a car that won't fall apart on rough terrain.", "Vägen mot Nordpolen blir ojämn och stenig. Kit behöver en bil som inte faller isär på ojämnt underlag."),
+      dialogue: [
+        { speaker: "Kit",  text: t("Every bump feels like I'm going to fall off! We need suspension.", "Varje gupp känns som att jag ska ramla av! Vi behöver fjädring.") },
+        { speaker: "Rob",  text: t("Suspension absorbs bumps so the passengers stay smooth even on rough roads.", "Fjädring absorberar gupp så att passagerarna förblir jämna även på ojämna vägar.") },
+        { speaker: "Laya", text: t("Mountain bikes, jeeps, and trucks all use suspension. It's essential for rough terrain.", "Mountainbikes, jeepbilar och lastbilar använder alla fjädring. Det är viktigt för ojämnt underlag.") },
+        { speaker: "Kit",  text: t("Let's add a suspension piece and a spoiler — style AND function!", "Vi lägger till ett fjädringshjälpmedel och en spoiler — stil OCH funktion!") },
+      ],
+      conclusion: t("The suspension car rolls smoothly over every rock — the North Pole is closer now!", "Terrängbilen rullar mjukt över varje sten — Nordpolen är nu närmre!"),
+    },
+    theory: {
+      concept: t("Suspension & friction (Terrain engineering)", "Fjädring & friktion (Terrängkonstruktion)"),
+      explanation: t("Suspension systems use springs or flexible parts to absorb bumps. Without suspension, every rock sends a shockwave through the whole vehicle. With it, the wheels move up and down while the body stays level.", "Fjädringssystem använder fjädrar eller flexibla delar för att absorbera gupp. Utan fjädring skickar varje sten en chockvåg genom hela fordonet. Med fjädring rör sig hjulen upp och ner medan kroppen förblir jämn."),
+      realWorldExamples: [
+        t("Mountain bikes have front forks with suspension for rocky trails", "Mountainbikes har framgafflar med fjädring för steniga stigar"),
+        t("Car shock absorbers keep the ride smooth on bumpy roads", "Bil-stötdämpare håller körningen jämn på ojämna vägar"),
+        t("Pogo sticks store energy in a spring and release it to bounce", "Pogo-pinnar lagrar energi i en fjäder och frigör den för att studsa"),
+      ],
+      newWords: [t("Suspension", "Fjädring"), t("Shock absorber", "Stötdämpare"), t("Terrain", "Terräng"), t("Stability", "Stabilitet")],
+    },
+    build: {
+      modelName: t("All-Terrain Suspension Car", "Terrängbil med fjädring"),
+      description: t("Build a car with suspension, steering, and a spoiler for rough terrain.", "Bygg en bil med fjädring, styrning och spoiler för ojämnt underlag."),
+      totalSteps: 12,
+      steps: [
+        { stepNumber: 1,  title: t("Build the main chassis", "Bygg huvudchassit"), description: t("Place two P11 beams parallel. Join with CT2 at both ends.", "Lägg två P11-balkar parallellt. Foga ihop med CT2 i båda ändar."), components: ["P11 x2", "CT2 x4"] },
+        { stepNumber: 2,  title: t("Add front frame", "Lägg till frontram"), description: t("Attach P3 beams and CL2 connectors to form the front section.", "Fäst P3-balkar och CL2-kopplingar för att forma frontsektionen."), components: ["P3 x2", "CL2 x2"] },
+        { stepNumber: 3,  title: t("Build rear section", "Bygg baksektion"), description: t("Add CT3 and CT2 connectors at the rear.", "Lägg till CT3 och CT2-kopplingar baktill."), components: ["CT3 x2", "CT2 x2"] },
+        { stepNumber: 4,  title: t("Add corner connectors", "Lägg till hörnkopplingar"), description: t("Press CH2 connectors at all four frame corners.", "Tryck CH2-kopplingar på alla fyra ramhörnen."), components: ["CH2 x4", "CL2 x2"] },
+        { stepNumber: 5,  title: t("Mount axle holders", "Montera axelhållare"), description: t("Click TW1 twist connectors onto the axle positions.", "Klicka TW1-vridkopplingar på axelpositionerna."), components: ["TW1 x4"] },
+        { stepNumber: 6,  title: t("Install front axle", "Installera frontaxeln"), description: t("Slide the SH60 shaft through the front TW1 holders.", "Skjut SH60-axeln genom de främre TW1-hållarna."), components: ["SH60 x1"] },
+        { stepNumber: 7,  title: t("Install rear axle", "Installera bakaxeln"), description: t("Slide the SH100 shaft through the rear TW1 holders.", "Skjut SH100-axeln genom de bakre TW1-hållarna."), components: ["SH100 x1"] },
+        { stepNumber: 8,  title: t("Attach wheels", "Fäst hjulen"), description: t("Press three wheels onto the axle ends.", "Tryck tre hjul på axelns ändar."), components: ["Wheel x3"] },
+        { stepNumber: 9,  title: t("Mount the suspension", "Montera fjädringen"), description: t("Clip the suspension piece under the chassis and add P5 supports.", "Klicka fast fjädringsenheten under chassit och lägg till P5-stöd."), components: ["Suspension x1", "P5 x2", "CH2 x1"] },
+        { stepNumber: 10, title: t("Add mudguards", "Lägg till stänkskärmar"), description: t("Attach the left and right mudguards over the rear wheels.", "Fäst vänster och höger stänkskärm över bakhjulen."), components: ["Mudguard Left x1", "Mudguard Right x1"] },
+        { stepNumber: 11, title: t("Attach steering wheel", "Fäst ratten"), description: t("Connect the steering wheel with CL2 and CT3 to the front.", "Anslut ratten med CL2 och CT3 till fronten."), components: ["Steering wheel x1", "CL2 x1", "CT3 x2", "P3 x1"] },
+        { stepNumber: 12, title: t("Add spoiler", "Lägg till spoiler"), description: t("Clip the spoiler onto the rear with P5 supports.", "Klicka fast spoilern baktill med P5-stöd."), components: ["Spoiler x1", "P5 x2"] },
+      ],
+    },
+    challenge: { title: t("Bumpy Road Test", "Ojämnt vägtest"), description: t("Build a ramp with books and test if your car makes it over without tipping.", "Bygg en ramp med böcker och testa om din bil klarar sig utan att välta."), hint: t("Lower centre of gravity = more stable. Can you lower the body?", "Lägre tyngdpunkt = mer stabil. Kan du sänka kroppen?") },
+    lgr22: { strands: ["tek_mek", "fys_kraft"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner; Fysik – Kraft & rörelse" },
+    sdgs: [9, 11],
+  },
+
+  // Ch7
+  {
+    id: 7, slug: "stable-tower", isCheckpoint: true,
+    title: t("Stable Tower", "Stabilt torn"),
+    subtitle: t("Build the tallest tower that won't fall", "Bygg det högsta tornet som inte faller"),
+    story: {
+      intro: t("The team reaches a windy plateau. Whoever builds the tallest standing tower wins a head-start to the North Pole!", "Laget når ett blåsigt platå. Den som bygger det högsta stående tornet får ett försprång till Nordpolen!"),
+      dialogue: [
+        { speaker: "Rob",      text: t("The key to a tall tower is a wide base — like a pyramid!", "Nyckeln till ett högt torn är en bred bas — som en pyramid!") },
+        { speaker: "Kit",      text: t("Triangles are the strongest shape. Bridges use triangles everywhere.", "Trianglar är den starkaste formen. Broar använder trianglar överallt.") },
+        { speaker: "Laya",     text: t("I'll try using all my P7x11 pillars as the base and stack up from there.", "Jag provar att använda alla mina P7x11-pelare som bas och staplar därifrån.") },
+        { speaker: "Narrator", text: t("Who will build the tallest stable tower? It's a checkpoint challenge!", "Vem bygger det högsta stabila tornet? Det är en checkpointutmaning!") },
+      ],
+      conclusion: t("Every tower tells a story about balance, structure and gravity!", "Varje torn berättar en historia om balans, struktur och gravitation!"),
+    },
+    theory: {
+      concept: t("Structural stability (Checkpoint)", "Strukturell stabilitet (Avstämning)"),
+      explanation: t("Taller structures are less stable because their centre of gravity is higher. A wide base lowers the centre of gravity and prevents tipping. Triangles distribute forces evenly — that's why engineers use them everywhere.", "Högre strukturer är mindre stabila eftersom deras tyngdpunkt är högre. En bred bas sänker tyngdpunkten och förhindrar välting. Trianglar fördelar krafter jämnt — det är därför ingenjörer använder dem överallt."),
+      realWorldExamples: [
+        t("The Eiffel Tower has a very wide base to stay stable", "Eiffeltornet har en mycket bred bas för att förbli stabilt"),
+        t("Egyptian pyramids are the most stable shape ever built", "Egyptiska pyramider är den stabilaste formen som någonsin byggts"),
+        t("Tripods (three legs) never wobble because triangles are rigid", "Stativ (tre ben) skakar aldrig eftersom trianglar är stela"),
+      ],
+      newWords: [t("Stability", "Stabilitet"), t("Centre of gravity", "Tyngdpunkt"), t("Triangle", "Triangel"), t("Structure", "Struktur")],
+    },
+    build: {
+      modelName: t("Stable Tower", "Stabilt torn"),
+      description: t("Use all available pieces to build the tallest free-standing tower.", "Använd alla tillgängliga bitar för att bygga det högsta fristående tornet."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build your tallest stable tower", "Bygg ditt högsta stabila torn"), description: t("Use any combination of pieces. Start with a wide base and taper as you go up. Must stand on its own for 10 seconds!", "Använd vilken kombination av bitar som helst. Börja med en bred bas och avsmalna uppåt. Måste stå självständigt i 10 sekunder!"), components: ["P7x11 x2", "P11 x2", "CT2 x4", "CT3 x4"] },
+      ],
+    },
+    challenge: { title: t("Tower Height Record", "Tornhöjdsrekord"), description: t("Measure your tower in Blix holes. Can you beat 30 holes tall?", "Mät ditt torn i Blix-hål. Kan du slå 30 hål högt?"), hint: t("Add cross-bracing (diagonal pieces) to resist side forces.", "Lägg till korsförband (diagonala bitar) för att motstå sidokrafter.") },
+    lgr22: { strands: ["tek_mek", "tek_design"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner; Teknik – Designprocess & modeller" },
+    sdgs: [4, 9, 11],
+  },
+
+  // Ch8
+  {
+    id: 8, slug: "rack-pinion-lift", isCheckpoint: false,
+    title: t("Rack-and-Pinion Lift", "Hiss med kuggstång"),
+    subtitle: t("Lift heavy loads with a gear and rack", "Lyft tunga laster med kugge och kuggstång"),
+    story: {
+      intro: t("A man at a building site struggles to lift heavy materials to the upper floor. The team spots a clever solution.", "En man på en byggplats kämpar med att lyfta tungt material till övervåningen. Laget ser en smart lösning."),
+      dialogue: [
+        { speaker: "Man",  text: t("My arms are aching — I've been lifting boxes all day!", "Mina armar värker — jag har lyft lådor hela dagen!") },
+        { speaker: "Laya", text: t("A rack and pinion converts rotation into straight-line movement — like a lift!", "En kuggstång omvandlar rotation till rätlinjig rörelse — som en hiss!") },
+        { speaker: "Kit",  text: t("The small gear (pinion) turns against the rack's teeth, pushing it up and down.", "Det lilla kugghjulet (drevet) vrids mot kuggstångens tänder och driver den upp och ner.") },
+        { speaker: "Rob",  text: t("Car steering racks, elevators and even dentist chairs use this mechanism!", "Bilar styrväxlar, hissar och till och med tandläkarstolar använder denna mekanism!") },
+      ],
+      conclusion: t("The lift works perfectly — no more aching arms at the building site!", "Hissen fungerar perfekt — inga mer värkande armar på byggplatsen!"),
+    },
+    theory: {
+      concept: t("Rack & pinion mechanism", "Kuggstångsmekanism"),
+      explanation: t("A rack is a flat strip of teeth. A pinion is a small circular gear. When the pinion rotates, its teeth push against the rack's teeth, converting rotation into linear (straight-line) motion. This is how car steering and many lifts work.", "En kuggstång är en platt remsa med tänder. Ett drev är ett litet runt kugghjul. När drevet roterar trycker dess tänder mot kuggstångens tänder och omvandlar rotation till linjär (rätlinjig) rörelse. Så fungerar bilarnas styrning och många hissar."),
+      realWorldExamples: [
+        t("Car steering converts steering wheel rotation into wheel turning", "Bilstyrning omvandlar rattrotation till hjulvridning"),
+        t("Elevator mechanisms use rack and pinion to move cabins", "Hissmekanismer använder kuggstång för att röra hissburen"),
+        t("A clock uses gears and racks to move clock hands precisely", "En klocka använder kugghjul och kuggstänger för att precisionsröra visarna"),
+      ],
+      newWords: [t("Rack", "Kuggstång"), t("Pinion", "Drev"), t("Linear motion", "Linjär rörelse"), t("Gear teeth", "Kuggtänder")],
+    },
+    build: {
+      modelName: t("Rack-and-Pinion Lift", "Hiss med kuggstång"),
+      description: t("Build a tall lift frame with a rack and pinion mechanism that raises a platform.", "Bygg en hög hissram med en kuggstångsmekanism som lyfter en plattform."),
+      totalSteps: 15,
+      steps: [
+        { stepNumber: 1,  title: t("Build the base frame", "Bygg basramen"), description: t("Lay two P11 beams and join with CT2 to form the base.", "Lägg två P11-balkar och foga ihop med CT2 för att forma basen."), components: ["P11 x2", "CT2 x6"] },
+        { stepNumber: 2,  title: t("Build the left column", "Bygg vänster pelare"), description: t("Stack P7 beams vertically on the left side with CT2.", "Stapla P7-balkar vertikalt på vänster sida med CT2."), components: ["P7 x4", "CT2 x4"] },
+        { stepNumber: 3,  title: t("Build the right column", "Bygg höger pelare"), description: t("Mirror the left column on the right side.", "Spegla den vänstra pelaren på höger sida."), components: ["P7 x4", "CT2 x4"] },
+        { stepNumber: 4,  title: t("Add U-pillar supports", "Lägg till U-pelarpelare"), description: t("Insert PU5x13 pillars inside each column for rigidity.", "Sätt in PU5x13-pelare inuti varje pelare för styvhet."), components: ["PU5x13 x2", "CH2 x2"] },
+        { stepNumber: 5,  title: t("Connect the column tops", "Anslut pelarnas toppar"), description: t("Bridge the tops with P5 beams and CH2 connectors.", "Brygga topparna med P5-balkar och CH2-kopplingar."), components: ["P5 x4", "CH2 x2"] },
+        { stepNumber: 6,  title: t("Add horizontal braces", "Lägg till horisontella förband"), description: t("Attach P3 beams across the middle for stability.", "Fäst P3-balkar tvärs mittendelen för stabilitet."), components: ["P3 x2", "CT2 x2"] },
+        { stepNumber: 7,  title: t("Mount the rack guides", "Montera kuggstångsguiderna"), description: t("Attach CH2 connectors where the rack will slide.", "Fäst CH2-kopplingar där kuggstången ska glida."), components: ["CH2 x2", "CT3 x2"] },
+        { stepNumber: 8,  title: t("Insert the rack rails", "Sätt in kuggstångskarvorna"), description: t("Slide three Rack pieces end-to-end in the guide channel.", "Skjut tre kuggstångsbitar ände-till-ände i guidekanalerna."), components: ["Rack x3"] },
+        { stepNumber: 9,  title: t("Install the drive shaft", "Installera drivaxeln"), description: t("Thread SH100 horizontally through the P7x11 pillar.", "Trä SH100 horisontellt genom P7x11-pelaren."), components: ["SH100 x1", "P7x11 x1"] },
+        { stepNumber: 10, title: t("Mount the pinion gears", "Montera drevkugghjulen"), description: t("Press G20 Plus gears onto the drive shaft to mesh with the rack.", "Tryck G20 Plus-kugghjul på drivaxeln för att gripa in i kuggstången."), components: ["G20 Plus x2"] },
+        { stepNumber: 11, title: t("Add side supports", "Lägg till sidostöd"), description: t("Reinforce both sides with P5 beams and CL2 connector.", "Förstärk båda sidor med P5-balkar och CL2-koppling."), components: ["P5 x4", "CL2 x1"] },
+        { stepNumber: 12, title: t("Reinforce the columns", "Förstärk pelarna"), description: t("Add P3 pieces to stiffen the lower columns.", "Lägg till P3-bitar för att styva upp de nedre pelarna."), components: ["P3 x3"] },
+        { stepNumber: 13, title: t("Add upper connectors", "Lägg till övre kopplingar"), description: t("Attach remaining CH2 connectors at the top for a clean finish.", "Fäst återstående CH2-kopplingar högst upp för en snygg avslutning."), components: ["CH2 x3", "CT2 x4"] },
+        { stepNumber: 14, title: t("Assemble the lift platform", "Montera hissplattformen"), description: t("Clip a flat plate onto the rack as the cargo platform.", "Klicka fast en flat platta på kuggstången som lastplattform."), components: ["P5 x2"] },
+        { stepNumber: 15, title: t("Test the lift", "Testa hissen"), description: t("Turn the drive shaft. Does the platform rise smoothly? Place a small load on it!", "Vrid drivaxeln. Stiger plattformen jämnt? Placera en liten last på den!"), components: [] },
+      ],
+    },
+    challenge: { title: t("Gear Ratio Challenge", "Kugghjulsförhållande-utmaning"), description: t("Replace G20 with G60. Does the platform rise faster or slower? Why?", "Ersätt G20 med G60. Stiger plattformen snabbare eller långsammare? Varför?"), hint: t("Bigger gear = more turns needed = slower but stronger lift.", "Större kugghjul = fler varv behövs = långsammare men starkare lyft.") },
+    lgr22: { strands: ["tek_mek"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
+    sdgs: [9, 11],
+  },
+
+  // Ch9
+  {
+    id: 9, slug: "collection-challenge", isCheckpoint: true,
+    title: t("300-Hole Collection", "300-hålssamling"),
+    subtitle: t("Sort and count your Blix pieces", "Sortera och räkna dina Blix-bitar"),
+    story: {
+      intro: t("After so many builds the pieces are scattered everywhere! This checkpoint is about organising and counting.", "Efter så många byggen är bitarna spridda överallt! Den här checkpointen handlar om att organisera och räkna."),
+      dialogue: [
+        { speaker: "Rob",      text: t("If we count all the holes in all our pieces, can we reach 300?", "Om vi räknar alla hål i alla våra bitar, kan vi nå 300?") },
+        { speaker: "Kit",      text: t("P3 has 3 holes, P5 has 5… this is going to take some real maths!", "P3 har 3 hål, P5 har 5… det här kräver lite riktig matematik!") },
+        { speaker: "Laya",     text: t("Sorting first makes counting easier — group by piece type.", "Att sortera först gör det lättare att räkna — gruppera efter bittyp.") },
+        { speaker: "Narrator", text: t("Sorting is the first step in data organisation — just like a computer!", "Sortering är det första steget i dataorganisation — precis som en dator!") },
+      ],
+      conclusion: t("Sorted, counted and ready — data skills are life skills!", "Sorterade, räknade och klara — datakunskaper är livskunskaper!"),
+    },
+    theory: {
+      concept: t("Counting & data sorting (Checkpoint)", "Räkning & datasortering (Avstämning)"),
+      explanation: t("Sorting means grouping similar things together. Counting means knowing how many there are. Computers sort and count billions of items per second — but the idea is the same as sorting your Blix pieces!", "Sortering innebär att gruppera liknande saker. Räkning innebär att veta hur många det finns. Datorer sorterar och räknar miljarder föremål per sekund — men idén är densamma som att sortera dina Blix-bitar!"),
+      realWorldExamples: [
+        t("Supermarkets sort products by type so customers find them fast", "Snabbköp sorterar varor efter typ så kunderna hittar dem snabbt"),
+        t("Libraries sort books by subject and author name", "Bibliotek sorterar böcker efter ämne och författarnamn"),
+        t("Apps sort your photos by date automatically", "Appar sorterar dina foton efter datum automatiskt"),
+      ],
+      newWords: [t("Sort", "Sortera"), t("Data", "Data"), t("Count", "Räkna"), t("Organise", "Organisera")],
+    },
+    build: {
+      modelName: t("300-Hole Collection", "300-hålssamling"),
+      description: t("Sort all pieces by type, count the total holes, and reach 300.", "Sortera alla bitar efter typ, räkna de totala hålen och nå 300."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Sort, count and total your pieces", "Sortera, räkna och summera dina bitar"), description: t("Group all Blix pieces by type. Count the holes in each group. Add them all up — can you reach 300 total holes?", "Gruppera alla Blix-bitar efter typ. Räkna hålen i varje grupp. Lägg ihop dem alla — kan du nå 300 totala hål?"), components: ["P3 x4", "P5 x4", "P7 x4", "P11 x4"] },
+      ],
+    },
+    challenge: { title: t("Beat 300 Holes!", "Slå 300 hål!"), description: t("Can you arrange pieces to total more than 300 holes? Draw your arrangement.", "Kan du arrangera bitar för att totalt nå mer än 300 hål? Rita din arrangement."), hint: t("More P11 pieces = more holes. Count in groups to go faster.", "Fler P11-bitar = fler hål. Räkna i grupper för att gå snabbare.") },
+    lgr22: { strands: ["mat_tal"], rawSpreadsheet: "Lgr22 1–3: Matematik – Taluppfattning" },
+    sdgs: [4],
+  },
+
+  // Ch10
+  {
+    id: 10, slug: "car-jack", isCheckpoint: false,
+    title: t("Car Jack", "Domkraft"),
+    subtitle: t("Lift a car with a power screw", "Lyft en bil med en kraftskruv"),
+    story: {
+      intro: t("A driver has a flat tyre but no way to lift the car. The team knows exactly what to do.", "En förare har ett punkterat däck men inget sätt att lyfta bilen. Laget vet precis vad man ska göra."),
+      dialogue: [
+        { speaker: "Driver", text: t("My tyre is flat but the car is too heavy to lift by hand!", "Mitt däck är punkterat men bilen är för tung att lyfta för hand!") },
+        { speaker: "Laya",   text: t("A screw is a ramp wrapped around a cylinder. Turning it a little lifts a lot!", "En skruv är en ramp lindat runt en cylinder. Att vrida lite lyfter mycket!") },
+        { speaker: "Kit",    text: t("Power screws can lift a whole car with just one hand — that's mechanical advantage.", "Kraftskruvar kan lyfta en hel bil med bara en hand — det är mekanisk fördel.") },
+        { speaker: "Rob",    text: t("The more threads per centimetre, the more force is multiplied. Maths in action!", "Fler gängor per centimeter = mer kraft multipliceras. Matte i praktiken!") },
+      ],
+      conclusion: t("The tyre is changed in minutes — a simple screw saves the day!", "Däcket byts på minuter — en enkel skruv räddar dagen!"),
+    },
+    theory: {
+      concept: t("Screw as simple machine", "Skruv som enkel maskin"),
+      explanation: t("A screw is a ramp (inclined plane) wound around a cylinder. Each turn of the screw moves the load a tiny distance but multiplies the turning force enormously. This is why a small hand crank can lift a heavy car.", "En skruv är en ramp (lutande plan) lindad runt en cylinder. Varje varv av skruven rör lasten ett litet avstånd men multiplicerar vridkraften enormt. Det är därför en liten handvev kan lyfta en tung bil."),
+      realWorldExamples: [
+        t("A car jack uses a power screw to lift vehicles", "En domkraft använder en kraftskruv för att lyfta fordon"),
+        t("Bottle caps are screws — twist to seal or open", "Flasklock är skruvar — vrid för att stänga eller öppna"),
+        t("A drill bit is a helical screw that bores into wood", "Ett borr är en spiralformad skruv som borrar in i trä"),
+      ],
+      newWords: [t("Screw", "Skruv"), t("Thread", "Gänga"), t("Mechanical advantage", "Mekanisk fördel"), t("Inclined plane", "Lutande plan")],
+    },
+    build: {
+      modelName: t("Car Jack", "Domkraft"),
+      description: t("Build a screw-lift mechanism that raises a load when the handle is turned.", "Bygg en skruvlyftmekanism som lyfter en last när handtaget vrids."),
+      totalSteps: 6,
+      steps: [
+        { stepNumber: 1, title: t("Build the base platform", "Bygg basplattformen"), description: t("Assemble the P7x11 pillar flat as the sturdy base.", "Montera P7x11-pelaren platt som den stabila basen."), components: ["P7x11 x1", "CT2 x2"] },
+        { stepNumber: 2, title: t("Build the side towers", "Bygg sidotornen"), description: t("Attach P7 beams vertically on each side with CT3.", "Fäst P7-balkar vertikalt på varje sida med CT3."), components: ["P7 x4", "CT3 x4"] },
+        { stepNumber: 3, title: t("Add TW1 pivot holders", "Lägg till TW1-pivothållare"), description: t("Click TW1 connectors at the midpoint of each tower.", "Klicka TW1-kopplingar vid mittpunkten av varje torn."), components: ["TW1 x4"] },
+        { stepNumber: 4, title: t("Add CH2 cross connectors", "Lägg till CH2-korskopplingar"), description: t("Bridge the towers with CH2 to form a stable frame.", "Brygga tornen med CH2 för att bilda en stabil ram."), components: ["CH2 x5"] },
+        { stepNumber: 5, title: t("Insert the power screw", "Sätt in kraftskruven"), description: t("Thread the Power Screw through the TW1 mounts vertically.", "Trä kraftskruven vertikalt genom TW1-hållarna."), components: ["Power Screw x1", "P5 Nut x1"] },
+        { stepNumber: 6, title: t("Add handle and test", "Lägg till handtag och testa"), description: t("Attach CL2 pieces as the turning handle. Turn and watch the platform rise!", "Fäst CL2-bitar som vridhandtag. Vrid och se plattformen stiga!"), components: ["CL2 x2", "P3 x2"] },
+      ],
+    },
+    challenge: { title: t("How High Can You Lift?", "Hur högt kan du lyfta?"), description: t("Place a small book on the lift platform. How many turns to raise it 5 cm?", "Lägg en liten bok på lyftplattformen. Hur många varv krävs för att lyfta den 5 cm?"), hint: t("Count turns carefully — each full rotation is one thread pitch of movement.", "Räkna varven noggrant — varje fullständig rotation är ett gängsteg.") },
+    lgr22: { strands: ["tek_mek"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
+    sdgs: [9],
+  },
+
+  // Ch11
+  {
+    id: 11, slug: "bear-trap", isCheckpoint: false,
+    title: t("Bear Trap", "Björnfälla"),
+    subtitle: t("Build a spring-loaded snap mechanism", "Bygg en fjäderlastad snappningsmekanism"),
+    story: {
+      intro: t("Rob spots a bear approaching the camp! The team needs a safe, humane trap to redirect the bear away.", "Rob ser en björn som närmar sig lägret! Laget behöver en säker, human fälla för att leda björnen bort."),
+      dialogue: [
+        { speaker: "Rob",  text: t("Bear incoming! We need something that snaps shut fast to startle it away!", "Björn på väg! Vi behöver något som snäpper igen snabbt för att skrämma bort den!") },
+        { speaker: "Kit",  text: t("A spring stores energy when you compress or bend it. Release it — snap!", "En fjäder lagrar energi när du tryckt ihop eller böjer den. Släpp — snap!") },
+        { speaker: "Laya", text: t("Mouse traps, pinball launchers and even clothes pegs use spring energy.", "Musfällor, flipperspel och till och med klädnypor använder fjäderenergi.") },
+        { speaker: "Rob",  text: t("Build it fast — the bear is getting closer!", "Bygg det snabbt — björnen kommer närmre!") },
+      ],
+      conclusion: t("The trap snaps and startles the bear away safely — elastic energy saves the campsite!", "Fällan snäpper till och skrämmer björnen bort säkert — elastisk energi räddar lägerplatsen!"),
+    },
+    theory: {
+      concept: t("Spring & elastic energy", "Fjäder- & elastisk energi"),
+      explanation: t("Springs store energy when stretched or compressed. Release the spring and that energy is returned as motion — very fast motion! This is called elastic potential energy, and it powers everything from watches to trampolines.", "Fjädrar lagrar energi när de sträcks ut eller trycks ihop. Släpp fjädern och den energin återgår som rörelse — mycket snabb rörelse! Detta kallas elastisk potentiell energi och driver allt från klockor till trampoliner."),
+      realWorldExamples: [
+        t("A mousetrap uses a spring to snap shut instantly", "En musfälla använder en fjäder för att snäppa igen omedelbart"),
+        t("A trampoline stores energy when you push it down", "En trampolin lagrar energi när du trycket ner den"),
+        t("Watches use coil springs wound tight to power the clock hands", "Klockor använder spiralfjädrar hårt uppvridna för att driva visarna"),
+      ],
+      newWords: [t("Spring", "Fjäder"), t("Elastic energy", "Elastisk energi"), t("Compress", "Komprimera"), t("Snap", "Snäppa")],
+    },
+    build: {
+      modelName: t("Bear Trap", "Björnfälla"),
+      description: t("Build a spring-loaded jaw mechanism that snaps shut when triggered.", "Bygg en fjäderlastad käkmekanism som snäpper igen när den utlöses."),
+      totalSteps: 6,
+      steps: [
+        { stepNumber: 1, title: t("Build the base plate", "Bygg basplattan"), description: t("Arrange P5 beams in a flat rectangular base.", "Arrangera P5-balkar i en platt rektangulär bas."), components: ["P5 x4", "CT2 x4"] },
+        { stepNumber: 2, title: t("Add corner supports", "Lägg till hörnstöd"), description: t("Attach CH2 connectors at each corner.", "Fäst CH2-kopplingar i varje hörn."), components: ["CH2 x4", "CT3 x4"] },
+        { stepNumber: 3, title: t("Build the lower jaw", "Bygg det nedre käken"), description: t("Assemble P7 beams as the lower jaw of the trap.", "Montera P7-balkar som fällans nedre käke."), components: ["P7 x3", "CT3 x2"] },
+        { stepNumber: 4, title: t("Build the upper jaw", "Bygg det övre käken"), description: t("Mirror the lower jaw using P7 beams.", "Spegla det nedre käken med P7-balkar."), components: ["P7 x3", "CT3 x2"] },
+        { stepNumber: 5, title: t("Add axle and spring tension", "Lägg till axel och fjäderspänning"), description: t("Thread SH100 shafts through both jaws with TW1 connectors as the pivot.", "Trä SH100-axlar genom båda käkarna med TW1-kopplingar som pivot."), components: ["SH100 x2", "TW1 x6", "CL2 x2"] },
+        { stepNumber: 6, title: t("Add P3 Plus trigger and test", "Lägg till P3 Plus-utlösare och testa"), description: t("Attach P3 Plus as the trigger arm. Open jaws, set trigger, then gently press — SNAP!", "Fäst P3 Plus som utlösararm. Öppna käkarna, ställ in utlösaren, tryck sedan försiktigt — SNAP!"), components: ["P3 Plus x4"] },
+      ],
+    },
+    challenge: { title: t("Spring Energy Comparison", "Fjäderenergi-jämförelse"), description: t("How far does a cotton ball fly when launched by the trap? Measure the distance.", "Hur långt flyger en bomullstuss när den skjuts av fällan? Mät avståndet."), hint: t("More spring tension = more energy stored = further launch!", "Mer fjäderspänning = mer lagrad energi = längre kast!") },
+    lgr22: { strands: ["fys_energi"], rawSpreadsheet: "Lgr22 1–3: Fysik – Energi och energiflöden" },
+    sdgs: [15],
+  },
+
+  // Ch12
+  {
+    id: 12, slug: "pasta-maker", isCheckpoint: false,
+    title: t("Pasta Maker", "Pastamaskin"),
+    subtitle: t("Roll flat pasta with a gear-driven roller", "Rulla platt pasta med en kugghjulsdriven vals"),
+    story: {
+      intro: t("A farmer's family is hungry but their pasta machine is broken! The team builds a new one using gears.", "En bondgårdsfamilj är hungrig men deras pastamaskin är trasig! Laget bygger en ny med kugghjul."),
+      dialogue: [
+        { speaker: "Farmer", text: t("Our pasta machine broke! We can't make spaghetti without it.", "Vår pastamaskin gick sönder! Vi kan inte göra spaghetti utan den.") },
+        { speaker: "Laya",   text: t("Two rollers connected by gears spin at the same speed — that's all a pasta maker is!", "Två valsar kopplade med kugghjul snurrar i samma hastighet — det är allt en pastamaskin är!") },
+        { speaker: "Kit",    text: t("One large gear and one small gear can change the speed and force of the rollers.", "Ett stort och ett litet kugghjul kan ändra hastigheten och kraften hos valsarna.") },
+        { speaker: "Rob",    text: t("Gear ratio! If G20 drives G60, the output spins three times slower but three times stronger.", "Kugghjulsförhållande! Om G20 driver G60 snurrar utdata tre gånger långsammare men tre gånger starkare.") },
+      ],
+      conclusion: t("Fresh pasta for everyone — gears really do make life tastier!", "Färsk pasta för alla — kugghjul gör verkligen livet godare!"),
+    },
+    theory: {
+      concept: t("Gear ratios", "Kugghjulsförhållanden"),
+      explanation: t("When a small gear (G20, 20 teeth) drives a large gear (G60, 60 teeth), the large gear turns 3× slower but with 3× more torque. This is gear reduction — trading speed for force. Pasta machines use this to roll dough smoothly.", "När ett litet kugghjul (G20, 20 tänder) driver ett stort kugghjul (G60, 60 tänder), vrids det stora 3× långsammare men med 3× mer vridmoment. Det är kugghjulsreduktion — att byta ut hastighet mot kraft. Pastamaskiner använder detta för att rulla deg jämnt."),
+      realWorldExamples: [
+        t("Bicycle gears let you go fast on flat roads or climb steep hills", "Cykelväxlar låter dig gå fort på platta vägar eller klättra branta backar"),
+        t("Electric screwdrivers use gear reduction for high torque", "Elektriska skruvdragare använder kugghjulsreduktion för högt vridmoment"),
+        t("A pasta machine uses two rollers linked by gears for even thickness", "En pastamaskin använder två valsar kopplade med kugghjul för jämn tjocklek"),
+      ],
+      newWords: [t("Gear ratio", "Kugghjulsförhållande"), t("Torque", "Vridmoment"), t("Reduction", "Reduktion"), t("Roller", "Vals")],
+    },
+    build: {
+      modelName: t("Pasta Maker", "Pastamaskin"),
+      description: t("Build a roller mechanism driven by interlocking gears.", "Bygg en valsmekanism driven av sammanlänkade kugghjul."),
+      totalSteps: 4,
+      steps: [
+        { stepNumber: 1, title: t("Build the side frame", "Bygg sidramen"), description: t("Assemble the P7x11 pillar as the main frame. Add P3 Plus support pieces.", "Montera P7x11-pelaren som huvudramen. Lägg till P3 Plus-stödstycken."), components: ["P7x11 x1", "P3 Plus x2"] },
+        { stepNumber: 2, title: t("Insert the axle shafts", "Sätt in axelaxlarna"), description: t("Thread two SH60 shafts through the frame — these are the two rollers.", "Trä två SH60-axlar genom ramen — dessa är de två valsarna."), components: ["SH60 x2"] },
+        { stepNumber: 3, title: t("Mount the gears", "Montera kugghjulen"), description: t("Press one G20 Plus gear on the top shaft and one G60 on the lower shaft.", "Tryck ett G20 Plus-kugghjul på den övre axeln och ett G60 på den nedre axeln."), components: ["G20 Plus x1", "G60 x2"] },
+        { stepNumber: 4, title: t("Mesh gears and test", "Gripa in kugghjulen och testa"), description: t("Adjust until the gears mesh smoothly. Turn the handle — do both rollers spin together?", "Justera tills kugghjulen griper in jämnt. Vrid handtaget — snurrar båda valsarna tillsammans?"), components: [] },
+      ],
+    },
+    challenge: { title: t("Gear Ratio Race", "Kugghjulsförhållande-tävling"), description: t("Swap G60 for a second G20. Now what happens to roller speed?", "Byt ut G60 mot ett andra G20. Vad händer nu med valsarnas hastighet?"), hint: t("Same size gears = same speed. Different sizes = speed change!", "Samma storlekskugghjul = samma hastighet. Olika storlekar = hastighetsbyte!") },
+    lgr22: { strands: ["tek_mek"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
+    sdgs: [2, 9],
+  },
+
+  // Ch13–30: continue with the shorthand approach for remaining chapters
   ...buildShorthandChapters([
-    { id: 2, slug: "aerodynamics-car", cp: false,
-      title: ["Aerodynamics Car", "Aerodynamisk bil"],
-      subtitle: ["Build a fast, fuel-efficient car", "Bygg en snabb, bränsleeffektiv bil"],
-      concept: ["Air friction (Aerodynamics)", "Luftmotstånd (Aerodynamik)"],
-      explanation: [
-        "The faster we move, the more air resists our motion. Race cars and aeroplanes are designed to cut through air with the least resistance. Aerodynamics is the study of how objects move through air.",
-        "Ju snabbare vi rör oss, desto mer motstår luften. Racerbilar och flygplan är formade för att skära genom luften med minst motstånd. Aerodynamik handlar om hur föremål rör sig genom luft."
-      ],
-      modelName: ["Aerodynamic Car", "Aerodynamisk bil"], totalSteps: 10,
-      challenge: ["Design Your Dream Car", "Designa din drömbil",
-        "Draw a car for Laya and Kit. The road is good and the distance is long. What features make it fastest?",
-        "Rita en bil för Laya och Kit. Vägen är bra och avståndet långt. Vilka egenskaper gör den snabbast?"],
-      lgr22: ["fys_kraft", "dig_ai"], lgr22Raw: "Lgr22 1–3: Fysik – Kraft & rörelse; Digital kompetens – AI, mönsterigenkänning & databehandling",
-      sdgs: [7, 9, 13],
-    },
-    { id: 3, slug: "challenge-ladder", cp: true,
-      title: ["Challenge: Ladder", "Utmaning: Stege"],
-      subtitle: ["Rescue a cat stuck high in a tree", "Rädda en katt som sitter högt i ett träd"],
-      concept: ["Sequencing & decoding (Checkpoint)", "Sekvenser & avkodning (Avstämning)"],
-      explanation: [
-        "Rob's calculation says the ladder must be exactly 18 holes long. This is a problem-solving challenge — combine P3, P5, P7 and P11 plates to reach exactly 18 holes.",
-        "Robs uträkning säger att stegen måste vara exakt 18 hål lång. Det här är en problemlösningsutmaning — kombinera P3-, P5-, P7- och P11-plattor för att nå exakt 18 hål."
-      ],
-      modelName: ["18-Hole Ladder", "Stege med 18 hål"], totalSteps: 1,
-      challenge: ["The 18-Hole Rule", "18-hålsregeln",
-        "Build a ladder exactly 18 holes long. Find more than one combination!",
-        "Bygg en stege som är exakt 18 hål lång. Hitta mer än en kombination!"],
-      lgr22: ["prog"], lgr22Raw: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system (Teknik/Matematik)",
-      sdgs: [4, 15],
-    },
-    { id: 4, slug: "trebuchet", cp: false,
-      title: ["Trebuchet", "Trebuchet"],
-      subtitle: ["Launch Rob across the valley", "Skjut Rob över dalen"],
-      concept: ["Action & reaction (Levers)", "Verkan & reaktion (Hävstänger)"],
-      explanation: [
-        "A trebuchet uses a lever and counterweight to throw heavy objects. When the heavy end falls, the long arm swings up and launches the projectile in a parabolic path.",
-        "En trebuchet använder hävstång och motvikt för att kasta tunga föremål. När den tunga änden faller, svingar den långa armen upp och skjuter projektilen i en parabelbana."
-      ],
-      modelName: ["Trebuchet", "Trebuchet"], totalSteps: 10,
-      challenge: ["Bring Rob Back", "Hämta tillbaka Rob",
-        "How will you bring Rob back? Think about ropes and pulleys.", "Hur ska du hämta tillbaka Rob? Tänk på rep och block."],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [4, 9],
-    },
-    { id: 5, slug: "sign-board", cp: false,
-      title: ["Sign Board", "Skyltbräda"],
-      subtitle: ["Communicate using shapes", "Kommunicera med former"],
-      concept: ["Coding & decoding (Visual signals)", "Kodning & avkodning (Visuella signaler)"],
-      explanation: [
-        "When sound doesn't work, shapes can carry meaning. Triangle, rectangle, square — anyone can recognise a shape, no matter their language. This is the basis of sign language and traffic signs.",
-        "När ljud inte fungerar kan former bära mening. Triangel, rektangel, kvadrat — alla kan känna igen en form, oavsett språk. Detta är grunden för teckenspråk och vägskyltar."
-      ],
-      modelName: ["Shape Sign Boards", "Formskyltar"], totalSteps: 3,
-      challenge: ["Invent Your Code", "Uppfinn din kod",
-        "Make up a shape language for 5 things you love. Can a friend guess them?", "Skapa ett formspråk för 5 saker du gillar. Kan en kompis gissa?"],
-      lgr22: ["prog"], lgr22Raw: "Lgr22 1–3: Programmering – Algoritmer, logik & digitala system (Teknik/Matematik)",
-      sdgs: [4, 10],
-    },
-    { id: 6, slug: "single-suspension-car", cp: false,
-      title: ["Single Suspension Car", "Bil med fjädring"],
-      subtitle: ["Handle bumpy forest paths", "Klara skogsvägar"],
-      concept: ["Construction skill (Suspension)", "Konstruktionsfärdighet (Fjädring)"],
-      explanation: [
-        "Suspensions use springs and shock absorbers to soak up bumps. If you can sit comfortably in a moving car, thank the suspension!",
-        "Fjädring använder fjädrar och stötdämpare för att ta upp gupp. Om du kan sitta bekvämt i en bil i rörelse — tacka fjädringen!"
-      ],
-      modelName: ["All-Terrain Suspension Car", "Terrängbil med fjädring"], totalSteps: 12,
-      challenge: ["Suspension Spotter", "Fjädringsspanaren",
-        "Next time you're in a car on a bumpy road, observe the suspension at work.", "Nästa gång du åker bil på en gropig väg — observera fjädringen i arbete."],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [9, 11],
-    },
-    { id: 7, slug: "most-stable-tower", cp: false,
-      title: ["Most Stable Tower", "Det stabilaste tornet"],
-      subtitle: ["Build the tallest, most stable tower", "Bygg det högsta, stabilaste tornet"],
-      concept: ["Structure & base (Stability)", "Konstruktion & bas (Stabilitet)"],
-      explanation: [
-        "A tower is stable when its centre of gravity stays over its base. Wide base, narrow top — this is why the Eiffel Tower stands.",
-        "Ett torn är stabilt när dess tyngdpunkt ligger över basen. Bred bas, smal topp — det är därför Eiffeltornet står."
-      ],
-      modelName: ["Stable Tower", "Stabilt torn"], totalSteps: 1,
-      challenge: ["Tower Trial", "Tornprovet",
-        "Compete with a friend! Whose tower survives a small earthquake (gentle shake)?", "Tävla med en kompis! Vems torn klarar en liten jordbävning (gunga lätt)?"],
-      lgr22: ["tek_mek"], lgr22Raw: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner",
-      sdgs: [9, 11],
-    },
-    { id: 8, slug: "lift", cp: false,
-      title: ["Lift", "Hiss"],
-      subtitle: ["Build an elevator with rack and pinion", "Bygg en hiss med kuggstång"],
-      concept: ["Construction skill (Rack & pinion)", "Konstruktionsfärdighet (Kuggstång)"],
-      explanation: [
-        "A rack is a straight bar with teeth. A pinion is a small circular gear. When the pinion rotates, it pushes the rack in a straight line — this is how elevators move.",
-        "En kuggstång är en rak stång med tänder. Ett pinjong är ett litet runt kugghjul. När pinjongen roterar trycker den kuggstången rakt — så fungerar hissar."
-      ],
-      modelName: ["Rack-and-Pinion Lift", "Hiss med kuggstång"], totalSteps: 15,
-      challenge: ["Multi-floor Mansion", "Flervåningshus",
-        "Add more rack pieces and see how high your lift can go!", "Lägg till fler kuggstänger och se hur högt din hiss kan gå!"],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [9, 10, 11],
-    },
-    { id: 9, slug: "money", cp: false,
-      title: ["Money", "Pengar"],
-      subtitle: ["Pay the taxi driver in Blix holes", "Betala taxiföraren i Blix-hål"],
-      concept: ["Counting & number sense", "Räkning & talförståelse"],
-      explanation: [
-        "Each Blix piece has a different number of holes: P11=11, P7=7, P5=5, P3=3. Counting holes is exactly like adding numbers — but you can see and feel the result.",
-        "Varje Blix-bit har olika antal hål: P11=11, P7=7, P5=5, P3=3. Att räkna hål är precis som att addera tal — men du kan se och känna resultatet."
-      ],
-      modelName: ["300-Hole Collection", "300-hålssamling"], totalSteps: 1,
-      challenge: ["Exact Change", "Exakt växel",
-        "Collect exactly 300 holes — not more, not less. Try it with the fewest pieces possible!", "Samla exakt 300 hål — varken mer eller mindre. Försök med så få bitar som möjligt!"],
-      lgr22: ["mat_tal"], lgr22Raw: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [1, 4, 8],
-    },
-    { id: 10, slug: "car-jack", cp: false,
-      title: ["Car Jack", "Domkraft"],
-      subtitle: ["Lift a car to fix a flat tire", "Lyft en bil för att laga punktering"],
-      concept: ["Power (Power screw)", "Effekt (Skruvdomkraft)"],
-      explanation: [
-        "A power screw lifts heavy things. Turn it slowly, lift huge weight. Small force over long distance becomes large force over short distance — that's mechanical advantage!",
-        "En skruvdomkraft lyfter tunga saker. Vrid långsamt — lyft stor vikt. Liten kraft över lång sträcka blir stor kraft över kort sträcka — det är mekanisk fördel!"
-      ],
-      modelName: ["Car Jack", "Domkraft"], totalSteps: 6,
-      challenge: ["Lift Test", "Lyfttest",
-        "How heavy a load can your jack lift before it stops working?", "Hur tung last klarar din domkraft innan den ger upp?"],
-      lgr22: ["fys_energi"], lgr22Raw: "Lgr22 1–3: Fysik – Energi och energiflöden",
-      sdgs: [8, 9],
-    },
-    { id: 11, slug: "bear-trap", cp: false,
-      title: ["Bear Trap", "Björnfälla"],
-      subtitle: ["Protect the village from a bear", "Skydda byn från en björn"],
-      concept: ["Elasticity (Stored energy)", "Elasticitet (Lagrad energi)"],
-      explanation: [
-        "Stretching a rubber band stores potential energy. Released, it snaps back fast — releasing that energy as motion. Bows, slingshots, and traps all work this way.",
-        "Att tänja ett gummiband lagrar potentiell energi. Släpps det, smäller det tillbaka snabbt — energin frigörs som rörelse. Pilbågar, slangbellor och fällor fungerar så."
-      ],
-      modelName: ["Bear Trap", "Björnfälla"], totalSteps: 6,
-      challenge: ["Hook the Rubber Bands", "Fäst gummibanden",
-        "Hook two rubber bands. The trap snaps shut when pressed. Test gently!", "Fäst två gummiband. Fällan slår igen vid tryck. Testa varsamt!"],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [11, 15],
-    },
-    { id: 12, slug: "challenge-pasta-maker", cp: true,
-      title: ["Challenge: Pasta Maker", "Utmaning: Pastamaskin"],
-      subtitle: ["Build a dough-twisting machine", "Bygg en degformningsmaskin"],
-      concept: ["Meshing gears (Checkpoint)", "Kugghjulsingrepp (Avstämning)"],
-      explanation: [
-        "When two gears mesh, their teeth interlock. As one turns, the other turns the opposite way. Pasta makers, cars, and clocks all use meshing gears.",
-        "När två kugghjul går i ingrepp låses tänderna i varandra. När ett vrider, vrider det andra åt motsatt håll. Pastamaskiner, bilar och klockor använder kugghjul i ingrepp."
-      ],
-      modelName: ["Pasta Maker", "Pastamaskin"], totalSteps: 4,
-      challenge: ["Design Your Own Pasta", "Designa din egen pasta",
-        "Build a quilling machine with two meshed gears. What pasta shape will you make?", "Bygg en formmaskin med två kugghjul i ingrepp. Vilken pastaform gör du?"],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [2, 9],
-    },
     { id: 13, slug: "merry-go-round", cp: false,
       title: ["Merry-Go-Round", "Karusell"],
       subtitle: ["Build a carnival ride", "Bygg ett karusellåk"],
