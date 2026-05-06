@@ -520,7 +520,7 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
   const [cameraError, setCameraError]   = useState<string | null>(null);
 
   // Option B: TF.js custom model (ready when VITE_COMPONENT_MODEL_URL is set)
-  const { status: modelStatus, detect } = useComponentDetector();
+  const { status: modelStatus, mode: modelMode, detect } = useComponentDetector();
 
   const comps = step ? parseComps(step.components) : [];
 
@@ -580,7 +580,7 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
         img.src = capturedImage;
         await img.decode();
         const detected = await detect(img);
-        const result = verifyComponents(detected, comps);
+        const result = verifyComponents(detected, comps, modelMode);
         setCheckResult(result);
         setPhase("done");
         return;
