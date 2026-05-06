@@ -244,7 +244,7 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
           color: 0x95a5a6,
           emissive: 0x95a5a6,
           emissiveIntensity: 0.1,
-          metalness: 0.8
+          shininess: 80
         });
         
         const shaft1 = new THREE.Mesh(shaftGeometry, shaftMaterial);
