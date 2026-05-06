@@ -208,8 +208,14 @@ function GradeWheel({
   );
 }
 
-// ─── Chapter Grid ──────────────────────────────────────────────────────────────
-function ChapterGrid({
+// ─── Roadmap ───────────────────────────────────────────────────────────────────
+// Snake-path board-game style map. 5 rows × 6 chapters each.
+// Odd rows run left→right, even rows run right→left.
+
+const ROW_SIZE = 6;
+const TERRAINS = ["🌲","🌸","⛰️","🌊","🌴","🏡","🌻","🦋","🍄","🌈"];
+
+function RoadMap({
   grade,
   selectedId,
   onSelect,
@@ -220,7 +226,11 @@ function ChapterGrid({
   onSelect: (ch: WheelChapter) => void;
   onBack: () => void;
 }) {
-  const cols = 6;
+  // Split 30 chapters into 5 rows of 6
+  const rows: WheelChapter[][] = [];
+  for (let r = 0; r < 5; r++) {
+    rows.push(grade.chapters.slice(r * ROW_SIZE, (r + 1) * ROW_SIZE));
+  }
 
   return (
     <div className="w-full">
@@ -237,70 +247,196 @@ function ChapterGrid({
             {grade.icon}
           </div>
           <div>
-            <p className="font-bold text-lg leading-tight" style={{ color: grade.color }}>{grade.label} — {grade.tagline}</p>
-            <p className="text-xs text-muted-foreground">30 chapters · click to preview</p>
+            <p className="font-bold text-lg leading-tight" style={{ color: grade.color }}>
+              {grade.label} — {grade.tagline}
+            </p>
+            <p className="text-xs text-muted-foreground">30 chapters · tap a stop to explore</p>
           </div>
         </div>
       </div>
 
-      {/* Grid of chapter circles */}
+      {/* Roadmap board */}
       <div
-        className="grid gap-3"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        className="relative w-full rounded-3xl overflow-hidden p-4 md:p-6"
+        style={{
+          background: `linear-gradient(160deg, ${grade.color}12 0%, ${grade.color}06 50%, hsl(var(--muted)/0.4) 100%)`,
+          border: `2px solid ${grade.color}30`,
+        }}
       >
-        {grade.chapters.map((ch, i) => {
-          const isSelected = selectedId === ch.id;
-          const isMilestone = (i + 1) % 10 === 0;
-          return (
-            <button
-              key={ch.id}
-              onClick={() => !ch.locked && onSelect(ch)}
-              title={ch.title}
-              className={`relative flex flex-col items-center justify-center aspect-square rounded-2xl border-2 transition-all duration-200 group ${
-                isSelected
-                  ? "scale-110 shadow-lg"
-                  : ch.locked
-                  ? "opacity-40 cursor-not-allowed"
-                  : "hover:scale-105 hover:shadow-md cursor-pointer"
-              }`}
-              style={{
-                background: ch.locked ? "hsl(var(--muted))" : `${ch.color}18`,
-                borderColor: isSelected ? ch.color : ch.locked ? "hsl(var(--border))" : `${ch.color}55`,
-                boxShadow: isSelected ? `0 0 0 3px ${ch.color}44, 0 4px 16px ${ch.color}33` : undefined,
-              }}
-            >
-              {/* Chapter number */}
-              <span className="text-[11px] font-black leading-none mb-0.5" style={{ color: ch.locked ? "hsl(var(--muted-foreground))" : ch.color }}>
-                {i + 1}
-              </span>
-              {/* Icon */}
-              <span className="text-lg leading-none">
-                {ch.locked ? "🔒" : ch.icon}
-              </span>
-              {/* Completed badge */}
-              {ch.completed && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-white" />
-                </span>
-              )}
-              {/* Milestone star */}
-              {isMilestone && !ch.locked && (
-                <span className="absolute -top-1 -left-1 text-[10px]">⭐</span>
-              )}
-              {/* Tooltip on hover */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-card border border-border rounded-lg px-2 py-1 text-[10px] font-semibold text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-md pointer-events-none">
-                {ch.title}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+        {/* Scattered terrain decorations */}
+        {TERRAINS.map((t, i) => (
+          <span
+            key={i}
+            className="absolute pointer-events-none select-none opacity-20 text-xl"
+            style={{
+              top:  `${8 + (i * 17) % 85}%`,
+              left: `${3 + (i * 23 + 11) % 94}%`,
+              fontSize: 14 + (i % 3) * 4,
+            }}
+          >
+            {t}
+          </span>
+        ))}
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mt-4 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> Completed</span>
-        <span className="flex items-center gap-1.5"><span>⭐</span> Milestone (Ch 10, 20, 30)</span>
-        <span className="flex items-center gap-1.5"><span>🔒</span> Locked</span>
+        {/* START banner */}
+        <div className="flex justify-start mb-2 ml-1">
+          <span className="inline-flex items-center gap-1.5 bg-green-500 text-white text-[11px] font-black px-3 py-1 rounded-full shadow">
+            🏁 START
+          </span>
+        </div>
+
+        {/* Rows */}
+        <div className="flex flex-col gap-0">
+          {rows.map((row, rowIdx) => {
+            const goRight = rowIdx % 2 === 0; // even rows L→R, odd rows R→L
+            const display  = goRight ? row : [...row].reverse();
+            const isLast   = rowIdx === rows.length - 1;
+
+            return (
+              <div key={rowIdx}>
+                {/* Chapter row */}
+                <div className="flex items-center gap-0">
+                  {display.map((ch, colIdx) => {
+                    const chIdx       = rowIdx * ROW_SIZE + (goRight ? colIdx : ROW_SIZE - 1 - colIdx);
+                    const isSelected  = selectedId === ch.id;
+                    const isMilestone = (chIdx + 1) % 10 === 0;
+                    const isLastInRow = colIdx === display.length - 1;
+
+                    return (
+                      <div key={ch.id} className="flex items-center flex-1 min-w-0">
+                        {/* Chapter node */}
+                        <button
+                          onClick={() => !ch.locked && onSelect(ch)}
+                          disabled={ch.locked}
+                          className={`relative flex flex-col items-center justify-center shrink-0 transition-all duration-200 group
+                            ${isSelected ? "scale-125 z-10" : ch.locked ? "opacity-50 cursor-not-allowed" : "hover:scale-110 hover:z-10 cursor-pointer"}`}
+                          style={{ width: 64, height: 64 }}
+                        >
+                          {/* Outer glow ring for selected */}
+                          {isSelected && (
+                            <span
+                              className="absolute inset-0 rounded-full animate-ping"
+                              style={{ background: ch.color, opacity: 0.3 }}
+                            />
+                          )}
+
+                          {/* Main circle */}
+                          <span
+                            className="relative flex flex-col items-center justify-center w-12 h-12 rounded-full shadow-md border-[3px]"
+                            style={{
+                              background: ch.locked
+                                ? "hsl(var(--muted))"
+                                : ch.completed
+                                ? "#22c55e"
+                                : isSelected
+                                ? ch.color
+                                : `${ch.color}dd`,
+                              borderColor: isSelected ? "#FFD700" : "white",
+                              boxShadow: isSelected ? `0 0 0 3px ${ch.color}66, 0 4px 12px ${ch.color}55` : "0 2px 8px rgba(0,0,0,0.18)",
+                            }}
+                          >
+                            {/* Milestone crown */}
+                            {isMilestone && !ch.locked && (
+                              <span className="absolute -top-3 text-base leading-none">👑</span>
+                            )}
+                            {/* Completed checkmark */}
+                            {ch.completed && !isSelected && (
+                              <CheckCircle2 className="w-5 h-5 text-white" />
+                            )}
+                            {/* Icon or lock */}
+                            {(!ch.completed || isSelected) && (
+                              <span className="text-base leading-none">{ch.locked ? "🔒" : ch.icon}</span>
+                            )}
+                          </span>
+
+                          {/* Chapter number label below */}
+                          <span
+                            className="mt-1 text-[9px] font-black leading-none"
+                            style={{ color: ch.locked ? "hsl(var(--muted-foreground))" : ch.color }}
+                          >
+                            {chIdx + 1}
+                          </span>
+
+                          {/* Tooltip on hover */}
+                          <div
+                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-card border border-border rounded-lg px-2 py-1 text-[10px] font-semibold whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30 pointer-events-none"
+                            style={{ color: ch.color }}
+                          >
+                            {ch.title}
+                          </div>
+                        </button>
+
+                        {/* Horizontal connector (not after last in row) */}
+                        {!isLastInRow && (
+                          <div className="flex-1 relative h-3 mx-0.5" style={{ minWidth: 8 }}>
+                            {/* Road track */}
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 w-full h-2 rounded-full"
+                              style={{
+                                background: ch.locked
+                                  ? "hsl(var(--border))"
+                                  : ch.completed
+                                  ? "#22c55e"
+                                  : `${grade.color}60`,
+                              }}
+                            />
+                            {/* Dashed center line */}
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 w-full"
+                              style={{
+                                height: 1,
+                                background: `repeating-linear-gradient(90deg, white 0, white 4px, transparent 4px, transparent 9px)`,
+                                opacity: ch.locked ? 0 : 0.5,
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* U-turn connector between rows (not after last row) */}
+                {!isLast && (
+                  <div className="flex" style={{ height: 36 }}>
+                    {/* Road curves to the opposite side */}
+                    <div className="flex-1" />
+                    <div
+                      className="flex items-center justify-center"
+                      style={{ width: 64, flexShrink: 0 }}
+                    >
+                      {/* Vertical connector on the turn side */}
+                      <div
+                        className="w-2 h-full rounded-full"
+                        style={{
+                          marginLeft: goRight ? "auto" : 0,
+                          marginRight: goRight ? 0 : "auto",
+                          background: `${grade.color}50`,
+                        }}
+                      />
+                    </div>
+                    {goRight ? null : <div className="flex-1" />}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* FINISH banner */}
+        <div className={`flex mt-2 ${rows.length % 2 === 0 ? "justify-start ml-1" : "justify-end mr-1"}`}>
+          <span className="inline-flex items-center gap-1.5 bg-yellow-400 text-yellow-900 text-[11px] font-black px-3 py-1 rounded-full shadow">
+            🏆 FINISH
+          </span>
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border/30 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> Completed</span>
+          <span className="flex items-center gap-1">👑 Milestone checkpoint</span>
+          <span className="flex items-center gap-1">🔒 Locked</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-yellow-400 inline-block" /> Selected</span>
+        </div>
       </div>
     </div>
   );
@@ -410,7 +546,7 @@ const ChapterWheel = () => {
         {/* Chapter grid + detail */}
         {selectedGrade && (
           <div>
-            <ChapterGrid
+            <RoadMap
               grade={selectedGrade}
               selectedId={selectedChapter?.id ?? null}
               onSelect={setSelectedChapter}
