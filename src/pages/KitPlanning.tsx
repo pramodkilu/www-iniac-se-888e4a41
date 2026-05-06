@@ -97,8 +97,11 @@ function TabBar<T extends string>({
 }
 
 // ─── Chapter Preview ──────────────────────────────────────────────────────────
-function ChapterPreview() {
-  const [sel, setSel] = useState<Chapter>(chapters[0]);
+export function ChapterPreview({ defaultChapterId }: { defaultChapterId?: number } = {}) {
+  const initial = defaultChapterId
+    ? (chapters.find(c => c.id === defaultChapterId) ?? chapters[0])
+    : chapters[0];
+  const [sel, setSel] = useState<Chapter>(initial);
   const [tab, setTab] = useState<PreviewTab>("story");
 
   const selIdx = chapters.findIndex(c => c.id === sel.id);
