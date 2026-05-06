@@ -278,7 +278,7 @@ function ChapterPreview() {
           )}
 
           {tab === "research" && (
-            <AIResearch />
+            <AIResearch inline />
           )}
         </div>
       </div>

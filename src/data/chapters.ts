@@ -717,264 +717,743 @@ export const chapters: Chapter[] = [
     sdgs: [2, 9],
   },
 
-  // Ch13–30: continue with the shorthand approach for remaining chapters
-  ...buildShorthandChapters([
-    { id: 13, slug: "merry-go-round", cp: false,
-      title: ["Merry-Go-Round", "Karusell"],
-      subtitle: ["Build a carnival ride", "Bygg ett karusellåk"],
-      concept: ["Rotation & gear ratios", "Rotation & utväxling"],
-      explanation: [
-        "A merry-go-round spins around a central axis. By combining differently-sized gears, you create a 'gear ratio' — a small fast gear can drive a large slow gear, or vice versa.",
-        "En karusell snurrar kring en central axel. Genom att kombinera olika stora kugghjul skapar du en 'utväxling' — ett litet snabbt kugghjul kan driva ett stort långsamt, eller tvärtom."
-      ],
-      modelName: ["Merry-Go-Round", "Karusell"], totalSteps: 2,
-      challenge: ["Spin Speed Test", "Snurrhastighetstest",
-        "How many input rotations make one full ride spin? Try swapping gear sizes!", "Hur många handvarv ger en hel karusellrunda? Byt kugghjulsstorlek!"],
-      lgr22: ["fys_kraft"], lgr22Raw: "Lgr22 1–3: Fysik – Kraft & rörelse",
-      sdgs: [3, 11],
-    },
-    { id: 14, slug: "spinning-top", cp: false,
-      title: ["Spinning Top", "Snurra"],
-      subtitle: ["Make a powered spinning top", "Bygg en motordriven snurra"],
-      concept: ["Energy transfer (Angular momentum)", "Energiöverföring (Rotationsenergi)"],
-      explanation: [
-        "Once spinning, an object 'wants' to keep spinning — that's angular momentum. The faster and heavier it spins, the longer it takes to slow down. Same principle keeps bicycles upright!",
-        "När något snurrar 'vill' det fortsätta snurra — det kallas rotationsenergi. Ju snabbare och tyngre, desto längre tid att stanna. Samma princip håller cyklar upprätta!"
-      ],
-      modelName: ["Motorized Spinning Top", "Motordriven snurra"], totalSteps: 5,
-      challenge: ["Beyblade Battle", "Snurra-strid",
-        "Build two tops. Whose spins longest? Whose can knock the other out?", "Bygg två snurror. Vems snurrar längst? Vem kan knuffa ut den andra?"],
-      lgr22: ["fys_energi"], lgr22Raw: "Lgr22 1–3: Fysik – Energi och energiflöden",
-      sdgs: [3, 4],
-    },
-    { id: 15, slug: "lock-and-key", cp: false,
-      title: ["Lock & Key", "Lås & nyckel"],
-      subtitle: ["Protect a sacred idol", "Skydda en helig staty"],
-      concept: ["Meshing gears (Locking mechanism)", "Kugghjulsingrepp (Låsmekanism)"],
-      explanation: [
-        "Locks allow motion only with the right key. Our Blix key uses a shaft and gear — turn it, and it meshes with a rack inside, sliding the bolt open. Wrong gear = no movement!",
-        "Lås tillåter rörelse endast med rätt nyckel. Vår Blix-nyckel använder en axel och ett kugghjul — vrid den, så griper den in i en kuggstång och skjuter regeln. Fel kugghjul = ingen rörelse!"
-      ],
-      modelName: ["Gear Lock & Key", "Lås & nyckel med kugghjul"], totalSteps: 7,
-      challenge: ["Two Different Keys", "Två olika nycklar",
-        "Build two different keys that open the same lock!", "Bygg två olika nycklar som öppnar samma lås!"],
-      lgr22: ["tek_mek"], lgr22Raw: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner",
-      sdgs: [11, 16],
-    },
-    { id: 16, slug: "trundle-wheel", cp: false,
-      title: ["Trundle Wheel", "Mäthjul"],
-      subtitle: ["Measure long distances", "Mät långa avstånd"],
-      concept: ["Motion conversion (Circumference)", "Rörelseomvandling (Omkrets)"],
-      explanation: [
-        "A trundle wheel converts rotation to distance. If the circumference is 10 cm, every full turn covers 10 cm. Count rotations × 10 cm = total distance!",
-        "Ett mäthjul omvandlar rotation till avstånd. Om omkretsen är 10 cm täcker varje hel rotation 10 cm. Antal varv × 10 cm = totalt avstånd!"
-      ],
-      modelName: ["Trundle Wheel", "Mäthjul"], totalSteps: 7,
-      challenge: ["Measure Real Distances", "Mät verkliga avstånd",
-        "Measure your bedroom, your tallest jump, and the kitchen's perimeter. Were your guesses right?", "Mät ditt rum, ditt högsta hopp och köksomkretsen. Stämde dina gissningar?"],
-      lgr22: ["fys_kraft", "tek_mek", "mat_tal"], lgr22Raw: "Lgr22 1–3: Fysik – Kraft & rörelse; Teknik – Mekanismer & konstruktioner; Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [4, 9],
-    },
-    { id: 17, slug: "zipline-ride", cp: false,
-      title: ["Zipline Ride", "Linbana"],
-      subtitle: ["Cross a deep valley", "Korsa en djup dal"],
-      concept: ["Gravity (Pulleys)", "Tyngdkraft (Block och talja)"],
-      explanation: [
-        "A zipline uses gravity and a pulley to slide you across a gap. The high end connects to the low end by rope. Hang on — gravity pulls down, the pulley rolls, and you slide!",
-        "En linbana använder tyngdkraft och en taljblock för att glida över ett gap. Hög ände kopplas till låg ände med rep. Häng på — tyngdkraften drar nedåt, blocket rullar, och du glider!"
-      ],
-      modelName: ["Zipline & Ring Toss", "Linbana & ringkast"], totalSteps: 7,
-      challenge: ["Ring Toss Game", "Ringkastningsspel",
-        "Build a ring with Blix and string. Toss it around a stick from a distance.", "Bygg en ring med Blix och snöre. Kasta den runt en pinne på avstånd."],
-      lgr22: ["fys_kraft"], lgr22Raw: "Lgr22 1–3: Fysik – Kraft & rörelse",
-      sdgs: [3, 9],
-    },
-    { id: 18, slug: "dancing-robot", cp: false,
-      title: ["Dancing Robot", "Dansande robot"],
-      subtitle: ["Win a dance competition", "Vinn en danstävling"],
-      concept: ["Types of movement (Linkages)", "Rörelsetyper (Länkmekanismer)"],
-      explanation: [
-        "A linkage is a system of bars connected by joints (hinges). Turning one part moves the others in complex ways. Robots, mechanical toys, and your own arm work this way!",
-        "En länkmekanism är ett system av stänger förbundna med leder (gångjärn). Att vrida en del rör de andra på komplexa sätt. Robotar, mekaniska leksaker och din egen arm fungerar så!"
-      ],
-      modelName: ["Dancing Robot", "Dansande robot"], totalSteps: 3,
-      challenge: ["Make Your Robot Move", "Få din robot att röra sig",
-        "Attach a P11 piece so turning the gear makes the robot walk, wave, or wiggle!", "Fäst en P11-del så att kugghjulet får roboten att gå, vinka eller vrida sig!"],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [4, 9],
-    },
-    { id: 19, slug: "digital-clock", cp: false,
-      title: ["Digital Clock", "Digital klocka"],
-      subtitle: ["Display digits with Blix", "Visa siffror med Blix"],
-      concept: ["Display (Digital segments)", "Display (Digitala segment)"],
-      explanation: [
-        "Each digit on a digital clock uses a 7-segment display — seven small bars in a figure-8 shape. Turn different bars on/off to show any digit 0-9. Real clocks use LEDs — same idea!",
-        "Varje siffra på en digital klocka använder en 7-segmentdisplay — sju små streck i en åtta-form. Tänd/släck olika streck för att visa siffrorna 0-9. Riktiga klockor använder lysdioder — samma idé!"
-      ],
-      modelName: ["Blix Digital Clock", "Digital Blix-klocka"], totalSteps: 1,
-      challenge: ["Build a Working Clock", "Bygg en fungerande klocka",
-        "Update the clock every minute for 10 minutes. Bonus: show seconds!", "Uppdatera klockan varje minut i 10 minuter. Bonus: visa sekunder!"],
-      lgr22: ["mat_tal"], lgr22Raw: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [4, 9],
-    },
-    { id: 20, slug: "earth-moon-sun", cp: false,
-      title: ["Earth, Moon & Sun", "Jorden, månen & solen"],
-      subtitle: ["Model the solar system", "Bygg en solsystemmodell"],
-      concept: ["Orbit (Rotation & revolution)", "Bana (Rotation & omloppsbana)"],
-      explanation: [
-        "Earth ROTATES on its axis (1 spin = 24 hours = 1 day). Earth REVOLVES around the Sun (1 lap = 365 days = 1 year). The tilt of Earth's axis gives us seasons!",
-        "Jorden ROTERAR runt sin axel (1 varv = 24 timmar = 1 dygn). Jorden går i BANA runt solen (1 varv = 365 dagar = 1 år). Jordaxelns lutning ger oss årstider!"
-      ],
-      modelName: ["Earth-Moon-Sun System", "Jord-Måne-Sol-system"], totalSteps: 8,
-      challenge: ["Track Day and Night", "Följ dag och natt",
-        "Use your model to show day and night. How long is one day? One revolution?", "Visa dag och natt med din modell. Hur lång är ett dygn? Ett år?"],
-      lgr22: ["fys_kraft", "fys_sol"], lgr22Raw: "Lgr22 1–3: Fysik – Kraft & rörelse; Fysik – Solsystemet & himlakroppar",
-      sdgs: [4, 13],
-    },
-    { id: 21, slug: "find-the-path", cp: false,
-      title: ["Find the Path", "Hitta vägen"],
-      subtitle: ["Crack a code at a four-way crossroad", "Knäck en kod vid ett fyrvägskors"],
-      concept: ["Sequence (Pattern recognition)", "Talföljd (Mönsterigenkänning)"],
-      explanation: [
-        "Number sequences are everywhere — puzzles, codes, even nature (Fibonacci in flower petals!). To crack a riddle, find the pattern: bigger? smaller? hidden positions?",
-        "Talföljder finns överallt — pussel, koder, till och med naturen (Fibonacci i blomkronblad!). För att knäcka en gåta, hitta mönstret: större? mindre? gömda positioner?"
-      ],
-      modelName: ["Number Code Builder", "Sifferkodsbyggare"], totalSteps: 1,
-      challenge: ["The Third-Digit Code", "Tredje-sifferkoden",
-        "Take 4 seven-digit numbers. Read the third digit of each — that's your code!", "Ta 4 sjusiffriga tal. Läs tredje siffran av var och ett — det är din kod!"],
-      lgr22: ["mat_tal"], lgr22Raw: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [4],
-    },
-    { id: 22, slug: "challenge-foldable-scale", cp: true,
-      title: ["Challenge: Foldable Scale", "Utmaning: Hopfällbar linjal"],
-      subtitle: ["Help a farmer measure his land", "Hjälp en bonde mäta sin mark"],
-      concept: ["Measurement (Standard units)", "Mätning (Standardenheter)"],
-      explanation: [
-        "1 metre = 100 cm. Blix holes are 1 cm apart — a perfect ruler! Standard units let people anywhere share measurements.",
-        "1 meter = 100 cm. Blix-hål ligger 1 cm isär — en perfekt linjal! Standardenheter låter människor överallt dela mätningar."
-      ],
-      modelName: ["Foldable Scale", "Hopfällbar linjal"], totalSteps: 1,
-      challenge: ["Measure Like a Surveyor", "Mät som en lantmätare",
-        "Measure your table's perimeter and area. Length × Width = area!", "Mät bordets omkrets och yta. Längd × Bredd = yta!"],
-      lgr22: ["mat_tal"], lgr22Raw: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [2, 4, 8],
-    },
-    { id: 23, slug: "weight-measuring-device", cp: false,
-      title: ["Weight Measuring Device", "Vägningsapparat"],
-      subtitle: ["Help the farmer weigh grains", "Hjälp bonden väga säd"],
-      concept: ["Balance (Mass)", "Balans (Massa)"],
-      explanation: [
-        "A balance compares two weights. Equal = level. Place reference weights on one side and find the mass of the unknown object on the other. Used for thousands of years!",
-        "En balansvåg jämför två vikter. Lika = vågrät. Lägg referensvikter på ena sidan och hitta massan av det okända föremålet på andra. Använd i tusentals år!"
-      ],
-      modelName: ["Balance Weighing Scale", "Balansvåg"], totalSteps: 7,
-      challenge: ["Weighing Game", "Vägningsspel",
-        "Use your scale to estimate the mass of a small toy. Guess before measuring!", "Använd din våg för att uppskatta massan av en liten leksak. Gissa innan du mäter!"],
-      lgr22: ["tek_mek", "mat_tal"], lgr22Raw: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner; Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [2, 8, 12],
-    },
-    { id: 24, slug: "plowing-machine", cp: false,
-      title: ["Plowing Machine", "Plogmaskin"],
-      subtitle: ["Clean the farmer's field", "Rensa böndernas åker"],
-      concept: ["Motor (Electric power)", "Motor (Elkraft)"],
-      explanation: [
-        "A motor converts electricity (from a battery) into rotation. The rotation drives wheels, which pull the plow. Tractors and lawn mowers work the same way.",
-        "En motor omvandlar el (från batteri) till rotation. Rotationen driver hjul som drar plogen. Traktorer och gräsklippare fungerar likadant."
-      ],
-      modelName: ["Motorized Plowing Machine", "Motoriserad plogmaskin"], totalSteps: 4,
-      challenge: ["Observation Time", "Observationsdags",
-        "Connect battery → power block → motor wire → motor block. Switch on. What do you observe?", "Koppla batteri → strömblock → motorkabel → motorblock. Slå på. Vad observerar du?"],
-      lgr22: ["fys_el"], lgr22Raw: "Lgr22 1–3: Fysik – Elektricitet & magnetism",
-      sdgs: [2, 9, 12],
-    },
-    { id: 25, slug: "challenge-goalkeeper-kicker", cp: true,
-      title: ["Challenge: Goalkeeper & Kicker", "Utmaning: Målvakt & sparkare"],
-      subtitle: ["Score 5 goals to rescue the horse!", "Gör 5 mål för att rädda hästen!"],
-      concept: ["Strategy & teamwork (Checkpoint)", "Strategi & samarbete (Avstämning)"],
-      explanation: [
-        "Competitive games involve strategy — planning to overcome an opponent. Building a Blix player is also strategy: which gears? Which leg-shape? What kick angle?",
-        "Tävlingsspel handlar om strategi — planera för att övervinna en motståndare. Att bygga en Blix-spelare är också strategi: vilka kugghjul? Vilken benform? Vilken sparkvinkel?"
-      ],
-      modelName: ["Football Player", "Fotbollsspelare"], totalSteps: 1,
-      challenge: ["Score 5 Goals", "Gör 5 mål",
-        "Two-player game: one is goalkeeper, the other is striker. Striker must score 5!", "Tvåspelarspel: en målvakt, en anfallare. Anfallaren måste göra 5 mål!"],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [3, 5, 17],
-    },
-    { id: 26, slug: "clock", cp: false,
-      title: ["Clock", "Klocka"],
-      subtitle: ["Read and tell time", "Läs och visa tiden"],
-      concept: ["Time (Hours, minutes, seconds)", "Tid (Timmar, minuter, sekunder)"],
-      explanation: [
-        "Time is measured in hours (60 minutes), minutes (60 seconds), and seconds. A clock face has 12 hours, with the small hand for hours and the long hand for minutes.",
-        "Tid mäts i timmar (60 minuter), minuter (60 sekunder) och sekunder. En urtavla har 12 timmar, med liten visare för timmar och stor visare för minuter."
-      ],
-      modelName: ["Analog Clock Face", "Analog urtavla"], totalSteps: 1,
-      challenge: ["Time Yourself", "Ta tid på dig själv",
-        "How long does it take you to build a Blix tower? Time and beat it!", "Hur länge tar det att bygga ett Blix-torn? Ta tid och slå det!"],
-      lgr22: ["mat_tal"], lgr22Raw: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik",
-      sdgs: [4],
-    },
-    { id: 27, slug: "first-circuit", cp: false,
-      title: ["Make Your First Circuit", "Bygg din första krets"],
-      subtitle: ["Discover electricity with Queaky", "Upptäck elektricitet med Queaky"],
-      concept: ["Introduction to electricity", "Introduktion till elektricitet"],
-      explanation: [
-        "Electricity needs a complete loop (closed circuit) to flow. Disconnect a wire = open circuit = electricity stops. Queaky 'shouts' when its two ears are connected — the loop is complete!",
-        "El behöver en sluten krets för att flöda. Koppla isär en tråd = öppen krets = elen stoppar. Queaky 'skriker' när dess två öron är förbundna — kretsen är sluten!"
-      ],
-      modelName: ["Queaky Circuit", "Queaky-krets"], totalSteps: 3,
-      challenge: ["Open / Closed Circuit", "Öppen / sluten krets",
-        "Demonstrate open vs closed circuit with Queaky. Use your body as a conductor!", "Visa öppen vs sluten krets med Queaky. Använd din kropp som ledare!"],
-      lgr22: ["fys_el"], lgr22Raw: "Lgr22 1–3: Fysik – Elektricitet & magnetism",
-      sdgs: [4, 7],
-    },
-    { id: 28, slug: "conductors-insulators", cp: false,
-      title: ["Conductors & Insulators", "Ledare & isolatorer"],
-      subtitle: ["What allows electricity to pass?", "Vad släpper igenom el?"],
-      concept: ["Loops (Material classification)", "Slutna kretsar (Materialklassificering)"],
-      explanation: [
-        "Conductors let electricity pass (most metals). Insulators block it (wood, rubber, plastic). Wires have copper inside (conductor) and plastic outside (insulator) — current flows but you don't get shocked!",
-        "Ledare släpper igenom el (de flesta metaller). Isolatorer blockerar den (trä, gummi, plast). Sladdar har koppar inuti (ledare) och plast utanpå (isolator) — strömmen flödar men du får inte stöt!"
-      ],
-      modelName: ["Conductor/Insulator Test Rig", "Lednings-/isolatortestrigg"], totalSteps: 1,
-      challenge: ["Conductor or Insulator?", "Ledare eller isolator?",
-        "Test paper (dry/wet), coin, eraser, spoon. Predict before testing!", "Testa papper (torrt/blött), mynt, suddgummi, sked. Gissa innan du testar!"],
-      lgr22: ["tva"], lgr22Raw: "Lgr22 1–3: Tvärvetenskapligt arbetsområde",
-      sdgs: [4, 7, 9],
-    },
-    { id: 29, slug: "paper-plane", cp: false,
-      title: ["Paper Plane", "Pappersflygplan"],
-      subtitle: ["Discover the parts of a plane", "Upptäck flygplanets delar"],
-      concept: ["Parts of a plane (Aerodynamics)", "Flygplanets delar (Aerodynamik)"],
-      explanation: [
-        "A paper plane has wings (provide lift), a body/fuselage (holds it together), and a tail (steers and stabilises). Folding paper precisely is also engineering!",
-        "Ett pappersflygplan har vingar (lyftkraft), kropp (håller ihop), och stjärt (styrning och stabilitet). Att vika papper exakt är också teknik!"
-      ],
-      modelName: ["Paper Plane", "Pappersflygplan"], totalSteps: 1,
-      challenge: ["Plane Parts Spotter", "Flygplansdelsspanare",
-        "Identify wings, body, and tail on your paper plane. Try different folds!", "Hitta vingar, kropp och stjärt på ditt plan. Prova olika vikningar!"],
-      lgr22: ["tek_design"], lgr22Raw: "Lgr22 1–3: Teknik – Designprocess & modeller",
-      sdgs: [4, 9],
-    },
-    { id: 30, slug: "balloon-rockets", cp: false,
-      title: ["Balloon Rockets", "Ballongraketer"],
-      subtitle: ["Use air to power a car", "Använd luft för att driva en bil"],
-      concept: ["Forces on a plane (Action & reaction)", "Krafter på ett plan (Verkan & reaktion)"],
-      explanation: [
-        "Newton's Third Law: every action has an equal and opposite reaction. Air rushing OUT of a balloon (action) pushes the balloon in the OPPOSITE direction (reaction). That's how rockets work!",
-        "Newtons tredje lag: varje verkan har en lika stor motverkan. Luft som strömmar UT ur en ballong (verkan) trycker ballongen åt MOTSATT håll (motverkan). Så fungerar raketer!"
-      ],
-      modelName: ["Balloon Rocket Car", "Ballongraketbil"], totalSteps: 6,
-      challenge: ["Distance Race", "Avståndstävling",
-        "Inflate to different sizes. Bigger balloon = longer trip? Race a friend!", "Blås upp olika mycket. Större ballong = längre resa? Tävla med en kompis!"],
-      lgr22: ["fys_kraft", "tek_design"], lgr22Raw: "Lgr22 1–3: Fysik – Kraft & rörelse; Teknik – Designprocess & modeller",
-      sdgs: [4, 9, 13],
-    },
-  ]),
-];
+  // ─── Chapters 13–30: fully expanded ──────────────────────────────────────
 
-// ============================================================================
+  // Ch13
+  {
+    id: 13, slug: "merry-go-round", isCheckpoint: false,
+    title: t("Merry-Go-Round", "Karusell"),
+    subtitle: t("Build a carnival ride with gears", "Bygg ett karusellåk med kugghjul"),
+    story: {
+      intro: t("The team finds a broken merry-go-round at a village fair. The children are disappointed — can the team fix it?", "Laget hittar en trasig karusell på en byfest. Barnen är besvikna — kan laget laga den?"),
+      dialogue: [
+        { speaker: "Laya", text: t("A merry-go-round needs a big gear driven by a small gear to spin at the right speed.", "En karusell behöver ett stort kugghjul drivet av ett litet för att snurra i rätt hastighet.") },
+        { speaker: "Kit",  text: t("The small G20 gear turns three times for every one turn of the big G60 gear. That's a 3:1 ratio!", "Det lilla G20-kugghjulet vrids tre gånger för varje ett varv av det stora G60. Det är ett 3:1-förhållande!") },
+        { speaker: "Rob",  text: t("Combine the G20 Idler between them and the rotation transfers smoothly.", "Kombinera G20 Idler mellan dem och rotationen överförs smidigt.") },
+        { speaker: "Laya", text: t("Done! Now the children can ride again. Gear ratios save the day!", "Klart! Nu kan barnen åka igen. Kugghjulsförhållanden räddar dagen!") },
+      ],
+      conclusion: t("The merry-go-round spins smoothly — gear ratios really are magical!", "Karusellen snurrar smidigt — kugghjulsförhållanden är verkligen magiska!"),
+    },
+    theory: {
+      concept: t("Rotation & gear ratios", "Rotation & utväxling"),
+      explanation: t("A merry-go-round spins around a central axis. By combining differently-sized gears, you create a gear ratio — a small fast gear can drive a large slow gear, or vice versa.", "En karusell snurrar kring en central axel. Genom att kombinera olika stora kugghjul skapar du en utväxling — ett litet snabbt kugghjul kan driva ett stort långsamt, eller tvärtom."),
+      realWorldExamples: [
+        t("A bicycle uses gears to go fast on flat roads or slow on steep hills", "En cykel använder växlar för att gå fort på platt mark eller långsamt i branta backar"),
+        t("Clock gears turn at different speeds: seconds, minutes, hours", "Klockans kugghjul vrids med olika hastigheter: sekunder, minuter, timmar"),
+        t("Car engines use gear ratios to balance speed and power", "Bilmotorer använder kugghjulsförhållanden för att balansera hastighet och kraft"),
+      ],
+      newWords: [t("Gear ratio", "Kugghjulsförhållande"), t("Rotation", "Rotation"), t("Axis", "Axel"), t("Idler gear", "Mellanhjul")],
+    },
+    build: {
+      modelName: t("Merry-Go-Round", "Karusell"),
+      description: t("Build a merry-go-round with a central gear train and rotating platform.", "Bygg en karusell med ett centralt kugghjultåg och roterande plattform."),
+      totalSteps: 5,
+      steps: [
+        { stepNumber: 1, title: t("Build the base frame", "Bygg basramen"), description: t("Lay P7x11 pillar flat as the sturdy base. Reinforce with P11 beams and CT2.", "Lägg P7x11-pelaren platt som den stabila basen. Förstärk med P11-balkar och CT2."), components: ["P7x11 x1", "P11 x2", "CT2 x4"] },
+        { stepNumber: 2, title: t("Add the central pillar", "Lägg till centralpelaren"), description: t("Attach PU5x7 pillar vertically in the centre with CT3 connectors.", "Fäst PU5x7-pelaren vertikalt i mitten med CT3-kopplingar."), components: ["PU5x7 x1", "CT3 x2", "P7 x2"] },
+        { stepNumber: 3, title: t("Mount the gear shafts", "Montera kugghjulsaxlarna"), description: t("Thread SH60 shafts through the TW1 and CL2 mounts at the top of the pillar.", "Trä SH60-axlar genom TW1- och CL2-hållarna i toppen av pelaren."), components: ["SH60 x2", "TW1 x3", "CL2 x4"] },
+        { stepNumber: 4, title: t("Install the gear train", "Installera kugghjulståget"), description: t("Press G20 Plus as the drive gear, G20 Idler in the middle, and G60 as the large output gear.", "Tryck G20 Plus som drivkugghjul, G20 Idler i mitten och G60 som stort utgångskugghjul."), components: ["G20 Plus x1", "G20 Idler x1", "G60 x2"] },
+        { stepNumber: 5, title: t("Build and attach the ride platform", "Bygg och fäst åkplattformen"), description: t("Assemble P5 and P3 arms as the ride seats. Attach CH2 as the seat connectors. Turn the handle and ride!", "Montera P5- och P3-armar som åkstolar. Fäst CH2 som stolskopplingar. Vrid handtaget och åk!"), components: ["P5 x4", "P3 x2", "CH2 x2", "CT2 x4", "CL2 x3"] },
+      ],
+    },
+    challenge: { title: t("Spin Speed Test", "Snurrhastighetstest"), description: t("How many input rotations make one full ride spin? Try swapping gear sizes!", "Hur många handvarv ger en hel karusellrunda? Byt kugghjulsstorlek!"), hint: t("Count teeth: G20 has 20, G60 has 60. What ratio is that?", "Räkna tänder: G20 har 20, G60 har 60. Vilket förhållande är det?") },
+    lgr22: { strands: ["fys_kraft"], rawSpreadsheet: "Lgr22 1–3: Fysik – Kraft & rörelse" },
+    sdgs: [3, 11],
+  },
+
+  // Ch14
+  {
+    id: 14, slug: "spinning-top", isCheckpoint: false,
+    title: t("Spinning Top", "Snurra"),
+    subtitle: t("Build a motor-powered spinning top", "Bygg en motordriven snurra"),
+    story: {
+      intro: t("Kit challenges Rob to a spinning-top duel. Whoever's top spins longest wins! Rob wants a motor-powered advantage.", "Kit utmanar Rob till en snurraduell. Vems snurra snurrar längst vinner! Rob vill ha motordrivet försprång."),
+      dialogue: [
+        { speaker: "Rob",  text: t("Angular momentum means a spinning object resists stopping. Heavier and faster = spins longer!", "Rörelsemängdsmoment innebär att ett snurrande föremål motstår att stanna. Tyngre och snabbare = snurrar längre!") },
+        { speaker: "Kit",  text: t("A motor connected through gears gives constant spin without losing energy to a hand-push.", "En motor kopplad via kugghjul ger konstant snurrande utan att förlora energi till ett handtryck.") },
+        { speaker: "Laya", text: t("G20 drives G60 — that reduces speed but greatly increases torque for a steady spin.", "G20 driver G60 — det minskar hastigheten men ökar vridmomentet för en stadig snurrning.") },
+        { speaker: "Rob",  text: t("My motor-top will spin forever! Well… until the battery runs out.", "Min motorsnurra snurrar för evigt! Ja... tills batteriet tar slut.") },
+      ],
+      conclusion: t("Rob's motor-powered top outlasts Kit's hand-spun top — physics wins!", "Robs motordrivna snurra varar längre än Kits handspunna — fysiken vinner!"),
+    },
+    theory: {
+      concept: t("Angular momentum & energy transfer", "Rörelsemängdsmoment & energiöverföring"),
+      explanation: t("Once spinning, an object wants to keep spinning — that's angular momentum. The faster and heavier it spins, the longer it takes to slow down. Same principle keeps bicycles upright!", "När något snurrar vill det fortsätta snurra — det kallas rörelsemängdsmoment. Ju snabbare och tyngre, desto längre tid att stanna. Samma princip håller cyklar upprätta!"),
+      realWorldExamples: [
+        t("A bicycle stays upright while moving because of spinning-wheel momentum", "En cykel förblir upprätt medan den rör sig på grund av hjulens rörelsemängdsmoment"),
+        t("A gyroscope resists tilting because it spins so fast", "Ett gyroskop motstår lutning eftersom det snurrar så fort"),
+        t("A boomerang spins in flight to keep it stable in the air", "En bumerang snurrar i luften för att hålla sig stabil"),
+      ],
+      newWords: [t("Angular momentum", "Rörelsemängdsmoment"), t("Torque", "Vridmoment"), t("Gyroscope", "Gyroskop"), t("Inertia", "Tröghet")],
+    },
+    build: {
+      modelName: t("Motorized Spinning Top", "Motordriven snurra"),
+      description: t("Build a motorized spinning top with a multi-gear drive train.", "Bygg en motordriven snurra med ett flerkugghjulsdrivsystem."),
+      totalSteps: 5,
+      steps: [
+        { stepNumber: 1, title: t("Build the base support", "Bygg basstödet"), description: t("Attach PU5x7 and PU5x13 pillars together as the main vertical support.", "Fäst PU5x7- och PU5x13-pelare tillsammans som det viktigaste vertikala stödet."), components: ["PU5x7 x1", "PU5x13 x1", "CT2 x2"] },
+        { stepNumber: 2, title: t("Mount the motor", "Montera motorn"), description: t("Attach the Motor with Battery Box to the base. This is your power source.", "Fäst Motor with Battery Box till basen. Det här är din kraftkälla."), components: ["Motor with Battery Box x1", "CH2 x2"] },
+        { stepNumber: 3, title: t("Insert the drive shafts", "Sätt in drivaxlarna"), description: t("Thread two SH60 shafts through the support frame for the gear train.", "Trä två SH60-axlar genom stödenheten för kugghjulssystemet."), components: ["SH60 x2"] },
+        { stepNumber: 4, title: t("Build the gear train", "Bygg kugghjulssystemet"), description: t("Mount three G20 Plus gears and three G60 gears to create the speed-reduction drive.", "Montera tre G20 Plus-kugghjul och tre G60-kugghjul för att skapa hastighetsminskning."), components: ["G20 Plus x3", "G60 x3"] },
+        { stepNumber: 5, title: t("Attach the spinning disc and test", "Fäst snurrskivan och testa"), description: t("Clip the disc top using remaining CT2 pieces. Switch on the motor and watch it spin!", "Klicka fast skivtoppen med återstående CT2. Slå på motorn och se den snurra!"), components: ["CT2 x1"] },
+      ],
+    },
+    challenge: { title: t("Beyblade Battle", "Snurra-strid"), description: t("Build two tops. Whose spins longest? Whose can knock the other out?", "Bygg två snurror. Vems snurrar längst? Vem kan knuffa ut den andra?"), hint: t("More gear reduction = more torque = steadier spin. But is it more fun?", "Mer utväxling = mer vridmoment = stadigare snurr. Men är det roligare?") },
+    lgr22: { strands: ["fys_energi"], rawSpreadsheet: "Lgr22 1–3: Fysik – Energi och energiflöden" },
+    sdgs: [3, 4],
+  },
+
+  // Ch15
+  {
+    id: 15, slug: "lock-and-key", isCheckpoint: false,
+    title: t("Lock & Key", "Lås & nyckel"),
+    subtitle: t("Protect a sacred idol with a gear lock", "Skydda en helig staty med ett kugghjulslås"),
+    story: {
+      intro: t("The team discovers a sacred idol that must be protected. They design a gear-based lock that only opens with the right key.", "Laget hittar en helig staty som måste skyddas. De designar ett kugghjulsbaserat lås som bara öppnas med rätt nyckel."),
+      dialogue: [
+        { speaker: "Laya", text: t("A lock only opens when the right key meshes perfectly with its internal gears.", "Ett lås öppnas bara när rätt nyckel griper in perfekt med dess interna kugghjul.") },
+        { speaker: "Kit",  text: t("If the gear teeth don't align, the bolt can't slide — wrong key, no entry!", "Om kuggtänderna inte stämmer kan regeln inte glida — fel nyckel, ingen tillgång!") },
+        { speaker: "Rob",  text: t("This is exactly how combination locks work — the right sequence aligns the gears.", "Det är precis så kombinationslås fungerar — rätt sekvens justerar kugghjulen.") },
+        { speaker: "Laya", text: t("Our Blix lock uses G20 and a shaft — turn it and the bolt slides open!", "Vårt Blix-lås använder G20 och en axel — vrid det och regeln glider upp!") },
+      ],
+      conclusion: t("The idol is safe — gear locks are stronger than any padlock!", "Statyn är säker — kugghjulslås är starkare än vilket hänglås som helst!"),
+    },
+    theory: {
+      concept: t("Meshing gears as a locking mechanism", "Kugghjulsingrepp som låsmekanism"),
+      explanation: t("Locks allow motion only with the right key. Our Blix key uses a shaft and gear — turn it, and it meshes with a rack inside, sliding the bolt open. Wrong gear = no movement!", "Lås tillåter rörelse endast med rätt nyckel. Vår Blix-nyckel använder en axel och ett kugghjul — vrid den, griper den in i en kuggstång inuti och skjuter regeln. Fel kugghjul = ingen rörelse!"),
+      realWorldExamples: [
+        t("Door locks use rotating pins that must align to open", "Dörrlås använder roterande stift som måste justeras för att öppna"),
+        t("Safe combination locks rotate discs until notches align", "Kassaskåpskombinationslås roterar skivor tills skåror justeras"),
+        t("Bike locks use a coded sequence of rotating rings", "Cykellås använder en kodad sekvens av roterande ringar"),
+      ],
+      newWords: [t("Lock", "Lås"), t("Bolt", "Regel"), t("Key", "Nyckel"), t("Combination", "Kombination")],
+    },
+    build: {
+      modelName: t("Gear Lock & Key", "Lås & nyckel med kugghjul"),
+      description: t("Build a lock body with a sliding bolt mechanism and a gear-driven key.", "Bygg ett låshus med en glidande regelmekanism och en kugghjulsdriven nyckel."),
+      totalSteps: 7,
+      steps: [
+        { stepNumber: 1, title: t("Build the lock body base", "Bygg låshusets bas"), description: t("Assemble three P7x11 pillars as the main lock housing.", "Montera tre P7x11-pelare som det viktigaste låshuset."), components: ["P7x11 x3"] },
+        { stepNumber: 2, title: t("Add lock frame sides", "Lägg till låsramens sidor"), description: t("Attach CH2 connectors along the sides to form the lock frame.", "Fäst CH2-kopplingar längs sidorna för att bilda låsramen."), components: ["CH2 x4", "CT2 x4"] },
+        { stepNumber: 3, title: t("Build the bolt channel", "Bygg regelkanalen"), description: t("Add CH2 pieces as the guide channel where the bolt will slide.", "Lägg till CH2-bitar som guidekanalerna där regeln kommer glida."), components: ["CH2 x4", "CT3 x1"] },
+        { stepNumber: 4, title: t("Insert the bolt shaft", "Sätt in regelaxeln"), description: t("Thread SH100 as the sliding bolt through the guide channel.", "Trä SH100 som den glidande regeln genom guidekanalerna."), components: ["SH100 x1"] },
+        { stepNumber: 5, title: t("Mount the key gear mount", "Montera nyckelkugghjulshållaren"), description: t("Attach CH2 and CT2 as the keyhole housing where the key gear inserts.", "Fäst CH2 och CT2 som nyckelhålshuset där nyckelkugghjulet sätts in."), components: ["CH2 x3", "CT2 x2"] },
+        { stepNumber: 6, title: t("Build the key", "Bygg nyckeln"), description: t("Thread SH60 through a G20 Plus gear — this is your key.", "Trä SH60 genom ett G20 Plus-kugghjul — det här är din nyckel."), components: ["SH60 x1", "G20 Plus x1", "P3 Plus x1"] },
+        { stepNumber: 7, title: t("Test lock and key", "Testa låset och nyckeln"), description: t("Insert the key, turn it — the gear meshes and the bolt slides open. Remove key — lock closes!", "Sätt in nyckeln, vrid den — kugghjulet griper in och regeln glider upp. Ta ut nyckeln — låset stängs!"), components: [] },
+      ],
+    },
+    challenge: { title: t("Two Different Keys", "Två olika nycklar"), description: t("Build two different keys that open the same lock!", "Bygg två olika nycklar som öppnar samma lås!"), hint: t("The bolt slot must align with BOTH keys — what shaft position makes this work?", "Reglurtappet måste justeras med BÅDA nycklarna — vilken axelposition gör detta?") },
+    lgr22: { strands: ["tek_mek"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner" },
+    sdgs: [11, 16],
+  },
+
+  // Ch16
+  {
+    id: 16, slug: "trundle-wheel", isCheckpoint: false,
+    title: t("Trundle Wheel", "Mäthjul"),
+    subtitle: t("Measure long distances by rolling", "Mät långa avstånd genom att rulla"),
+    story: {
+      intro: t("The class needs to measure the school playground but there is no tape measure long enough. Rob builds a trundle wheel!", "Klassen måste mäta skolgårdens lekplats men det finns inget tillräckligt långt måttband. Rob bygger ett mäthjul!"),
+      dialogue: [
+        { speaker: "Rob",  text: t("A trundle wheel converts one rotation into a known distance. Count the clicks, multiply!", "Ett mäthjul omvandlar en rotation till ett känt avstånd. Räkna klickljuden, multiplicera!") },
+        { speaker: "Kit",  text: t("If the wheel circumference is 31 cm, every full rotation = 31 cm of distance covered.", "Om hjulets omkrets är 31 cm, varje full rotation = 31 cm avstånd.") },
+        { speaker: "Laya", text: t("Surveyors used trundle wheels for hundreds of years before laser measuring was invented.", "Lantmätare använde mäthjul i hundratals år innan lasermätning uppfanns.") },
+        { speaker: "Rob",  text: t("Let's measure the playground! One rotation at a time. Click, click, click!", "Vi mäter lekplatsen! En rotation i taget. Klick, klick, klick!") },
+      ],
+      conclusion: t("The playground is 23 metres long — the trundle wheel nailed it!", "Lekplatsen är 23 meter lång — mäthjulet lyckades!"),
+    },
+    theory: {
+      concept: t("Circumference & motion conversion", "Omkrets & rörelseomvandling"),
+      explanation: t("A trundle wheel converts rotation to distance. If the circumference is 10 cm, every full turn covers 10 cm. Count rotations × circumference = total distance!", "Ett mäthjul omvandlar rotation till avstånd. Om omkretsen är 10 cm täcker varje hel rotation 10 cm. Antal varv × omkrets = totalt avstånd!"),
+      realWorldExamples: [
+        t("Odometers in cars count wheel rotations to show distance travelled", "Vägmätare i bilar räknar hjulrotationer för att visa körsträckan"),
+        t("Surveyors use electronic trundle wheels to map land", "Lantmätare använder elektroniska mäthjul för att kartlägga land"),
+        t("Bicycle computers count wheel rotations to calculate speed", "Cykeldatorer räknar hjulrotationer för att beräkna hastigheten"),
+      ],
+      newWords: [t("Circumference", "Omkrets"), t("Rotation", "Rotation"), t("Distance", "Avstånd"), t("Odometer", "Vägmätare")],
+    },
+    build: {
+      modelName: t("Trundle Wheel", "Mäthjul"),
+      description: t("Build a rolling wheel on a handle that measures distance with each rotation.", "Bygg ett rullande hjul på ett handtag som mäter avstånd med varje rotation."),
+      totalSteps: 7,
+      steps: [
+        { stepNumber: 1, title: t("Build the handle frame", "Bygg handtagsramen"), description: t("Join two P11 beams with CT2 connectors to form the long handle.", "Foga ihop två P11-balkar med CT2 för att bilda det långa handtaget."), components: ["P11 x2", "CT2 x4"] },
+        { stepNumber: 2, title: t("Add the axle support", "Lägg till axelstödet"), description: t("Attach PU5x7 pillars at the base of the handle as the wheel axle holder.", "Fäst PU5x7-pelare vid basen av handtaget som hjulaxelns hållare."), components: ["PU5x7 x2", "CT3 x2"] },
+        { stepNumber: 3, title: t("Build the side reinforcement", "Bygg sidoförstärkningen"), description: t("Add P5 beams and CL2 connectors to stiffen the handle sides.", "Lägg till P5-balkar och CL2-kopplingar för att stärka handtagets sidor."), components: ["P5 x3", "CL2 x3"] },
+        { stepNumber: 4, title: t("Insert the axle shafts", "Sätt in axelaxlarna"), description: t("Thread SH60 shafts horizontally through the PU5x7 pillar axle mounts.", "Trä SH60-axlar horisontellt genom PU5x7-pelarnas axelhållare."), components: ["SH60 x2", "TW1 x2"] },
+        { stepNumber: 5, title: t("Mount the gear counter", "Montera kugghjulsräknaren"), description: t("Press G20 Plus gears and a G60 onto the axle to create a rotation counter mechanism.", "Tryck G20 Plus-kugghjul och ett G60 på axeln för att skapa en rotationsräknarmekanism."), components: ["G20 Plus x2", "G60 x1"] },
+        { stepNumber: 6, title: t("Add the rack click-counter", "Lägg till kuggstångsklickräknaren"), description: t("Attach Rack pieces with P3 and P3 Plus as the click mechanism — one click per rotation.", "Fäst kuggstångsbitar med P3 och P3 Plus som klickmekanism — ett klick per rotation."), components: ["Rack x3", "P3 x3", "P3 Plus x1"] },
+        { stepNumber: 7, title: t("Attach the measuring wheel and test", "Fäst mäthjulet och testa"), description: t("Press the main wheel onto the axle end. Roll it 10 times and measure the distance covered.", "Tryck huvudhjulet på axelns ände. Rulla det 10 gånger och mät det avstånd som täcks."), components: ["P7 x1", "P5 x1"] },
+      ],
+    },
+    challenge: { title: t("Measure Real Distances", "Mät verkliga avstånd"), description: t("Measure your bedroom, your tallest jump, and the kitchen's perimeter. Were your guesses right?", "Mät ditt rum, ditt högsta hopp och köksomkretsen. Stämde dina gissningar?"), hint: t("Distance = number of clicks × wheel circumference in cm.", "Avstånd = antal klick × hjulets omkrets i cm.") },
+    lgr22: { strands: ["fys_kraft", "tek_mek", "mat_tal"], rawSpreadsheet: "Lgr22 1–3: Fysik – Kraft & rörelse; Teknik – Mekanismer; Matematik – Tal" },
+    sdgs: [4, 9],
+  },
+
+  // Ch17
+  {
+    id: 17, slug: "zipline-ride", isCheckpoint: false,
+    title: t("Zipline Ride", "Linbana"),
+    subtitle: t("Cross a deep valley on a pulley and rope", "Korsa en djup dal på ett block och rep"),
+    story: {
+      intro: t("The team reaches a deep valley with no bridge. Laya spots two tall trees — perfect for a zipline!", "Laget når en djup dal utan bro. Laya ser två höga träd — perfekt för en linbana!"),
+      dialogue: [
+        { speaker: "Laya", text: t("A zipline uses gravity to pull you from high to low. We just need rope, a pulley, and a frame!", "En linbana använder tyngdkraft för att dra dig från högt till lågt. Vi behöver bara rep, ett block och en ram!") },
+        { speaker: "Kit",  text: t("The pulley wheel reduces friction on the rope so it glides smoothly instead of grinding.", "Blockkjulet minskar friktionen på repet så det glider smidigt istället för att slira.") },
+        { speaker: "Rob",  text: t("And the Wheel without tires rolls along the rope — like a trolley on a rail!", "Och hjulet utan däck rullar längs repet — som en vagn på en räls!") },
+        { speaker: "Laya", text: t("Gravity does all the work. Higher start = faster ride. Physics is the ultimate engineer!", "Tyngdkraften gör allt arbete. Högre start = snabbare åk. Fysik är den ultimata ingenjören!") },
+      ],
+      conclusion: t("The whole team crosses safely — gravity-powered transport at its finest!", "Hela laget korsar säkert — gravitationsdriven transport i sin finaste form!"),
+    },
+    theory: {
+      concept: t("Gravity & pulley mechanics", "Tyngdkraft & blockmekanism"),
+      explanation: t("A zipline uses gravity and a pulley to slide across a gap. The high end connects to the low end by rope. Gravity pulls down, the pulley rolls, and you slide!", "En linbana använder tyngdkraft och ett block för att glida över ett gap. Hög ände kopplas till låg ände med rep. Tyngdkraften drar nedåt, blocket rullar och du glider!"),
+      realWorldExamples: [
+        t("Ski lifts use pulleys and cables to carry skiers uphill", "Skidliftar använder block och kablar för att bära skidåkare uppför backen"),
+        t("Cranes use pulleys to lift heavy loads with less force", "Kranar använder block för att lyfta tunga laster med mindre kraft"),
+        t("Fishing rods use a pulley (reel) to retrieve the line", "Fiskespön använder ett block (spole) för att dra in linan"),
+      ],
+      newWords: [t("Pulley", "Block"), t("Gravity", "Tyngdkraft"), t("Friction", "Friktion"), t("Zipline", "Linbana")],
+    },
+    build: {
+      modelName: t("Zipline & Ring Toss", "Linbana & ringkast"),
+      description: t("Build a zipline frame with a pulley wheel that slides along a string.", "Bygg en linbaneram med ett blockhjul som glider längs ett snöre."),
+      totalSteps: 7,
+      steps: [
+        { stepNumber: 1, title: t("Build the tall support towers", "Bygg de höga stödtornen"), description: t("Assemble three P7x11 pillars as two tall towers for the zipline endpoints.", "Montera tre P7x11-pelare som två höga torn för linbanans ändpunkter."), components: ["P7x11 x3", "CT2 x4"] },
+        { stepNumber: 2, title: t("Reinforce the towers", "Förstärk tornen"), description: t("Add P11 and P7 beams as cross-bracing to keep the towers standing.", "Lägg till P11- och P7-balkar som korsförband för att hålla tornen stående."), components: ["P11 x4", "P7 x2", "CT(1x2) x4"] },
+        { stepNumber: 3, title: t("Build the pulley mount", "Bygg blockhållaren"), description: t("Attach TW1 connectors and CH2 at the tower top as the rope guide.", "Fäst TW1-kopplingar och CH2 i tornets topp som repguide."), components: ["TW1 x6", "CH2 x2"] },
+        { stepNumber: 4, title: t("Insert the pulley axle", "Sätt in blockaxeln"), description: t("Thread SH60 through the TW1 mounts as the pulley shaft.", "Trä SH60 genom TW1-hållarna som blockaxel."), components: ["SH60 x1", "CT3 x2"] },
+        { stepNumber: 5, title: t("Mount pulley and ride wheels", "Montera block och åkhjul"), description: t("Attach the Pulley wheel on the axle. Add Wheel-without-tires as the zipline trolley.", "Fäst blockhjulet på axeln. Lägg till Hjul-utan-däck som linbanans vagn."), components: ["Pulley x1", "Wheel w/o tires x2"] },
+        { stepNumber: 6, title: t("Add gear reduction and P3", "Lägg till kugghjulsreduktion och P3"), description: t("Mount G60 gears and CL2 pieces as the brake/slow-down mechanism.", "Montera G60-kugghjul och CL2-bitar som broms/avmattningssystem."), components: ["G60 x2", "CL2 x2", "P3 x1"] },
+        { stepNumber: 7, title: t("String the rope and test", "Spänn repet och testa"), description: t("Thread the Thread/rope through the pulley. Tilt one tower lower and release a small weight. Does it slide?", "Trä tråden/repet genom blocket. Luta ett torn lägre och släpp en liten vikt. Glider den?"), components: ["Thread x1"] },
+      ],
+    },
+    challenge: { title: t("Ring Toss Game", "Ringkastningsspel"), description: t("Build a ring with Blix and string. Toss it around a stick from a distance.", "Bygg en ring med Blix och snöre. Kasta den runt en pinne på avstånd."), hint: t("A heavier ring flies further but is harder to aim. Find the balance!", "En tyngre ring flyger längre men är svårare att sikta med. Hitta balansen!") },
+    lgr22: { strands: ["fys_kraft"], rawSpreadsheet: "Lgr22 1–3: Fysik – Kraft & rörelse" },
+    sdgs: [3, 9],
+  },
+
+  // Ch18
+  {
+    id: 18, slug: "dancing-robot", isCheckpoint: false,
+    title: t("Dancing Robot", "Dansande robot"),
+    subtitle: t("Build a motor-powered robot that dances", "Bygg en motordriven robot som dansar"),
+    story: {
+      intro: t("The village is holding a dance competition and Rob wants to enter — but Rob can't dance! Laya builds a dancing robot instead.", "Byn håller en danstävling och Rob vill delta — men Rob kan inte dansa! Laya bygger en dansrobot istället."),
+      dialogue: [
+        { speaker: "Rob",  text: t("I want to win the dance competition but my moves are terrible!", "Jag vill vinna danstävlingen men mina rörelser är fruktansvärda!") },
+        { speaker: "Laya", text: t("A motor plus gears creates controlled, repeating movement — exactly what a robot dancer needs!", "En motor plus kugghjul skapar kontrollerad, upprepande rörelse — precis vad en dansrobot behöver!") },
+        { speaker: "Kit",  text: t("The G20 drives G60 for slow, strong rotation. The P21x21 base keeps it steady while it spins.", "G20 driver G60 för långsam, stark rotation. P21x21-basen håller den stabil medan den snurrar.") },
+        { speaker: "Rob",  text: t("My dancing robot wins every time — and it never gets tired!", "Min dansrobot vinner varje gång — och den tröttnar aldrig!") },
+      ],
+      conclusion: t("The robot dances perfectly — and wins the competition for Rob!", "Roboten dansar perfekt — och vinner tävlingen för Rob!"),
+    },
+    theory: {
+      concept: t("Motor-driven linkages & movement types", "Motordrivna länkmekanismer & rörelsetyper"),
+      explanation: t("A linkage is a system of bars connected by joints. Turning one part moves the others in complex ways. Robots, mechanical toys, and your own arm work this way!", "En länkmekanism är ett system av stänger kopplade med leder. Att vrida en del rör de andra på komplexa sätt. Robotar, mekaniska leksaker och din egen arm fungerar så!"),
+      realWorldExamples: [
+        t("Factory robots use motorized linkages to weld and assemble cars", "Fabriksrobotar använder motordrivna länkmekanismer för att svetsa och montera bilar"),
+        t("A mechanical clock uses linkages to move the hands at different speeds", "En mekanisk klocka använder länkmekanismer för att röra visarna i olika hastigheter"),
+        t("Prosthetic limbs use motors and linkages to mimic natural movement", "Proteser använder motorer och länkmekanismer för att imitera naturliga rörelser"),
+      ],
+      newWords: [t("Linkage", "Länkmekanism"), t("Joint", "Led"), t("Oscillation", "Svängning"), t("Mechanism", "Mekanism")],
+    },
+    build: {
+      modelName: t("Dancing Robot", "Dansande robot"),
+      description: t("Build a motorized robot with a gear-driven spinning base and moving arms.", "Bygg en motordrivet robot med en kugghjulsdriven snurrande bas och rörliga armar."),
+      totalSteps: 3,
+      steps: [
+        { stepNumber: 1, title: t("Build the stable base", "Bygg den stabila basen"), description: t("Mount P21x21 as the wide base. Attach PU5x7 pillars vertically as the body supports.", "Montera P21x21 som den breda basen. Fäst PU5x7-pelare vertikalt som kroppsstöd."), components: ["P21x21 x1", "PU5x7 x2", "CT2 x2", "CH2 x2"] },
+        { stepNumber: 2, title: t("Build the gear drive", "Bygg kugghjulsdriften"), description: t("Thread SH100 through the body centre. Mount G20 Plus as the drive gear and G60 as the output gear.", "Trä SH100 genom kroppens centrum. Montera G20 Plus som drivkugghjul och G60 som utgångskugghjul."), components: ["SH100 x1", "G20 Plus x1", "G60 x2"] },
+        { stepNumber: 3, title: t("Attach motor and build arms", "Fäst motorn och bygg armarna"), description: t("Connect the Motor with Battery Box to the drive shaft. Build robot arms and switch on — dance!", "Anslut Motor with Battery Box till drivaxeln. Bygg robotarmar och slå på — dansa!"), components: ["Motor with Battery Box x1"] },
+      ],
+    },
+    challenge: { title: t("Make Your Robot Move", "Få din robot att röra sig"), description: t("Attach a P11 piece so turning the gear makes the robot walk, wave, or wiggle!", "Fäst en P11-del så att kugghjulet får roboten att gå, vinka eller vrida sig!"), hint: t("Offset the arm pivot point from the gear centre to create an eccentric motion.", "Förskjut armens pivotpunkt från kugghjulets centrum för att skapa en excentrisk rörelse.") },
+    lgr22: { strands: ["tva"], rawSpreadsheet: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
+    sdgs: [4, 9],
+  },
+
+  // Ch19
+  {
+    id: 19, slug: "digital-clock", isCheckpoint: false,
+    title: t("Digital Clock", "Digital klocka"),
+    subtitle: t("Display digits with Blix beams", "Visa siffror med Blix-balkar"),
+    story: {
+      intro: t("Laya wants to know the time but there is no clock at the campsite. She decides to build a digital clock display from Blix pieces.", "Laya vill veta vad klockan är men det finns ingen klocka på campingplatsen. Hon bestämmer sig för att bygga en digital klockdisplay av Blix-bitar."),
+      dialogue: [
+        { speaker: "Laya", text: t("A digital display uses seven segments — seven bars arranged like a figure 8!", "En digital display använder sju segment — sju streck arrangerade som en åtta!") },
+        { speaker: "Kit",  text: t("Turn some segments on and others off to make any digit from 0 to 9.", "Tänd några segment och släck andra för att visa vilken siffra som helst från 0 till 9.") },
+        { speaker: "Rob",  text: t("Real digital clocks use LEDs — tiny lights — for each segment. Same idea, different materials.", "Riktiga digitala klockor använder lysdioder — winziga lampor — för varje segment. Samma idé, olika material.") },
+        { speaker: "Laya", text: t("We need P7 beams for the long segments and P3 for the short ones. Let's build 8:00!", "Vi behöver P7-balkar för de långa segmenten och P3 för de korta. Bygg 8:00!") },
+      ],
+      conclusion: t("The Blix digital clock shows 8:00 — time to cook breakfast!", "Blix digitalklockan visar 8:00 — dags att laga frukost!"),
+    },
+    theory: {
+      concept: t("Seven-segment digital display", "Sjusegmentsdisplay"),
+      explanation: t("Each digit on a digital clock uses a 7-segment display — seven small bars in a figure-8 shape. Turn different bars on/off to show any digit 0-9. Real clocks use LEDs — same idea!", "Varje siffra på en digital klocka använder en 7-segmentsdisplay — sju små streck i en åttaform. Tänd/släck olika streck för att visa siffrorna 0-9. Riktiga klockor använder lysdioder — samma idé!"),
+      realWorldExamples: [
+        t("Calculators use 7-segment displays to show numbers", "Räknedosor använder 7-segmentsdisplayer för att visa siffror"),
+        t("Microwave ovens display cooking time with 7-segment digits", "Mikrovågsugnar visar tillagningstid med 7-segmentssiffror"),
+        t("Petrol station price displays use large 7-segment segments", "Bensinstationsprisvisare använder stora 7-segmentsssegment"),
+      ],
+      newWords: [t("Segment", "Segment"), t("Display", "Display"), t("LED", "LED"), t("Binary", "Binärt")],
+    },
+    build: {
+      modelName: t("Blix Digital Clock Display", "Digital Blix-klockdisplay"),
+      description: t("Build a 7-segment style digit display using P7 and P3 Blix beams.", "Bygg en 7-segmentsstil sifferdisplay med P7- och P3-Blix-balkar."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build a 7-segment digit", "Bygg en 7-segmentssiffra"), description: t("Use P7 beams as the top, middle, and bottom horizontals. Use P3 beams as the four vertical sides. Arrange them to show digit '8'. Then remove segments to show 0-9.", "Använd P7-balkar som de övre, mellersta och undre horisontella. Använd P3-balkar som de fyra vertikala sidorna. Arrangera dem för att visa siffran '8'. Ta sedan bort segment för att visa 0-9."), components: ["P7 x28", "CT2 x28", "P21x21 x2", "CH2 x2", "CT(1x2) x2"] },
+      ],
+    },
+    challenge: { title: t("Build a Working Clock", "Bygg en fungerande klocka"), description: t("Update the clock every minute for 10 minutes. Bonus: show seconds!", "Uppdatera klockan varje minut i 10 minuter. Bonus: visa sekunder!"), hint: t("Draw a chart: which 7 segments are on/off for each digit 0-9?", "Rita ett diagram: vilka 7 segment är på/av för varje siffra 0-9?") },
+    lgr22: { strands: ["mat_tal"], rawSpreadsheet: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik" },
+    sdgs: [4, 9],
+  },
+
+  // Ch20
+  {
+    id: 20, slug: "earth-moon-sun", isCheckpoint: false,
+    title: t("Earth, Moon & Sun", "Jorden, månen & solen"),
+    subtitle: t("Build a model of the solar system", "Bygg en modell av solsystemet"),
+    story: {
+      intro: t("Under a clear night sky, Rob points at the Moon. The team decides to build a mechanical model showing how Earth, Moon and Sun move.", "Under en klar natthimmel pekar Rob på månen. Laget bestämmer sig för att bygga en mekanisk modell som visar hur Jord, Måne och Sol rör sig."),
+      dialogue: [
+        { speaker: "Rob",  text: t("Earth rotates once every 24 hours — that's one day. And it orbits the Sun once every 365 days!", "Jorden roterar en gång var 24:e timme — det är ett dygn. Och den kretsar runt solen en gång var 365:e dag!") },
+        { speaker: "Kit",  text: t("The Moon orbits Earth every 28 days. We can model all three movements with gears!", "Månen kretsar runt Jorden var 28:e dag. Vi kan modellera alla tre rörelserna med kugghjul!") },
+        { speaker: "Laya", text: t("Different-sized gears will spin at different rates — just like the real solar system!", "Olika stora kugghjul snurrar med olika hastigheter — precis som det verkliga solsystemet!") },
+        { speaker: "Rob",  text: t("Earth's tilt is 23.5 degrees — that's why we have summer and winter!", "Jordens lutning är 23,5 grader — det är därför vi har sommar och vinter!") },
+      ],
+      conclusion: t("The model solar system spins perfectly — space engineering at its finest!", "Modellsolsystemet snurrar perfekt — rymdteknik på sitt bästa!"),
+    },
+    theory: {
+      concept: t("Orbit, rotation & revolution", "Bana, rotation & omloppsbana"),
+      explanation: t("Earth ROTATES on its axis (1 spin = 24 hours = 1 day). Earth REVOLVES around the Sun (1 lap = 365 days = 1 year). The tilt of Earth's axis gives us seasons!", "Jorden ROTERAR runt sin axel (1 varv = 24 timmar = 1 dygn). Jorden går i BANA runt solen (1 varv = 365 dagar = 1 år). Jordaxelns lutning ger oss årstider!"),
+      realWorldExamples: [
+        t("Day and night happen because Earth rotates toward and away from the Sun", "Dag och natt uppstår när Jorden roterar mot och från solen"),
+        t("The Moon's phases change because it orbits Earth every 28 days", "Månens faser förändras eftersom den kretsar runt Jorden var 28:e dag"),
+        t("Seasons occur because Earth's axis is tilted 23.5 degrees", "Årstiderna uppstår eftersom Jordens axel är lutad 23,5 grader"),
+      ],
+      newWords: [t("Rotation", "Rotation"), t("Revolution", "Omloppsbana"), t("Orbit", "Bana"), t("Axis", "Axel")],
+    },
+    build: {
+      modelName: t("Earth-Moon-Sun System", "Jord-Måne-Sol-system"),
+      description: t("Build a gear-driven orrery showing Earth rotating and orbiting the Sun.", "Bygg ett kugghjulsdrivet planetarium som visar Jordens rotation och bana runt solen."),
+      totalSteps: 8,
+      steps: [
+        { stepNumber: 1, title: t("Build the Sun base", "Bygg solbasen"), description: t("Mount P21x21 flat as the solar system base plate.", "Montera P21x21 platt som solsystemets basplatta."), components: ["P21x21 x1", "CT2 x2"] },
+        { stepNumber: 2, title: t("Build the central pillar (Sun)", "Bygg centralpelaren (Solen)"), description: t("Attach PU5x7 pillars vertically in the centre as the Sun's axis.", "Fäst PU5x7-pelare vertikalt i mitten som solens axel."), components: ["PU5x7 x2", "CH2 x2"] },
+        { stepNumber: 3, title: t("Insert the main shaft", "Sätt in huvudaxeln"), description: t("Thread SH100 vertically through the central pillar.", "Trä SH100 vertikalt genom centralpelaren."), components: ["SH100 x1", "TW1 x1"] },
+        { stepNumber: 4, title: t("Build the Earth orbit arm", "Bygg Jordens omloppsbanearm"), description: t("Attach P7x11 pillar horizontally as the arm that holds Earth.", "Fäst P7x11-pelaren horisontellt som armen som håller Jorden."), components: ["P7x11 x1", "CL2 x3"] },
+        { stepNumber: 5, title: t("Mount Earth gear train", "Montera Jordens kugghjulssystem"), description: t("Press G20 gears on the orbit arm axle to drive Earth's rotation.", "Tryck G20-kugghjul på omloppsbanearmens axel för att driva Jordens rotation."), components: ["G20 x3", "SH60 x1"] },
+        { stepNumber: 6, title: t("Add large Sun gear", "Lägg till stort solkugghjul"), description: t("Mount G20 Plus and G60 as the solar drive gears.", "Montera G20 Plus och G60 som de solara drivkugghjulen."), components: ["G20 Plus x2", "G60 x1"] },
+        { stepNumber: 7, title: t("Build the Moon arm", "Bygg månens arm"), description: t("Attach P11 beam and P3 Plus as the arm that holds the Moon around Earth.", "Fäst P11-balk och P3 Plus som armen som håller månen runt Jorden."), components: ["P11 x1", "P3 Plus x2", "CT3 x1", "P5 x1"] },
+        { stepNumber: 8, title: t("Add the wheel and test orbits", "Lägg till hjulet och testa omloppsbanan"), description: t("Mount a Wheel as the Earth sphere. Turn the main shaft — Earth orbits, Moon follows!", "Montera ett hjul som Jordsféren. Vrid huvudaxeln — Jorden kretsar, Månen följer!"), components: ["Wheel x1", "CH2 x2"] },
+      ],
+    },
+    challenge: { title: t("Track Day and Night", "Följ dag och natt"), description: t("Use your model to show day and night. How long is one day? One revolution?", "Visa dag och natt med din modell. Hur lång är ett dygn? Ett år?"), hint: t("Mark one point on Earth as your house. How many rotations = one orbit?", "Markera en punkt på Jorden som ditt hus. Hur många rotationer = ett omloppsbana?") },
+    lgr22: { strands: ["fys_kraft", "fys_sol"], rawSpreadsheet: "Lgr22 1–3: Fysik – Kraft & rörelse; Fysik – Solsystemet & himlakroppar" },
+    sdgs: [4, 13],
+  },
+
+  // Ch21
+  {
+    id: 21, slug: "find-the-path", isCheckpoint: false,
+    title: t("Find the Path", "Hitta vägen"),
+    subtitle: t("Crack a number code at a crossroads", "Knäck en sifferkod vid ett vägskäl"),
+    story: {
+      intro: t("The team reaches a four-way crossroads with no signpost. A coded message on a stone points to the right path — but only if they can decode it.", "Laget når ett fyrvägskors utan skylt. Ett kodat meddelande på en sten pekar på rätt väg — men bara om de kan avkoda det."),
+      dialogue: [
+        { speaker: "Rob",  text: t("The stone shows: 2, 4, 8, 16, ?, 64. What comes next — find the pattern!", "Stenen visar: 2, 4, 8, 16, ?, 64. Vad kommer härnäst — hitta mönstret!") },
+        { speaker: "Kit",  text: t("Each number doubles! 2×2=4, 4×2=8, 8×2=16 — so the answer is 32!", "Varje tal fördubblas! 2×2=4, 4×2=8, 8×2=16 — så svaret är 32!") },
+        { speaker: "Laya", text: t("The code says: go north if the answer is below 40. It's 32, so we go north!", "Koden säger: gå norrut om svaret är under 40. Det är 32, så vi går norrut!") },
+        { speaker: "Rob",  text: t("Number patterns are everywhere in nature — petals, spirals, even rabbit populations!", "Talmönster finns överallt i naturen — kronblad, spiraler, till och med kaninpopulationer!") },
+      ],
+      conclusion: t("The pattern leads them north — maths opens every door!", "Mönstret leder dem norrut — matte öppnar varje dörr!"),
+    },
+    theory: {
+      concept: t("Number sequences & pattern recognition", "Talföljder & mönsterigenkänning"),
+      explanation: t("Number sequences are everywhere — puzzles, codes, even nature. To crack a riddle, find the pattern: doubling, halving, adding, subtracting, or something more hidden.", "Talföljder finns överallt — pussel, koder, till och med naturen. För att knäcka en gåta, hitta mönstret: fördubbla, halvera, addera, subtrahera eller något mer gömt."),
+      realWorldExamples: [
+        t("Fibonacci sequence appears in sunflower seed spirals", "Fibonacci-sekvensen förekommer i solrosfröets spiraler"),
+        t("Computer binary code uses doubling sequences: 1, 2, 4, 8, 16...", "Datorns binärkod använder fördubblingssekvenser: 1, 2, 4, 8, 16..."),
+        t("Music rhythms use repeating patterns of beats", "Musikrytmer använder upprepande mönster av slag"),
+      ],
+      newWords: [t("Sequence", "Sekvens"), t("Pattern", "Mönster"), t("Fibonacci", "Fibonacci"), t("Algorithm", "Algoritm")],
+    },
+    build: {
+      modelName: t("Number Code Builder", "Sifferkodsbyggare"),
+      description: t("Use Blix pieces as physical number tokens to represent and solve number sequences.", "Använd Blix-bitar som fysiska siffertokens för att representera och lösa talföljder."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build and solve number sequences", "Bygg och lös talföljder"), description: t("Use P3=3, P5=5, P7=7, P11=11 as tokens. Lay them in a pattern sequence. Find what comes next. Challenge a friend to guess!", "Använd P3=3, P5=5, P7=7, P11=11 som tokens. Lägg dem i ett mönster. Hitta vad som kommer härnäst. Utmana en kompis att gissa!"), components: ["P3 x4", "P5 x4", "P7 x4", "P11 x4"] },
+      ],
+    },
+    challenge: { title: t("The Third-Digit Code", "Tredje-sifferkoden"), description: t("Take 4 seven-digit numbers. Read the third digit of each — that's your code!", "Ta 4 sjusiffriga tal. Läs tredje siffran av var och ett — det är din kod!"), hint: t("Try making your own code using Blix hole-counts as cipher values.", "Prova att göra din egen kod med Blix-hålräkningar som chiffervärden.") },
+    lgr22: { strands: ["mat_tal"], rawSpreadsheet: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik" },
+    sdgs: [4],
+  },
+
+  // Ch22
+  {
+    id: 22, slug: "challenge-foldable-scale", isCheckpoint: true,
+    title: t("Challenge: Foldable Scale", "Utmaning: Hopfällbar linjal"),
+    subtitle: t("Help a farmer measure his land precisely", "Hjälp en bonde mäta sin mark exakt"),
+    story: {
+      intro: t("A farmer needs to measure his fields to sell them fairly, but his old measuring rope has snapped. The team builds a foldable Blix ruler.", "En bonde måste mäta sina åkrar för att sälja dem rättvist, men hans gamla mätsträng har gått av. Laget bygger en hopfällbar Blix-linjal."),
+      dialogue: [
+        { speaker: "Farmer", text: t("I need to measure exactly 10 metres — not a centimetre more or less!", "Jag måste mäta exakt 10 meter — inte en centimeter mer eller mindre!") },
+        { speaker: "Laya",   text: t("Blix holes are exactly 1 cm apart. P11 = 11 cm. Five P11 pieces = 55 cm!", "Blix-hål är exakt 1 cm isär. P11 = 11 cm. Fem P11-bitar = 55 cm!") },
+        { speaker: "Kit",    text: t("Standard units like centimetres let anyone in the world share measurements accurately.", "Standardenheter som centimeter låter vem som helst i världen dela mätningar exakt.") },
+        { speaker: "Laya",   text: t("Fold the ruler to carry it easily. Unfold to measure. Simple and accurate!", "Vik ihop linjalen för att bära den lätt. Vik ut för att mäta. Enkelt och exakt!") },
+      ],
+      conclusion: t("The farmer measures his field precisely — standard units make the world fair!", "Bonden mäter sin åker exakt — standardenheter gör världen rättvis!"),
+    },
+    theory: {
+      concept: t("Standard measurement units", "Standardmätenheter"),
+      explanation: t("1 metre = 100 cm. Blix holes are 1 cm apart — a perfect ruler! Standard units let people anywhere share measurements and build things together without confusion.", "1 meter = 100 cm. Blix-hål ligger 1 cm isär — en perfekt linjal! Standardenheter låter människor överallt dela mätningar och bygga saker tillsammans utan förvirring."),
+      realWorldExamples: [
+        t("All countries agreed on the metre system so trade is fair everywhere", "Alla länder enades om metersystemet så att handel är rättvis överallt"),
+        t("Carpenters use millimetres for precise cuts in woodworking", "Snickare använder millimeter för exakta snitt i trä"),
+        t("Scientists worldwide use SI units to share research results", "Forskare världen över använder SI-enheter för att dela forskningsresultat"),
+      ],
+      newWords: [t("Standard unit", "Standardenhet"), t("Metre", "Meter"), t("Centimetre", "Centimeter"), t("Perimeter", "Omkrets")],
+    },
+    build: {
+      modelName: t("Foldable Scale", "Hopfällbar linjal"),
+      description: t("Build a foldable ruler from P11 beams and hinge connectors.", "Bygg en hopfällbar linjal av P11-balkar och gångjärnkopplingar."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build the foldable ruler", "Bygg den hopfällbara linjalen"), description: t("Connect five P11 beams end-to-end with Hinge connectors so it folds accordion-style. Each P11 = 11 cm. Full length = 55 cm.", "Anslut fem P11-balkar ände-till-ände med gångjärnkopplingar så det viks dragspelsstil. Varje P11 = 11 cm. Full längd = 55 cm."), components: ["P11 x5", "Hinges x1"] },
+      ],
+    },
+    challenge: { title: t("Measure Like a Surveyor", "Mät som en lantmätare"), description: t("Measure your table's perimeter and area. Length × Width = area!", "Mät bordets omkrets och yta. Längd × Bredd = yta!"), hint: t("Perimeter = all sides added together. Area = length × width.", "Omkrets = alla sidor ihopaddade. Yta = längd × bredd.") },
+    lgr22: { strands: ["mat_tal"], rawSpreadsheet: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik" },
+    sdgs: [2, 4, 8],
+  },
+
+  // Ch23
+  {
+    id: 23, slug: "weight-measuring-device", isCheckpoint: false,
+    title: t("Weight Measuring Device", "Vägningsapparat"),
+    subtitle: t("Build a balance scale to weigh grains", "Bygg en balansvåg för att väga säd"),
+    story: {
+      intro: t("A farmer needs to weigh grain to sell it fairly at the market. The team builds a balance scale from Blix pieces.", "En bonde måste väga säd för att sälja den rättvist på marknaden. Laget bygger en balansvåg av Blix-bitar."),
+      dialogue: [
+        { speaker: "Farmer", text: t("I need to know exactly how many grams of grain are in each sack for the market!", "Jag måste veta exakt hur många gram säd som finns i varje säck för marknaden!") },
+        { speaker: "Rob",    text: t("A balance scale compares masses. When both pans are level, the weights are equal!", "En balansvåg jämför massor. När båda skålarna är jämna är vikterna lika!") },
+        { speaker: "Kit",    text: t("Place known weights on one side and grain on the other. When it balances — you know the mass!", "Lägg kända vikter på ena sidan och säden på den andra. När det balanserar — vet du massan!") },
+        { speaker: "Laya",   text: t("Balance scales were used in ancient Egypt and are still used in chemistry labs today!", "Balansvågar användes i antikens Egypten och används fortfarande i kemilabb idag!") },
+      ],
+      conclusion: t("Every sack is weighed precisely — fairness at the market starts with a good balance!", "Varje säck vägs exakt — rättvisa på marknaden börjar med en bra balans!"),
+    },
+    theory: {
+      concept: t("Balance & mass comparison", "Balans & massajämförelse"),
+      explanation: t("A balance compares two weights. Equal = level. Place reference weights on one side and find the mass of the unknown object on the other. Used for thousands of years!", "En balansvåg jämför två vikter. Lika = vågrät. Lägg referensvikter på ena sidan och hitta massan av det okända föremålet på andra. Använd i tusentals år!"),
+      realWorldExamples: [
+        t("Chemists use precision balances to measure tiny amounts of substances", "Kemister använder precisionsvågar för att mäta winziga mängder ämnen"),
+        t("Grocers use scales to weigh fruit and vegetables for customers", "Grönsakshandlare använder vågar för att väga frukt och grönsaker"),
+        t("Justice is symbolised by scales — equal weight = fair treatment", "Rättvisa symboliseras av vågar — lika vikt = rättvis behandling"),
+      ],
+      newWords: [t("Mass", "Massa"), t("Balance", "Balans"), t("Fulcrum", "Vridpunkt"), t("Calibrate", "Kalibrera")],
+    },
+    build: {
+      modelName: t("Balance Weighing Scale", "Balansvåg"),
+      description: t("Build a pivot-arm balance scale with two hanging pans.", "Bygg en pivotarmsbalansvåg med två hängande skålar."),
+      totalSteps: 7,
+      steps: [
+        { stepNumber: 1, title: t("Build the base support", "Bygg basstödet"), description: t("Assemble two P7x11 pillars as the base and vertical support of the scale.", "Montera två P7x11-pelare som basen och det vertikala stödet för vågen."), components: ["P7x11 x2", "CT2 x4"] },
+        { stepNumber: 2, title: t("Build the upright column", "Bygg den upprätta kolumnen"), description: t("Stack P11 beams vertically supported by CT3 connectors.", "Stapla P11-balkar vertikalt stödda av CT3-kopplingar."), components: ["P11 x4", "CT3 x4"] },
+        { stepNumber: 3, title: t("Add the pivot mount", "Lägg till pivothållaren"), description: t("Attach TW1 connectors at the top of the column as the balance arm pivot.", "Fäst TW1-kopplingar i toppen av kolumnen som balanarmens pivot."), components: ["TW1 x4", "P5 x2"] },
+        { stepNumber: 4, title: t("Build the balance beam", "Bygg balansbalkens arm"), description: t("Connect two P11 beams end-to-end as the long balance arm.", "Anslut två P11-balkar ände-till-ände som den långa balansbalkens arm."), components: ["P11 x4", "CT2 x4"] },
+        { stepNumber: 5, title: t("Mount the balance arm on pivot", "Montera balansbalkens arm på pivot"), description: t("Thread the balance arm through the TW1 pivot mounts so it can swing freely.", "Trä balansbalkens arm genom TW1-pivothållarna så den kan svänga fritt."), components: ["TW1 x4"] },
+        { stepNumber: 6, title: t("Build the scale pans", "Bygg vågskålarna"), description: t("Use P5 beams as the flat pan surfaces. Attach with CT2 connectors as the pan frame.", "Använd P5-balkar som de platta skålytan. Fäst med CT2-kopplingar som vågskålramen."), components: ["P5 x6", "CT2 x2"] },
+        { stepNumber: 7, title: t("Hang pans and calibrate", "Häng skålarna och kalibrera"), description: t("Attach pans to each end of the balance arm. Add equal weights — does it level? Test with a coin on one side!", "Fäst skålarna i varje ände av balansbalkens arm. Lägg lika vikter — nivellar det? Testa med ett mynt på ena sidan!"), components: ["CT3 x4"] },
+      ],
+    },
+    challenge: { title: t("Weighing Game", "Vägningsspel"), description: t("Use your scale to estimate the mass of a small toy. Guess before measuring!", "Använd din våg för att uppskatta massan av en liten leksak. Gissa innan du mäter!"), hint: t("Use Blix pieces as reference weights: P11 ≈ 5g, P7 ≈ 3g, P5 ≈ 2g.", "Använd Blix-bitar som referensvikter: P11 ≈ 5g, P7 ≈ 3g, P5 ≈ 2g.") },
+    lgr22: { strands: ["tek_mek", "mat_tal"], rawSpreadsheet: "Lgr22 1–3: Teknik – Mekanismer & konstruktioner; Matematik – Tal" },
+    sdgs: [2, 8, 12],
+  },
+
+  // Ch24
+  {
+    id: 24, slug: "plowing-machine", isCheckpoint: false,
+    title: t("Plowing Machine", "Plogmaskin"),
+    subtitle: t("Use a motor to plow the farmer's field", "Använd en motor för att plöja bondens åker"),
+    story: {
+      intro: t("The farmer's field is full of weeds and must be plowed before spring. Manual plowing takes days — the team builds a motorized plow.", "Bondens åker är full av ogräs och måste plöjas inför våren. Manuell plöjning tar dagar — laget bygger en motoriserad plog."),
+      dialogue: [
+        { speaker: "Farmer", text: t("Plowing by hand takes all week. My back is aching already just thinking about it!", "Att plöja för hand tar hela veckan. Ryggen värker redan bara av tanken!") },
+        { speaker: "Laya",   text: t("A motor converts electrical energy into rotation. The rotation drives wheels, which pull the plow.", "En motor omvandlar elektrisk energi till rotation. Rotationen driver hjul som drar plogen.") },
+        { speaker: "Rob",    text: t("The battery box stores energy. Connect it to the motor and energy flows — the plow moves!", "Batterilådan lagrar energi. Anslut den till motorn och energi flödar — plogen rör sig!") },
+        { speaker: "Kit",    text: t("Tractors use exactly this principle — a big motor driving big wheels with great force.", "Traktorer använder exakt denna princip — en stor motor som driver stora hjul med stor kraft.") },
+      ],
+      conclusion: t("The field is plowed in minutes — electric motors change everything!", "Åkern är plöjd på minuter — elektriska motorer förändrar allt!"),
+    },
+    theory: {
+      concept: t("Electric motor & energy conversion", "Elektrisk motor & energiomvandling"),
+      explanation: t("A motor converts electricity from a battery into rotation. The rotation drives wheels, which pull the plow. Tractors and lawn mowers work the same way.", "En motor omvandlar el från ett batteri till rotation. Rotationen driver hjul som drar plogen. Traktorer och gräsklippare fungerar likadant."),
+      realWorldExamples: [
+        t("Electric cars use large motors instead of petrol engines", "Elbilar använder stora motorer istället för bensinmotorer"),
+        t("Wind turbines use the opposite — rotation makes electricity!", "Vindkraftverk gör det omvända — rotation skapar elektricitet!"),
+        t("Washing machines use motors to spin the drum", "Tvättmaskiner använder motorer för att snurra trumman"),
+      ],
+      newWords: [t("Motor", "Motor"), t("Battery", "Batteri"), t("Electrical energy", "Elektrisk energi"), t("Conversion", "Omvandling")],
+    },
+    build: {
+      modelName: t("Motorized Plowing Machine", "Motoriserad plogmaskin"),
+      description: t("Build a motorized vehicle with four wheels and a plow attachment.", "Bygg ett motoriserat fordon med fyra hjul och en ploginfästning."),
+      totalSteps: 4,
+      steps: [
+        { stepNumber: 1, title: t("Build the chassis frame", "Bygg chassiets ram"), description: t("Assemble CH2 connectors and CT3 pieces as the sturdy vehicle chassis.", "Montera CH2-kopplingar och CT3-bitar som det robusta fordonschassis."), components: ["CH2 x6", "CT3 x4", "CT2 x3", "PU5x13 x1"] },
+        { stepNumber: 2, title: t("Mount wheels and axles", "Montera hjul och axlar"), description: t("Thread SH100 shafts through TW1 holders. Attach Wheel-without-tires on all four axle ends.", "Trä SH100-axlar genom TW1-hållare. Fäst Hjul-utan-däck på alla fyra axelns ändar."), components: ["SH100 x3", "TW1 x8", "Wheel w/o tires x4"] },
+        { stepNumber: 3, title: t("Attach the motor", "Fäst motorn"), description: t("Connect the Motor with Battery Box to the rear axle drive position.", "Anslut Motor with Battery Box till drivaxelns bakre position."), components: ["Motor with Battery Box x1", "CH2 x3", "P5 x1", "P3 x1", "P3 Plus x2"] },
+        { stepNumber: 4, title: t("Build the plow and test", "Bygg plogen och testa"), description: t("Attach mudguards as the plow blades at the front. Switch on — does it drive forward?", "Fäst stänkskärmar som plogblad framtill. Slå på — kör det framåt?"), components: ["Mudguard Left x2", "Mudguard Right x2", "CT3 x2"] },
+      ],
+    },
+    challenge: { title: t("Observation Time", "Observationsdags"), description: t("Connect battery → motor → switch on. What do you observe? What happens if you reverse the wires?", "Anslut batteri → motor → slå på. Vad observerar du? Vad händer om du vänder trådarna?"), hint: t("Reversing the battery connections reverses the motor direction!", "Att vända batteriets anslutningar vänder motorns riktning!") },
+    lgr22: { strands: ["fys_el"], rawSpreadsheet: "Lgr22 1–3: Fysik – Elektricitet & magnetism" },
+    sdgs: [2, 9, 12],
+  },
+
+  // Ch25
+  {
+    id: 25, slug: "challenge-goalkeeper-kicker", isCheckpoint: true,
+    title: t("Challenge: Goalkeeper & Kicker", "Utmaning: Målvakt & sparkare"),
+    subtitle: t("Score 5 goals to rescue the horse!", "Gör 5 mål för att rädda hästen!"),
+    story: {
+      intro: t("A horse is trapped behind a gate that only opens when the team scores 5 goals against a goalkeeper robot. Game on!", "En häst är instängd bakom en grind som bara öppnas när laget gör 5 mål mot en målvaktsrobot. Dags att spela!"),
+      dialogue: [
+        { speaker: "Kit",      text: t("Strategy time! I'll aim for the bottom corners — hardest for the goalkeeper to reach.", "Strategidags! Jag siktar på de nedre hörnen — svårast för målvakten att nå.") },
+        { speaker: "Rob",      text: t("I'll build the goalkeeper with a wide flat arm — more coverage area means harder to score!", "Jag bygger målvakten med en bred platt arm — större täckningsyta = svårare att göra mål!") },
+        { speaker: "Laya",     text: t("Building a good kicker is also engineering — the right gear ratio gives the perfect kick force.", "Att bygga en bra sparkare är också teknik — rätt kugghjulsförhållande ger den perfekta sparkkraften.") },
+        { speaker: "Narrator", text: t("Two engineers, one ball, five goals to score. May the best builder win!", "Två ingenjörer, en boll, fem mål att göra. Måtte den bäste byggaren vinna!") },
+      ],
+      conclusion: t("5 goals scored — the gate opens and the horse gallops free!", "5 mål gjorda — grinden öppnas och hästen galoppar fri!"),
+    },
+    theory: {
+      concept: t("Strategy & design thinking (Checkpoint)", "Strategi & designtänkande (Avstämning)"),
+      explanation: t("Competitive games involve strategy — planning to overcome an opponent. Building a Blix player is also strategy: which gears? Which leg shape? What kick angle gives maximum power?", "Tävlingsspel handlar om strategi — planera för att övervinna en motståndare. Att bygga en Blix-spelare är också strategi: vilka kugghjul? Vilken benform? Vilken sparkvinkel ger maximal kraft?"),
+      realWorldExamples: [
+        t("Football coaches use data analytics to plan winning strategies", "Fotbollstränare använder dataanalys för att planera vinnande strategier"),
+        t("Chess is pure strategy — planning many moves ahead", "Schack är ren strategi — planera många drag framåt"),
+        t("Engineers design machines with strategy: strength, weight, cost", "Ingenjörer designar maskiner strategiskt: styrka, vikt, kostnad"),
+      ],
+      newWords: [t("Strategy", "Strategi"), t("Teamwork", "Lagarbete"), t("Optimise", "Optimera"), t("Iterate", "Iterera")],
+    },
+    build: {
+      modelName: t("Football Player", "Fotbollsspelare"),
+      description: t("Build a kicker and goalkeeper for a two-player robot football match.", "Bygg en sparkare och målvakt för en tvåspelares robotfotbollsmatch."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build kicker and goalkeeper robots", "Bygg sparkar- och målvaktsrobotar"), description: t("Build a kicker with a lever-arm kick mechanism and a goalkeeper with a wide blocking arm. Use gears to control kick power. Play the match — first to 5 goals wins!", "Bygg en sparkare med en hävstångsarmsparkmekanism och en målvakt med en bred blockeringsarm. Använd kugghjul för att kontrollera sparkkraften. Spela matchen — den som gör 5 mål vinner!"), components: ["CT3 x4", "P11 x2", "CT2 x4", "P7 x2"] },
+      ],
+    },
+    challenge: { title: t("Score 5 Goals", "Gör 5 mål"), description: t("Two-player game: one is goalkeeper, the other is striker. Striker must score 5!", "Tvåspelarspel: en målvakt, en anfallare. Anfallaren måste göra 5 mål!"), hint: t("Aim for the corners — most goalkeepers can't cover the full width!", "Sikta på hörnen — de flesta målvakter kan inte täcka hela bredden!") },
+    lgr22: { strands: ["tva"], rawSpreadsheet: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
+    sdgs: [3, 5, 17],
+  },
+
+  // Ch26
+  {
+    id: 26, slug: "clock", isCheckpoint: false,
+    title: t("Clock", "Klocka"),
+    subtitle: t("Build an analogue clock face and read the time", "Bygg en analog urtavla och läs av tiden"),
+    story: {
+      intro: t("Rob keeps missing meals because there is no clock at the campsite. Kit decides to build an analogue Blix clock so the whole team stays on schedule.", "Rob missar ständigt måltiderna för det finns ingen klocka på campingplatsen. Kit bestämmer sig för att bygga en analog Blix-klocka så att hela laget håller schemat."),
+      dialogue: [
+        { speaker: "Kit",  text: t("A clock face has 12 hour positions and 60 minute marks. The short hand shows hours, long hand shows minutes.", "En urtavla har 12 timpositioner och 60 minutmarkeringar. Den korta visaren visar timmar, den långa visaren minuter.") },
+        { speaker: "Laya", text: t("Gear ratios make the minute hand turn 12 times for every one turn of the hour hand.", "Kugghjulsförhållanden gör att minutvisaren vrids 12 gånger för varje ett varv av timvisaren.") },
+        { speaker: "Rob",  text: t("So if the minute hand goes all the way round once, the hour hand only moves one hour position. Smart!", "Alltså om minutvisaren går runt en gång, rör sig timvisaren bara en timpostion. Smart!") },
+        { speaker: "Kit",  text: t("Now Rob has no excuse for missing dinner. 6 o'clock — time to eat!", "Nu har Rob ingen ursäkt för att missa middagen. Klockan 6 — dags att äta!") },
+      ],
+      conclusion: t("The clock ticks perfectly — time management is the ultimate life skill!", "Klockan tickar perfekt — tidshantering är den ultimata livskunskapen!"),
+    },
+    theory: {
+      concept: t("Time reading & clock mechanisms", "Tidsavläsning & klockmekanismer"),
+      explanation: t("Time is measured in hours (60 minutes), minutes (60 seconds) and seconds. A clock face has 12 hours, with the small hand for hours and the long hand for minutes. Gear ratios make the hands move at different speeds.", "Tid mäts i timmar (60 minuter), minuter (60 sekunder) och sekunder. En urtavla har 12 timmar, med liten visare för timmar och stor visare för minuter. Kugghjulsförhållanden gör att visarna rör sig med olika hastigheter."),
+      realWorldExamples: [
+        t("Grandfather clocks use a pendulum to regulate the gear movement", "Morfarsur använder ett pendel för att reglera kugghjulsrörelsen"),
+        t("Church bells ring every hour — a clock mechanism triggers them", "Kyrkklockor ringer varje timme — en klockmekanism utlöser dem"),
+        t("Atomic clocks are so precise they lose only one second per 300 million years", "Atomur är så exakta att de tappar bara en sekund per 300 miljoner år"),
+      ],
+      newWords: [t("Hour hand", "Timvisare"), t("Minute hand", "Minutvisare"), t("Clockwise", "Medurs"), t("Analogue", "Analog")],
+    },
+    build: {
+      modelName: t("Analogue Clock Face", "Analog urtavla"),
+      description: t("Build a Blix clock face with hour and minute positions.", "Bygg en Blix-urtavla med tim- och minutpositioner."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build the clock face", "Bygg urtavlan"), description: t("Build a circular arrangement with 12 P3 pieces as hour markers. Use two Blix arms as the clock hands. Practice showing different times!", "Bygg ett cirkulärt arrangemang med 12 P3-bitar som timmarkerare. Använd två Blix-armar som klockvisare. Öva på att visa olika tider!"), components: ["P3 x8", "P5 x4", "CT2 x4", "P7 x2"] },
+      ],
+    },
+    challenge: { title: t("Time Yourself", "Ta tid på dig själv"), description: t("How long does it take you to build a Blix tower? Time it and try to beat your record!", "Hur länge tar det att bygga ett Blix-torn? Ta tid och försök slå ditt rekord!"), hint: t("5 minutes = minute hand at 12 → 1. Can you build a tower that fast?", "5 minuter = minutvisare vid 12 → 1. Kan du bygga ett torn det fort?") },
+    lgr22: { strands: ["mat_tal"], rawSpreadsheet: "Lgr22 1–3: Matematik – Tal, algebra, mönster & statistik" },
+    sdgs: [4],
+  },
+
+  // Ch27
+  {
+    id: 27, slug: "first-circuit", isCheckpoint: false,
+    title: t("Make Your First Circuit", "Bygg din första krets"),
+    subtitle: t("Discover electricity with Queaky", "Upptäck elektricitet med Queaky"),
+    story: {
+      intro: t("Laya discovers Queaky — a strange device that makes noise when its two ears are touched together. The team investigates electricity.", "Laya hittar Queaky — ett märkligt redskap som gör ljud när dess två öron rörs ihop. Laget undersöker elektricitet."),
+      dialogue: [
+        { speaker: "Laya", text: t("When I touch Queaky's ears together it screams! When I let go, it stops. Why?", "När jag rör Queasky's öron ihop skriker den! När jag släpper stannar det. Varför?") },
+        { speaker: "Rob",  text: t("Electricity needs a complete loop — a closed circuit — to flow. You completed the circuit!", "Elektricitet behöver en komplett slinga — en sluten krets — för att flöda. Du avslutade kretsen!") },
+        { speaker: "Kit",  text: t("Break the loop anywhere and electricity stops — that's how every light switch works!", "Bryt slingan var som helst och elektriciteten stannar — det är hur varje strömbrytare fungerar!") },
+        { speaker: "Laya", text: t("So a switch is just a gap in the circuit that I can close or open. Brilliant!", "Alltså är en strömbrytare bara ett gap i kretsen som jag kan stänga eller öppna. Lysande!") },
+      ],
+      conclusion: t("Queaky teaches the team everything about circuits — electricity is alive!", "Queaky lär laget allt om kretsar — elektriciteten lever!"),
+    },
+    theory: {
+      concept: t("Open and closed electrical circuits", "Öppna och slutna elektriska kretsar"),
+      explanation: t("Electricity needs a complete loop (closed circuit) to flow. Disconnect a wire = open circuit = electricity stops. Queaky shouts when its two ears are connected — the loop is complete!", "El behöver en komplett slinga (sluten krets) för att flöda. Koppla isär en tråd = öppen krets = elen stannar. Queaky skriker när dess två öron är förbundna — slingan är komplett!"),
+      realWorldExamples: [
+        t("A light switch opens and closes the circuit to turn lights on and off", "En strömbrytare öppnar och stänger kretsen för att tända och släcka lampor"),
+        t("A doorbell circuit closes when you press the button", "En dörrklockskrets stängs när du trycker på knappen"),
+        t("A torch battery, wires, bulb and switch form a complete circuit", "En ficklampas batteri, trådar, glödlampa och strömbrytare bildar en komplett krets"),
+      ],
+      newWords: [t("Circuit", "Krets"), t("Open circuit", "Öppen krets"), t("Closed circuit", "Sluten krets"), t("Switch", "Strömbrytare")],
+    },
+    build: {
+      modelName: t("Queaky Circuit", "Queaky-krets"),
+      description: t("Build a simple circuit using Queaky as the detector.", "Bygg en enkel krets med Queaky som detektor."),
+      totalSteps: 3,
+      steps: [
+        { stepNumber: 1, title: t("Prepare the circuit holder", "Förbered kretshållaren"), description: t("Build a flat platform using P21x21 as the circuit base board. Mount PU5x7 pillars as component holders.", "Bygg en plan plattform med P21x21 som kretskortet. Montera PU5x7-pelare som komponenthållare."), components: ["PU5x7 x2"] },
+        { stepNumber: 2, title: t("Mount Queaky and wire up", "Montera Queaky och anslut"), description: t("Place Queaky on the platform. Connect alligator clips or CT3 connectors to Queaky's two ear positions.", "Placera Queaky på plattformen. Anslut krokodilklämmor eller CT3-kopplingar till Queasky's två öronpositioner."), components: ["Queaky x1", "CT3 x2", "SH60 x1"] },
+        { stepNumber: 3, title: t("Complete the circuit and test open/closed", "Avsluta kretsen och testa öppen/sluten"), description: t("Touch the two wire ends together → Queaky screams (closed circuit). Separate them → silence (open circuit). Test both states!", "Rör de två trådändarna ihop → Queaky skriker (sluten krets). Separera dem → tystnad (öppen krets). Testa båda tillstånden!"), components: [] },
+      ],
+    },
+    challenge: { title: t("Open / Closed Circuit", "Öppen / sluten krets"), description: t("Demonstrate open vs closed circuit with Queaky. Use your body as a conductor — hold one wire in each hand!", "Visa öppen vs sluten krets med Queaky. Använd din kropp som ledare — håll en tråd i varje hand!"), hint: t("Wet hands conduct better than dry hands — does Queaky scream louder?", "Blöta händer leder bättre än torra — skriker Queaky högre?") },
+    lgr22: { strands: ["fys_el"], rawSpreadsheet: "Lgr22 1–3: Fysik – Elektricitet & magnetism" },
+    sdgs: [4, 7],
+  },
+
+  // Ch28
+  {
+    id: 28, slug: "conductors-insulators", isCheckpoint: false,
+    title: t("Conductors & Insulators", "Ledare & isolatorer"),
+    subtitle: t("Test materials that let electricity pass", "Testa material som släpper igenom el"),
+    story: {
+      intro: t("Rob wonders why some things let electricity through and others don't. The team builds a tester and investigates everyday materials.", "Rob undrar varför en del saker släpper igenom el och andra inte. Laget bygger en testare och undersöker vardagsmaterial."),
+      dialogue: [
+        { speaker: "Rob",  text: t("Why does Queaky scream when I touch the metal coin but not the rubber eraser?", "Varför skriker Queaky när jag rör vid myntet men inte vid gummisuddgummit?") },
+        { speaker: "Kit",  text: t("Conductors like metals have free electrons that can carry electric current easily.", "Ledare som metaller har fria elektroner som lätt kan bära elektrisk ström.") },
+        { speaker: "Laya", text: t("Insulators like rubber, wood and plastic hold their electrons tightly — no flow!", "Isolatorer som gummi, trä och plast håller sina elektroner tätt — inget flöde!") },
+        { speaker: "Rob",  text: t("That's why wires have copper inside (conductor) and plastic outside (insulator) — safe and functional!", "Det är därför sladdar har koppar inuti (ledare) och plast utanpå (isolator) — säkra och funktionella!") },
+      ],
+      conclusion: t("The team tests 10 materials — conductors and insulators revealed!", "Laget testar 10 material — ledare och isolatorer avslöjas!"),
+    },
+    theory: {
+      concept: t("Conductors & insulators", "Ledare & isolatorer"),
+      explanation: t("Conductors let electricity pass (most metals). Insulators block it (wood, rubber, plastic). Wires have copper inside (conductor) and plastic outside (insulator) — current flows but you don't get shocked!", "Ledare släpper igenom el (de flesta metaller). Isolatorer blockerar den (trä, gummi, plast). Sladdar har koppar inuti (ledare) och plast utanpå (isolator) — strömmen flödar men du får inte stöt!"),
+      realWorldExamples: [
+        t("Copper wire conducts electricity in all our appliances", "Kopparsladdar leder elektricitet i alla våra apparater"),
+        t("Rubber gloves protect electricians from electric shocks", "Gummihandskar skyddar elektriker från elektriska stötar"),
+        t("Glass is an insulator — that's why electricity poles use glass insulators", "Glas är en isolator — det är därför elstolpar använder glasisolatorer"),
+      ],
+      newWords: [t("Conductor", "Ledare"), t("Insulator", "Isolator"), t("Electron", "Elektron"), t("Current", "Ström")],
+    },
+    build: {
+      modelName: t("Conductor/Insulator Test Rig", "Lednings-/isolatortestrigg"),
+      description: t("Build a test rig using Queaky to classify everyday materials.", "Bygg ett testriggsystem med Queaky för att klassificera vardagsmaterial."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Build the material test rig", "Bygg materialtestriggen"), description: t("Mount P21x21 as the base. Attach PU5x7 pillars as object holders. Connect Queaky via CT3 and SH60 as the test circuit. Place each material between the contacts — does Queaky scream?", "Montera P21x21 som basen. Fäst PU5x7-pelare som objekthållare. Anslut Queaky via CT3 och SH60 som testkretsen. Placera varje material mellan kontakterna — skriker Queaky?"), components: ["P21x21 x1", "PU5x7 x2", "CT3 x4", "SH60 x1", "Queaky x1"] },
+      ],
+    },
+    challenge: { title: t("Conductor or Insulator?", "Ledare eller isolator?"), description: t("Test paper (dry/wet), coin, eraser, spoon. Predict before testing!", "Testa papper (torrt/blött), mynt, suddgummi, sked. Gissa innan du testar!"), hint: t("Wet paper conducts better than dry paper — why do you think that is?", "Blött papper leder bättre än torrt papper — varför tror du det är så?") },
+    lgr22: { strands: ["tva"], rawSpreadsheet: "Lgr22 1–3: Tvärvetenskapligt arbetsområde" },
+    sdgs: [4, 7, 9],
+  },
+
+  // Ch29
+  {
+    id: 29, slug: "paper-plane", isCheckpoint: false,
+    title: t("Paper Plane", "Pappersflygplan"),
+    subtitle: t("Fold and fly — discover aeronautics", "Vik och flyg — upptäck luftfart"),
+    story: {
+      intro: t("The team is stuck waiting for a boat crossing. Kit pulls out a sheet of paper and folds the perfect plane — launching it into the wind.", "Laget väntar på en båtöverfart. Kit tar fram ett papper och viker det perfekta planet — och skjuter det ut i vinden."),
+      dialogue: [
+        { speaker: "Kit",  text: t("A paper plane has three parts: wings for lift, a fuselage to hold it together, and a tail to steer.", "Ett pappersflygplan har tre delar: vingar för lyft, en flygkropp för att hålla ihop det och en stjärt för att styra.") },
+        { speaker: "Laya", text: t("Lift happens because air moves faster over the curved top of the wing than under the flat bottom.", "Lyft uppstår eftersom luft rör sig snabbare över den böjda vingsovansidan än under den platta undersidan.") },
+        { speaker: "Rob",  text: t("Exactly! That pressure difference creates upward force — that's Bernoulli's principle.", "Exakt! Den tryckcilllskillnaden skapar uppåtkraft — det är Bernoullis princip.") },
+        { speaker: "Kit",  text: t("And folding precisely is engineering. Every crease must be sharp for best performance!", "Och att vika exakt är teknik. Varje veck måste vara skarpt för bästa prestanda!") },
+      ],
+      conclusion: t("Kit's paper plane soars across the river — aeronautics in a sheet of paper!", "Kits pappersplan svävar över floden — luftfart i ett pappersark!"),
+    },
+    theory: {
+      concept: t("Lift & aeronautics (Parts of a plane)", "Lyft & luftfart (Flygplanets delar)"),
+      explanation: t("A paper plane has wings (provide lift), a body/fuselage (holds it together), and a tail (steers and stabilises). Folding paper precisely is also engineering — every crease matters!", "Ett pappersflygplan har vingar (lyftkraft), kropp (håller ihop) och stjärt (styrning och stabilitet). Att vika papper exakt är också teknik — varje veck spelar roll!"),
+      realWorldExamples: [
+        t("Real aircraft have the same three parts: wings, fuselage, tail", "Riktiga flygplan har samma tre delar: vingar, flygkropp, stjärt"),
+        t("Birds tuck their wings to dive and spread them to glide", "Fåglar fäller in vingarna för att dyka och breder ut dem för att glida"),
+        t("Frisbees use aerodynamics to fly straight and far", "Frisbees använder aerodynamik för att flyga rakt och långt"),
+      ],
+      newWords: [t("Lift", "Lyft"), t("Fuselage", "Flygkropp"), t("Drag", "Luftmotstånd"), t("Bernoulli", "Bernoulli")],
+    },
+    build: {
+      modelName: t("Paper Plane", "Pappersflygplan"),
+      description: t("Fold a precision paper plane and test its aerodynamic performance.", "Vik ett precisionspappersplan och testa dess aerodynamiska prestanda."),
+      totalSteps: 1,
+      steps: [
+        { stepNumber: 1, title: t("Fold and fly your paper plane", "Vik och flyg ditt pappersplan"), description: t("Fold a sheet of A4 paper into a plane with sharp wings and a pointed nose. Mark the wings, fuselage and tail. Launch it from the same spot three times — measure the average distance!", "Vik ett A4-papper till ett plan med skarpa vingar och en spetsig nos. Markera vingarna, flygkroppen och stjärten. Skjuta det från samma plats tre gånger — mät medelavståndet!"), components: [] },
+      ],
+    },
+    challenge: { title: t("Plane Parts Spotter", "Flygplansdelsspanare"), description: t("Identify wings, body, and tail on your paper plane. Try different folds — which flies furthest?", "Hitta vingar, kropp och stjärt på ditt plan. Prova olika vikningar — vilken flyger längst?"), hint: t("Sharper nose = less drag = further flight. But too sharp and it nose-dives!", "Spetsigare nos = mindre luftmotstånd = längre flygning. Men för spetsig och den dyker!") },
+    lgr22: { strands: ["tek_design"], rawSpreadsheet: "Lgr22 1–3: Teknik – Designprocess & modeller" },
+    sdgs: [4, 9],
+  },
+
+  // Ch30
+  {
+    id: 30, slug: "balloon-rockets", isCheckpoint: false,
+    title: t("Balloon Rockets", "Ballongraketer"),
+    subtitle: t("Use air pressure to power a rocket car", "Använd lufttryck för att driva en raketbil"),
+    story: {
+      intro: t("Rob wants to travel to the Moon! The team explains that rockets work by pushing air backwards — and they build a balloon-powered car to prove it.", "Rob vill resa till månen! Laget förklarar att raketer fungerar genom att trycka luft bakåt — och de bygger en ballongdriven bil för att bevisa det."),
+      dialogue: [
+        { speaker: "Rob",  text: t("How do rockets fly in space if there's no air to push against?", "Hur flyger raketer i rymden om det inte finns luft att trycka mot?") },
+        { speaker: "Laya", text: t("Newton's Third Law: every action has an equal and opposite reaction. Air rushes out backwards — rocket goes forwards!", "Newtons tredje lag: varje verkan har en lika stor motverkan. Luft strömmar ut bakåt — raketen åker framåt!") },
+        { speaker: "Kit",  text: t("The balloon pushes air out — the air pushes the balloon (and our car) the other way. No air needed outside!", "Ballongen trycker ut luft — luften trycker ballongen (och vår bil) åt andra hållet. Ingen luft behövs utanför!") },
+        { speaker: "Rob",  text: t("So our balloon car IS a rocket! Let's build it and race to the North Pole!", "Alltså ÄR vår ballongbil en raket! Bygg den och tävla till Nordpolen!") },
+      ],
+      conclusion: t("The balloon rocket car zooms across the floor — Newton was right all along!", "Ballongraketbilen svischar över golvet — Newton hade rätt hela tiden!"),
+    },
+    theory: {
+      concept: t("Newton's Third Law — action & reaction", "Newtons tredje lag — verkan & motverkan"),
+      explanation: t("Newton's Third Law: every action has an equal and opposite reaction. Air rushing OUT of a balloon (action) pushes the balloon in the OPPOSITE direction (reaction). That's exactly how rockets work!", "Newtons tredje lag: varje verkan har en lika stor motverkan. Luft som strömmar UT ur en ballong (verkan) trycker ballongen åt MOTSATT håll (motverkan). Det är precis hur raketer fungerar!"),
+      realWorldExamples: [
+        t("Rocket engines burn fuel to push exhaust gas backwards — rocket goes forward", "Raketmotorer bränner bränsle för att trycka avgaser bakåt — raketen åker framåt"),
+        t("A fire hose recoils backwards when water shoots forward", "En brandslang rekylar bakåt när vatten skjuts framåt"),
+        t("Squid jet propulsion: squirt water backwards to move forward", "Bläckfiskens jetframdrivning: spruta vatten bakåt för att röra sig framåt"),
+      ],
+      newWords: [t("Action", "Verkan"), t("Reaction", "Motverkan"), t("Thrust", "Tryck"), t("Propulsion", "Framdrivning")],
+    },
+    build: {
+      modelName: t("Balloon Rocket Car", "Ballongraketbil"),
+      description: t("Build a wheeled car powered by a balloon — release the air, watch it race!", "Bygg en hjulförsedd bil driven av en ballong — släpp luften, se den tävla!"),
+      totalSteps: 6,
+      steps: [
+        { stepNumber: 1, title: t("Build the car chassis", "Bygg bilchassit"), description: t("Attach two CT2 beams and CT3 connectors as the thin, light car body.", "Fäst två CT2-balkar och CT3-kopplingar som den tunna, lätta bilkroppen."), components: ["CT2 x2", "CT3 x2"] },
+        { stepNumber: 2, title: t("Add the axle mounts", "Lägg till axelmonteringen"), description: t("Click TW1 connectors and CH2 pieces as the axle holders on the chassis.", "Klicka TW1-kopplingar och CH2-bitar som axelns hållare på chassit."), components: ["TW1 x6", "CH2 x4"] },
+        { stepNumber: 3, title: t("Insert both axles", "Sätt in båda axlarna"), description: t("Slide two SH100 shafts through the TW1 axle mounts, one front, one rear.", "Skjut två SH100-axlar genom TW1-axelns hållare, en fram och en bak."), components: ["SH100 x2"] },
+        { stepNumber: 4, title: t("Attach all four wheels", "Fäst alla fyra hjul"), description: t("Press a wheel firmly onto each of the four axle ends.", "Tryck fast ett hjul ordentligt på var och en av de fyra axlarnas ändar."), components: ["Wheel x4"] },
+        { stepNumber: 5, title: t("Build the balloon mount", "Bygg ballongmonteringen"), description: t("Use PU5x7 pillar and P5 to create the balloon nozzle holder at the rear.", "Använd PU5x7-pelaren och P5 för att skapa ballongens munstyckhållare baktill."), components: ["PU5x7 x1", "P3 x1"] },
+        { stepNumber: 6, title: t("Attach balloon and launch!", "Fäst ballongen och skjut!"), description: t("Stretch the Balloon over the nozzle. Blow it up, pinch the neck, place on the floor — let go and watch it race!", "Sträck Ballongen över munstycket. Blås upp det, nyp om halsen, placera på golvet — släpp och se det tävla!"), components: ["Balloon x1"] },
+      ],
+    },
+    challenge: { title: t("Distance Race", "Avståndstävling"), description: t("Inflate to different sizes. Bigger balloon = longer trip? Race a friend!", "Blås upp olika mycket. Större ballong = längre resa? Tävla med en kompis!"), hint: t("More air = more thrust = further distance. But too heavy = slows down!", "Mer luft = mer tryck = längre avstånd. Men för tungt = bromsar!") },
+    lgr22: { strands: ["fys_kraft", "tek_design"], rawSpreadsheet: "Lgr22 1–3: Fysik – Kraft & rörelse; Teknik – Designprocess & modeller" },
+    sdgs: [4, 9, 13],
+  },
+];
 // SHORTHAND HELPER — expands compact session entries into full Chapter shape
 // ============================================================================
 

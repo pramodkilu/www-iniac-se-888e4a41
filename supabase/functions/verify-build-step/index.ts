@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
     userContent.push({ type: "image_url", image_url: { url: dataUrl } });
 
     const body = {
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-1.5-flash",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userContent },
@@ -172,6 +172,8 @@ Deno.serve(async (req) => {
     });
 
     if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error("AI gateway error:", resp.status, errorText);
       if (resp.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit reached. Please try again in a moment." }),
@@ -180,14 +182,20 @@ Deno.serve(async (req) => {
       }
       if (resp.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted." }),
+          JSON.stringify({ error: "AI credits exhausted. Contact your administrator." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      const t = await resp.text();
-      console.error("AI gateway error:", resp.status, t);
-      return new Response(JSON.stringify({ error: "AI verification failed" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      // Return a structured fallback result rather than an error — so the UI still renders
+      return new Response(JSON.stringify({
+        status: "needs_review",
+        confidence: 0.3,
+        found: [],
+        missing: componentCodes,
+        feedback: `AI model unavailable (${resp.status}). Try again or use the ML model.`,
+        tip: "The vision AI gateway returned an error. This may be temporary.",
+      }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -226,9 +234,17 @@ Deno.serve(async (req) => {
 
   } catch (e) {
     console.error("verify-build-step error:", e);
+    // Return a graceful result rather than a 500 so the frontend can still display something
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({
+        status: "needs_review",
+        confidence: 0.2,
+        found: [],
+        missing: [],
+        feedback: "Could not connect to AI service. Check your internet connection and try again.",
+        tip: e instanceof Error ? e.message : "Unknown error",
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

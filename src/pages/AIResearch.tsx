@@ -19,11 +19,11 @@ export interface ResearchNavState {
 }
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, color }: { label: string; value: string | number | null; sub?: string; color: string }) {
+function StatCard({ label, value, sub, color, isCount }: { label: string; value: string | number | null; sub?: string; color: string; isCount?: boolean }) {
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-1">
       <p className="text-[11px] text-gray-500 uppercase tracking-wide font-semibold">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value ?? "—"}{typeof value === "number" && value !== null ? "%" : ""}</p>
+      <p className={`text-2xl font-bold ${color}`}>{value ?? "—"}{typeof value === "number" && value !== null && !isCount ? "%" : ""}</p>
       {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
     </div>
   );
@@ -85,7 +85,7 @@ function ResultPanel({ result, label, accent, loading }: {
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────────
-export default function AIResearch() {
+export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   const navigate  = useNavigate();
   const location  = useLocation();
   const state     = (location.state ?? {}) as ResearchNavState;
@@ -231,26 +231,41 @@ export default function AIResearch() {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="flex-1">
-            <h1 className="font-bold text-[15px] text-gray-900">🔬 AI Model Research</h1>
-            {step && <p className="text-[11px] text-gray-500">Step {(stepIdx ?? 0) + 1}: {step.title.en}</p>}
+    <div className={inline ? "bg-gray-50" : "min-h-screen bg-gray-50"}>
+      {/* Header — hidden when embedded inline */}
+      {!inline && (
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-3 flex items-center gap-3">
+            <button onClick={() => navigate(-1)}
+              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex-1">
+              <h1 className="font-bold text-[15px] text-gray-900">🔬 AI Model Research</h1>
+              {step && <p className="text-[11px] text-gray-500">Step {(stepIdx ?? 0) + 1}: {step.title.en}</p>}
+            </div>
+            <button onClick={() => { clearCheckHistory(); refreshHistory(); }}
+              className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-red-500 transition-colors px-2 py-1 rounded-lg hover:bg-red-50">
+              <Trash2 className="w-3.5 h-3.5" /> Clear history
+            </button>
           </div>
+        </div>
+      )}
+
+      {/* Inline toolbar — shown when embedded */}
+      {inline && (
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <p className="text-[12px] font-bold text-gray-600 flex items-center gap-1.5">
+            🔬 AI Model Research <span className="text-gray-400 font-normal">— performance analytics</span>
+          </p>
           <button onClick={() => { clearCheckHistory(); refreshHistory(); }}
-            className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-red-500 transition-colors px-2 py-1 rounded-lg hover:bg-red-50">
-            <Trash2 className="w-3.5 h-3.5" /> Clear history
+            className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-red-500 transition-colors px-2 py-1 rounded-lg hover:bg-red-50">
+            <Trash2 className="w-3 h-3" /> Clear
           </button>
         </div>
-      </div>
+      )}
 
-      <div className="container mx-auto px-4 py-6 space-y-6 max-w-5xl">
+      <div className={inline ? "px-4 py-3 space-y-4 max-w-5xl" : "container mx-auto px-4 py-6 space-y-6 max-w-5xl"}>
 
         {/* ── Current check results ── */}
         {capturedImage && step && (
@@ -333,7 +348,7 @@ export default function AIResearch() {
         <section>
           <h2 className="text-[13px] font-bold text-gray-700 mb-3 uppercase tracking-wide">Performance Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard label="Total Checks" value={history.length} sub={`${stats.api.length} API · ${stats.model.length} ML`} color="text-gray-800" />
+            <StatCard label="Total Checks" value={history.length} sub={`${stats.api.length} API · ${stats.model.length} ML`} color="text-gray-800" isCount />
             <StatCard label="Claude Vision Accuracy" value={stats.apiAcc} sub={`${stats.api.length} checks`} color="text-blue-600" />
             <StatCard label="INIAC-ML Accuracy" value={stats.modelAcc} sub={`${stats.model.length} checks`} color="text-orange-500" />
             <StatCard label="Agreement Rate" value={stats.agreementRate} sub={`${stats.bothRun} paired steps`} color="text-purple-600" />
