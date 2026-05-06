@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
-import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2, Cpu } from "lucide-react";
 import { type Chapter, tr } from "@/data/chapters";
 import { supabase } from "@/integrations/supabase/client";
 import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
@@ -503,8 +503,58 @@ function StepDetails({ chapter, stepIdx, onStepChange }: DetailsProps) {
   );
 }
 
+// ─── Shared result card ───────────────────────────────────────────────────────
+function ResultCard({ result, label, accent }: {
+  result: VerifyResult;
+  label: string;
+  accent: "blue" | "orange";
+}) {
+  const a = accent === "blue"
+    ? { border: "border-blue-200",  bg: "bg-blue-50",  badge: "bg-blue-100 text-blue-700",  bar: "bg-blue-400"  }
+    : { border: "border-orange-200",bg: "bg-orange-50",badge: "bg-orange-100 text-orange-700",bar: "bg-orange-400"};
+
+  return (
+    <div className={`border ${a.border} ${a.bg} rounded-xl p-3 space-y-1.5`}>
+      {/* Source label */}
+      <div className="flex items-center justify-between">
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${a.badge}`}>{label}</span>
+        <span className={`text-[11px] font-bold ${result.correct ? "text-green-600" : "text-red-500"}`}>
+          {result.correct ? "✓ Correct" : "✗ Needs fix"}
+        </span>
+      </div>
+      {/* Feedback */}
+      <p className="text-[11px] text-gray-700 leading-snug">{result.feedback}</p>
+      {result.tip && <p className="text-[11px] text-orange-600 leading-snug">{result.tip}</p>}
+      {/* Found / missing pills */}
+      {result.found.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {result.found.map(c => (
+            <span key={c} className="font-mono text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full">✓ {c}</span>
+          ))}
+        </div>
+      )}
+      {result.missing.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {result.missing.map(c => (
+            <span key={c} className="font-mono text-[10px] bg-red-100 text-red-600 border border-red-200 px-1.5 py-0.5 rounded-full">✗ {c}</span>
+          ))}
+        </div>
+      )}
+      {/* Confidence bar */}
+      {result.confidence > 0 && (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1 bg-white rounded-full overflow-hidden border border-gray-200">
+            <div className={`h-full rounded-full ${a.bar}`} style={{ width: `${Math.round(result.confidence * 100)}%` }} />
+          </div>
+          <span className="text-[10px] text-gray-400">{Math.round(result.confidence * 100)}%</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Right: AI Step Check ─────────────────────────────────────────────────────
-type CheckPhase = "idle" | "camera" | "captured" | "checking" | "done";
+type CheckPhase = "idle" | "camera" | "captured" | "done";
 
 interface AICheckProps {
   stepIdx: number;
@@ -512,14 +562,17 @@ interface AICheckProps {
 }
 
 function AIStepCheck({ stepIdx, step }: AICheckProps) {
-  const videoRef    = useRef<HTMLVideoElement>(null);
-  const streamRef   = useRef<MediaStream | null>(null);
-  const [phase, setPhase]               = useState<CheckPhase>("idle");
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [checkResult, setCheckResult]   = useState<VerifyResult | null>(null);
-  const [cameraError, setCameraError]   = useState<string | null>(null);
+  const videoRef  = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // Option B: TF.js custom model (ready when VITE_COMPONENT_MODEL_URL is set)
+  const [phase,          setPhase]          = useState<CheckPhase>("idle");
+  const [capturedImage,  setCapturedImage]  = useState<string | null>(null);
+  const [cameraError,    setCameraError]    = useState<string | null>(null);
+  // Separate results per method so both can be shown simultaneously
+  const [apiResult,      setApiResult]      = useState<VerifyResult | null>(null);
+  const [modelResult,    setModelResult]    = useState<VerifyResult | null>(null);
+  const [checking,       setChecking]       = useState<"api" | "model" | null>(null);
+
   const { status: modelStatus, mode: modelMode, detect } = useComponentDetector();
 
   const comps = step ? parseComps(step.components) : [];
@@ -569,25 +622,10 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
     setPhase("captured");
   }, [stopCamera]);
 
-  const checkWithAI = useCallback(async () => {
-    if (!capturedImage) return;
-    setPhase("checking");
-
-    // ── Option B: TF.js custom model (offline, instant) ─────────────────────
-    if (modelStatus === "ready") {
-      try {
-        const img = new Image();
-        img.src = capturedImage;
-        await img.decode();
-        const detected = await detect(img);
-        const result = verifyComponents(detected, comps, modelMode);
-        setCheckResult(result);
-        setPhase("done");
-        return;
-      } catch { /* fall through to API */ }
-    }
-
-    // ── Option A: Supabase Edge Function → Gemini vision API ────────────────
+  // ── Option A: Claude / Gemini Vision API ────────────────────────────────────
+  const checkVisionAPI = useCallback(async () => {
+    if (!capturedImage || checking) return;
+    setChecking("api");
     try {
       const { data, error } = await supabase.functions.invoke("verify-build-step", {
         body: {
@@ -599,36 +637,56 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
         },
       });
       if (error) throw error;
-      // Map edge function response → VerifyResult
       const r = data as { status: string; confidence: number; feedback: string; tip: string };
-      setCheckResult({
+      setApiResult({
         correct: r.status === "correct",
         found: r.status === "correct" ? comps.map(c => c.code) : [],
-        missing: r.status === "incorrect" ? comps.map(c => c.code) : [],
+        missing: r.status !== "correct" ? comps.map(c => c.code) : [],
         feedback: r.feedback,
         tip: r.tip,
         confidence: r.confidence,
         source: "api",
       });
     } catch {
-      // Final fallback: optimistic mock so the UI never breaks
-      setCheckResult({
-        correct: false,
-        found: [],
-        missing: comps.map(c => c.code),
-        feedback: "Could not reach the AI service. Check your connection.",
+      setApiResult({
+        correct: false, found: [], missing: comps.map(c => c.code),
+        feedback: "Could not reach AI service. Check your connection.",
         tip: "Make sure you are online and try again.",
-        confidence: 0,
-        source: "mock",
+        confidence: 0, source: "mock",
       });
     }
+    setChecking(null);
     setPhase("done");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage, modelStatus, stepIdx, comps.map(c => c.code).join(",")]);
+  }, [capturedImage, checking, stepIdx, comps.map(c => c.code).join(",")]);
+
+  // ── Option B: TF.js custom / COCO-SSD model ──────────────────────────────
+  const checkMLModel = useCallback(async () => {
+    if (!capturedImage || checking || modelStatus !== "ready") return;
+    setChecking("model");
+    try {
+      const img = new Image();
+      img.src = capturedImage;
+      await img.decode();
+      const detected = await detect(img);
+      setModelResult(verifyComponents(detected, comps, modelMode));
+    } catch {
+      setModelResult({
+        correct: false, found: [], missing: comps.map(c => c.code),
+        feedback: "ML model inference failed.", tip: "",
+        confidence: 0, source: "demo-model",
+      });
+    }
+    setChecking(null);
+    setPhase("done");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImage, checking, modelStatus, modelMode, comps.map(c => c.code).join(",")]);
 
   const reset = useCallback(() => {
     setCapturedImage(null);
-    setCheckResult(null);
+    setApiResult(null);
+    setModelResult(null);
+    setChecking(null);
     setPhase("idle");
   }, []);
 
@@ -700,11 +758,10 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
           </div>
         </div>
 
-        {/* ── Phase: captured / checking — side-by-side comparison ── */}
-        {(phase === "captured" || phase === "checking" || phase === "done") && capturedImage && (
-          <div className="space-y-2">
+        {/* ── Side-by-side: reference vs captured ── */}
+        {(phase === "captured" || phase === "done") && capturedImage && (
+          <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              {/* Reference */}
               <div>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1">Reference</p>
                 <div className="rounded-lg overflow-hidden border-2 border-teal-400 bg-gray-50 relative" style={{ aspectRatio: "4/3" }}>
@@ -712,33 +769,25 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
                     ? <img src={referenceImage} alt="Reference build" className="w-full h-full object-cover" />
                     : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">No ref</div>
                   }
-                  {/* Teal checkmark badge */}
                   <div className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center shadow">
                     <span className="text-white text-[8px] font-bold">✓</span>
                   </div>
                 </div>
               </div>
-              {/* Your photo */}
               <div>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1">Your Build</p>
                 <div className="rounded-lg overflow-hidden border-2 border-orange-400 relative" style={{ aspectRatio: "4/3" }}>
                   <img src={capturedImage} alt="Your build" className="w-full h-full object-cover" />
-                  {phase === "checking" && (
+                  {checking && (
                     <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
-                  {phase === "done" && checkResult?.correct && (
+                  {(apiResult?.correct || modelResult?.correct) && !checking && (
                     <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8 text-green-600 drop-shadow" />
                     </div>
                   )}
-                  {phase === "done" && checkResult && !checkResult.correct && (
-                    <div className="absolute inset-0 bg-yellow-500/20 flex items-center justify-center">
-                      <span className="text-2xl drop-shadow">⚠️</span>
-                    </div>
-                  )}
-                  {/* Orange camera badge */}
                   <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow">
                     <Camera className="w-2.5 h-2.5 text-white" />
                   </div>
@@ -746,107 +795,83 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
               </div>
             </div>
 
-            {phase === "captured" && (
-              <div className="flex gap-2">
-                <button onClick={checkWithAI}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1 transition-colors">
-                  <Sparkles className="w-3 h-3" /> Check with AI
+            {/* ── Two check buttons ── */}
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Choose verification method</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={checkVisionAPI} disabled={checking !== null}
+                  className="flex flex-col items-center gap-0.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-[11px] font-bold py-2.5 px-2 rounded-xl transition-colors">
+                  {checking === "api"
+                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
+                    : <Sparkles className="w-4 h-4 mb-0.5" />}
+                  <span>{checking === "api" ? "Checking…" : "Claude Vision"}</span>
+                  <span className="text-[9px] font-normal opacity-75">AI Vision API</span>
                 </button>
-                <button onClick={() => { setCapturedImage(null); startCamera(); }}
-                  className="w-9 border border-gray-200 text-gray-400 py-2 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-center"
-                  title="Retake">
-                  <RefreshCw className="w-3 h-3" />
+                <button onClick={checkMLModel} disabled={checking !== null || modelStatus !== "ready"}
+                  className="flex flex-col items-center gap-0.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-[11px] font-bold py-2.5 px-2 rounded-xl transition-colors">
+                  {checking === "model"
+                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
+                    : <Cpu className="w-4 h-4 mb-0.5" />}
+                  <span>{checking === "model" ? "Running…" : modelStatus === "loading" ? "Loading…" : "INIAC-ML"}</span>
+                  <span className="text-[9px] font-normal opacity-75">
+                    {modelMode === "custom" ? "Custom Model" : modelStatus === "loading" ? "Initialising" : "COCO-SSD Demo"}
+                  </span>
                 </button>
+              </div>
+              <button onClick={() => { setCapturedImage(null); setApiResult(null); setModelResult(null); startCamera(); }}
+                className="w-full mt-1.5 text-[10px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 py-0.5 transition-colors">
+                <RefreshCw className="w-3 h-3" /> Retake photo
+              </button>
+            </div>
+
+            {/* ── Individual results ── */}
+            {apiResult && <ResultCard result={apiResult} label="☁️ Claude Vision API" accent="blue" />}
+            {modelResult && (
+              <ResultCard
+                result={modelResult}
+                label={modelMode === "custom" ? "🤖 INIAC-ML (Custom)" : "🤖 INIAC-ML (Demo)"}
+                accent="orange"
+              />
+            )}
+
+            {/* ── Comparison card — thesis highlight ── */}
+            {apiResult && modelResult && (
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
+                <p className="text-[11px] font-bold text-purple-700 mb-2">📊 Model Comparison</p>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="bg-white rounded-lg p-2 border border-blue-100 text-center">
+                    <p className="text-[10px] text-blue-600 font-bold mb-0.5">Claude Vision</p>
+                    <p className={`text-[13px] font-bold ${apiResult.correct ? "text-green-600" : "text-red-500"}`}>
+                      {apiResult.correct ? "✓ Pass" : "✗ Fail"}
+                    </p>
+                    <p className="text-[10px] text-gray-400">{Math.round(apiResult.confidence * 100)}% conf.</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-2 border border-orange-100 text-center">
+                    <p className="text-[10px] text-orange-600 font-bold mb-0.5">
+                      INIAC-ML
+                    </p>
+                    <p className={`text-[13px] font-bold ${modelResult.correct ? "text-green-600" : "text-red-500"}`}>
+                      {modelResult.correct ? "✓ Pass" : "✗ Fail"}
+                    </p>
+                    <p className="text-[10px] text-gray-400">{Math.round(modelResult.confidence * 100)}% conf.</p>
+                  </div>
+                </div>
+                <div className={`text-[11px] font-semibold rounded-lg px-2.5 py-1.5 text-center ${
+                  apiResult.correct === modelResult.correct
+                    ? "bg-green-100 text-green-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}>
+                  {apiResult.correct === modelResult.correct
+                    ? "✓ Both models agree"
+                    : "⚠ Models disagree — human review recommended"}
+                </div>
               </div>
             )}
 
-            {phase === "checking" && (
-              <p className="text-center text-[11px] text-gray-500 animate-pulse py-1">
-                AI is comparing your build to the reference…
-              </p>
-            )}
-
-            {/* ── Results ── */}
-            {phase === "done" && checkResult && (
-              <div className="space-y-2">
-                {/* Correct */}
-                {checkResult.correct && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                      <p className="text-[12px] text-green-700 font-bold">Step looks correct!</p>
-                    </div>
-                    <p className="text-[11px] text-green-600 leading-snug">{checkResult.feedback}</p>
-                  </div>
-                )}
-
-                {/* Needs fix */}
-                {!checkResult.correct && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="text-yellow-500">⚠️</span>
-                      <span className="font-bold text-[12px] text-orange-600">Let's fix this</span>
-                    </div>
-                    <p className="text-[11px] text-gray-700 leading-snug mb-2">{checkResult.feedback}</p>
-                    {checkResult.tip && (
-                      <p className="text-[11px] text-orange-600 leading-snug">{checkResult.tip}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Found / missing component pills */}
-                {(checkResult.found.length > 0 || checkResult.missing.length > 0) && (
-                  <div className="space-y-1">
-                    {checkResult.found.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {checkResult.found.map(code => (
-                          <span key={code} className="font-mono text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5">
-                            ✓ {code}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {checkResult.missing.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {checkResult.missing.map(code => (
-                          <span key={code} className="font-mono text-[10px] bg-red-100 text-red-600 border border-red-200 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5">
-                            ✗ {code}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Confidence bar */}
-                {checkResult.confidence > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-400 shrink-0">AI confidence</span>
-                    <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${checkResult.correct ? "bg-green-400" : "bg-orange-400"}`}
-                        style={{ width: `${Math.round(checkResult.confidence * 100)}%` }} />
-                    </div>
-                    <span className="text-[10px] text-gray-400 shrink-0">{Math.round(checkResult.confidence * 100)}%</span>
-                  </div>
-                )}
-
-                {/* Source badge + action buttons */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[9px] text-gray-300 uppercase tracking-wide shrink-0">
-                    {checkResult.source === "model" ? "🤖 Local ML" : checkResult.source === "api" ? "☁️ AI vision" : "⚠ Offline"}
-                  </span>
-                  <div className="flex gap-2 flex-1 justify-end">
-                    <button onClick={reset}
-                      className="border border-gray-200 text-gray-500 text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 flex items-center gap-1">
-                      <RefreshCw className="w-3 h-3" /> Retake
-                    </button>
-                    {checkResult.correct && (
-                      <div className="bg-teal-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center">
-                        ✓ Step {stepIdx + 1} done
-                      </div>
-                    )}
-                  </div>
-                </div>
+            {/* ── Step done banner ── */}
+            {(apiResult?.correct || modelResult?.correct) && !checking && (
+              <div className="bg-teal-500 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Step {stepIdx + 1} verified ✓
               </div>
             )}
           </div>
