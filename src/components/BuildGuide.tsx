@@ -728,12 +728,12 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
-                  {phase === "done" && result === "ok" && (
+                  {phase === "done" && checkResult?.correct && (
                     <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8 text-green-600 drop-shadow" />
                     </div>
                   )}
-                  {phase === "done" && result === "retry" && (
+                  {phase === "done" && checkResult && !checkResult.correct && (
                     <div className="absolute inset-0 bg-yellow-500/20 flex items-center justify-center">
                       <span className="text-2xl drop-shadow">⚠️</span>
                     </div>
