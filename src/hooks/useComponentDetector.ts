@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-export interface DetectedComponent { code: string; count: number; confidence: number }
+export interface DetectedComponent {
+  code: string;
+  count: number;
+  confidence: number;
+  rawLabel?: string; // Original COCO class label in demo mode
+}
 export type DetectorStatus = "idle" | "loading" | "ready" | "unavailable";
 export type DetectorMode   = "custom" | "demo" | "none";
 
@@ -152,20 +157,24 @@ export function useComponentDetector() {
       }
     }
 
-    // COCO-SSD demo model
+    // COCO-SSD demo model — return ALL detections above threshold
+    // Mapped ones get a Blix code; unmapped ones get code = rawLabel for transparency
     if (mode === "demo" && cocoModelRef.current) {
       try {
         const predictions = await cocoModelRef.current.detect(source);
-        const counts: Record<string, { n: number; conf: number }> = {};
+        const counts: Record<string, { n: number; conf: number; raw: string }> = {};
         predictions.forEach(({ class: cls, score }: { class: string; score: number }) => {
           if (score < CONFIDENCE_THRESHOLD) return;
-          const code = COCO_TO_BLIX[cls];
-          if (!code) return;
-          if (!counts[code]) counts[code] = { n: 0, conf: 0 };
-          counts[code].n++; counts[code].conf += score;
+          const blixCode = COCO_TO_BLIX[cls] ?? cls; // fall back to raw COCO label
+          const key = blixCode;
+          if (!counts[key]) counts[key] = { n: 0, conf: 0, raw: cls };
+          counts[key].n++; counts[key].conf += score;
         });
-        return Object.entries(counts).map(([code, { n, conf }]) => ({
-          code, count: n, confidence: conf / n,
+        return Object.entries(counts).map(([code, { n, conf, raw }]) => ({
+          code,
+          count: n,
+          confidence: conf / n,
+          rawLabel: raw !== code ? raw : undefined, // only set if different from mapped code
         }));
       } catch (e) {
         console.warn("[Detector] COCO-SSD inference failed:", e);
@@ -185,11 +194,17 @@ export function verifyComponents(
   expected: { code: string; qty: number }[],
   mode: DetectorMode
 ): VerifyResult {
+  const source: VerifyResult["source"] = mode === "custom" ? "model" : "demo-model";
+
+  // In demo mode with COCO-SSD, separate mapped Blix codes from raw COCO labels
+  const blixMapped  = detected.filter(d => !d.rawLabel); // already mapped to a Blix code
+  const rawDetected = detected.filter(d => d.rawLabel);  // real objects COCO saw but couldn't map
+
   const found: string[]   = [];
   const missing: string[] = [];
 
   expected.forEach(({ code, qty }) => {
-    const det = detected.find(d => d.code.toLowerCase() === code.toLowerCase());
+    const det = blixMapped.find(d => d.code.toLowerCase() === code.toLowerCase());
     if (det && det.count >= qty) {
       found.push(code);
     } else {
@@ -197,25 +212,34 @@ export function verifyComponents(
     }
   });
 
-  const correct  = missing.length === 0;
-  const avgConf  = detected.length
+  const correct = missing.length === 0;
+  const avgConf = detected.length
     ? detected.reduce((s, d) => s + d.confidence, 0) / detected.length
     : 0;
-  const source: VerifyResult["source"] = mode === "custom" ? "model" : "demo-model";
 
-  return {
-    correct,
-    found,
-    missing,
-    feedback: correct
-      ? "All components are in place — great job!"
-      : detected.length === 0
-        ? "I couldn't detect any components. Try better lighting or a closer shot."
-        : `I can see ${found.length} of ${expected.length} required components.`,
-    tip: missing.length
-      ? `Still need: ${missing.join(", ")}. Place them and try again.`
-      : "",
-    confidence: avgConf,
-    source,
-  };
+  // Demo model: if nothing mapped but COCO did detect some objects, explain what it saw
+  const rawLabels = rawDetected.map(d => d.rawLabel ?? d.code);
+  const isDemoNoMatch = mode === "demo" && blixMapped.length === 0;
+
+  let feedback: string;
+  let tip: string;
+
+  if (correct) {
+    feedback = "All components are in place — great job!";
+    tip = "";
+  } else if (isDemoNoMatch && rawLabels.length > 0) {
+    feedback = `COCO-SSD detected: ${rawLabels.join(", ")} — none map to Blix components.`;
+    tip = "The demo model uses everyday-object detection. Train a custom model on Blix parts for accurate results.";
+  } else if (isDemoNoMatch) {
+    feedback = "COCO-SSD detected nothing above confidence threshold.";
+    tip = "Try better lighting, move closer, or place recognisable objects near the build for demo mode.";
+  } else if (detected.length === 0) {
+    feedback = "No components detected. Try better lighting or a closer shot.";
+    tip = "Make sure all components are clearly visible.";
+  } else {
+    feedback = `Detected ${found.length} of ${expected.length} required components.`;
+    tip = missing.length ? `Still need: ${missing.join(", ")}.` : "";
+  }
+
+  return { correct, found, missing, feedback, tip, confidence: avgConf, source };
 }

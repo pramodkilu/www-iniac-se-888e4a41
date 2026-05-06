@@ -7,7 +7,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
 import { getCheckHistory, saveCheckRecord, clearCheckHistory, computeStats, type CheckRecord } from "@/hooks/useCheckHistory";
-import { CheckCircle2, XCircle, RefreshCw, ChevronLeft, Trash2, Cpu, Sparkles } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronLeft, Trash2, Cpu, Sparkles } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 export interface ResearchNavState {
@@ -126,11 +126,16 @@ export default function AIResearch() {
         },
       });
       if (error) throw error;
-      const r = data as { status: string; confidence: number; feedback: string; tip: string };
+      const r = data as {
+        status: string; confidence: number;
+        found: string[]; missing: string[];
+        feedback: string; tip: string;
+      };
       const result: VerifyResult = {
         correct: r.status === "correct",
-        found: r.status === "correct" ? comps.map(c => c.code) : [],
-        missing: r.status !== "correct" ? comps.map(c => c.code) : [],
+        // Use the actual component-level found/missing from the AI response
+        found:   Array.isArray(r.found)   ? r.found   : (r.status === "correct" ? comps.map(c => c.code) : []),
+        missing: Array.isArray(r.missing) ? r.missing : (r.status !== "correct" ? comps.map(c => c.code) : []),
         feedback: r.feedback, tip: r.tip, confidence: r.confidence, source: "api",
       };
       setApiResult(result);
