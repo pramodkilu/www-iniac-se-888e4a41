@@ -11,11 +11,12 @@ import Header from "@/components/Header";
 import BuildGuide from "@/components/BuildGuide";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package, ChevronLeft, ChevronRight, FlaskConical } from "lucide-react";
+import AIResearch from "@/pages/AIResearch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type MainTab     = "preview" | "components" | "sdg";
-type PreviewTab  = "story" | "theory" | "build" | "challenge";
+type PreviewTab  = "story" | "theory" | "build" | "challenge" | "research";
 type MapSubTab   = "heatmap" | "by-chapter" | "by-component" | "totals";
 type SDGSubTab   = "min-kit" | "sdg-map" | "sdg-coverage";
 
@@ -158,18 +159,19 @@ function ChapterPreview() {
         <div className="px-6 pt-3 pb-2 border-b border-border">
           <TabBar
             tabs={[
-              { id: "story",     label: "Story",     icon: <BookOpen className="w-3.5 h-3.5" /> },
-              { id: "theory",    label: "Theory",    icon: <Lightbulb className="w-3.5 h-3.5" /> },
-              { id: "build",     label: "Build",     icon: <Wrench className="w-3.5 h-3.5" /> },
-              { id: "challenge", label: "Challenge", icon: <Trophy className="w-3.5 h-3.5" /> },
+              { id: "story",     label: "Story",       icon: <BookOpen className="w-3.5 h-3.5" /> },
+              { id: "theory",    label: "Theory",      icon: <Lightbulb className="w-3.5 h-3.5" /> },
+              { id: "build",     label: "Build",       icon: <Wrench className="w-3.5 h-3.5" /> },
+              { id: "challenge", label: "Challenge",   icon: <Trophy className="w-3.5 h-3.5" /> },
+              { id: "research",  label: "AI Research", icon: <FlaskConical className="w-3.5 h-3.5" /> },
             ]}
             active={tab}
             onChange={(t) => setTab(t)}
           />
         </div>
 
-        {/* Tab content — Build gets full width, others stay padded */}
-        <div className={`flex-1 overflow-y-auto ${tab === "build" ? "p-4" : "px-6 py-4"}`}>
+        {/* Tab content — Build + Research get full width, others stay padded */}
+        <div className={`flex-1 overflow-y-auto ${tab === "build" || tab === "research" ? "p-0" : "px-6 py-4"}`}>
           {tab === "story" && (
             <div className="space-y-3 max-w-2xl">
               <p className="text-sm italic text-muted-foreground leading-relaxed">{tr(sel.story.intro, "en")}</p>
@@ -273,6 +275,10 @@ function ChapterPreview() {
                 )}
               </div>
             </div>
+          )}
+
+          {tab === "research" && (
+            <AIResearch />
           )}
         </div>
       </div>
