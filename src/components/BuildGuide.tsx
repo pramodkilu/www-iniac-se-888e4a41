@@ -3,8 +3,7 @@ import * as THREE from "three";
 import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2, Cpu } from "lucide-react";
 import { type Chapter, tr } from "@/data/chapters";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
+import { useComponentDetector, type VerifyResult } from "@/hooks/useComponentDetector";
 import type { ResearchNavState } from "@/pages/AIResearch";
 
 // ─── Component connections ────────────────────────────────────────────────────
@@ -590,7 +589,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
   const [modelResult,    setModelResult]    = useState<VerifyResult | null>(null);
   const [checking,       setChecking]       = useState<"api" | "model" | null>(null);
 
-  const { status: modelStatus, mode: modelMode, detect } = useComponentDetector();
+  const { status: modelStatus, mode: modelMode } = useComponentDetector();
 
   const comps = step ? parseComps(step.components) : [];
   // Generated canvas fallback (used only when 3D snapshot not yet ready)
@@ -857,7 +856,8 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
 }
 
 // ─── AR Module ────────────────────────────────────────────────────────────────
-const AFRAME_SRC = "https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js";
+// aframe.io CDN is authoritative — jsDelivr 1.4.0 returns 404
+const AFRAME_SRC = "https://aframe.io/releases/1.4.0/aframe.min.js";
 const ARJS_SRC   = "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js";
 const HIRO_IMG   = "https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png";
 
@@ -1121,7 +1121,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
         {/* Right column */}
         <div className="space-y-3">
           <StepDetails chapter={chapter} stepIdx={stepIdx} onStepChange={setStepIdx} />
-          <AIStepCheck stepIdx={stepIdx} step={step} chapterId={chapter.id} chapterTitle={tr(chapter.title, "en")} referenceSnapshot={referenceSnapshot} />
+          <AIStepCheck stepIdx={stepIdx} step={step} chapterId={String(chapter.id)} chapterTitle={tr(chapter.title, "en")} referenceSnapshot={referenceSnapshot} />
           <AskAIBuddy />
         </div>
       </div>
