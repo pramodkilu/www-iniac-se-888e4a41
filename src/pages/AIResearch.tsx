@@ -97,7 +97,8 @@ export default function AIResearch() {
   const [loadingApi,  setLoadingApi]  = useState(false);
   const [loadingModel,setLoadingModel]= useState(false);
   const [history,     setHistory]     = useState<CheckRecord[]>(() => getCheckHistory());
-  const [capturedImage] = useState<string | null>(() => sessionStorage.getItem("blix_captured_image"));
+  const [capturedImage]   = useState<string | null>(() => sessionStorage.getItem("blix_captured_image"));
+  const [referenceImage]  = useState<string | null>(() => sessionStorage.getItem("blix_reference_image"));
 
   const { status: modelStatus, mode: modelMode, detect } = useComponentDetector();
 
@@ -117,6 +118,7 @@ export default function AIResearch() {
       const { data, error } = await supabase.functions.invoke("verify-build-step", {
         body: {
           imageBase64: capturedImage,
+          referenceBase64: referenceImage ?? undefined,
           stepInstruction: step.title.en,
           stepNumber: (stepIdx ?? 0) + 1,
           pieces: comps.map(c => `${c.code} ×${c.qty}`),
@@ -249,6 +251,32 @@ export default function AIResearch() {
         {capturedImage && step && (
           <section>
             <h2 className="text-[13px] font-bold text-gray-700 mb-3 uppercase tracking-wide">Current Check</h2>
+
+            {/* Side-by-side image comparison */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1.5">
+                  3D Reference (from Build Guide)
+                </p>
+                <div className="rounded-xl overflow-hidden border-2 border-teal-400 bg-gray-50 relative" style={{ aspectRatio: "4/3" }}>
+                  {referenceImage
+                    ? <img src={referenceImage} alt="3D reference" className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">Viewing 3D model…</div>
+                  }
+                  <div className="absolute top-1.5 left-1.5 bg-teal-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">REFERENCE</div>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1.5">
+                  Your Build (captured photo)
+                </p>
+                <div className="rounded-xl overflow-hidden border-2 border-orange-400 relative" style={{ aspectRatio: "4/3" }}>
+                  <img src={capturedImage} alt="Your build" className="w-full h-full object-cover" />
+                  <div className="absolute top-1.5 left-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">YOUR BUILD</div>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <ResultPanel result={apiResult} label="☁️ Claude Vision API" accent="blue" loading={loadingApi} />

@@ -244,8 +244,9 @@ interface ViewerProps {
   step: { components: string[]; title: { en: string }; stepNumber: number } | null;
   totalSteps: number; stepIdx: number; exploded: boolean;
   onPrev: () => void; onNext: () => void;
+  onSnapshot?: (dataUrl: string) => void;
 }
-function StepViewer3D({ step, totalSteps, stepIdx, exploded, onPrev, onNext }: ViewerProps) {
+function StepViewer3D({ step, totalSteps, stepIdx, exploded, onPrev, onNext, onSnapshot }: ViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const groupRef = useRef<THREE.Group>(new THREE.Group());
@@ -306,6 +307,16 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, onPrev, onNext }: V
       }
     }
     grp.rotation.set(0, 0.3, 0);
+
+    // Capture a snapshot after the grow animation settles (~350ms)
+    if (onSnapshot) {
+      const timer = setTimeout(() => {
+        if (rendererRef.current) {
+          onSnapshot(rendererRef.current.domElement.toDataURL("image/jpeg", 0.9));
+        }
+      }, 400);
+      return () => clearTimeout(timer);
+    }
   }, [step, exploded]);
 
   const comps = step ? parseComps(step.components) : [];
@@ -563,9 +574,10 @@ interface AICheckProps {
   step: { title: { en: string }; components: string[] } | null;
   chapterId: string;
   chapterTitle: string;
+  referenceSnapshot: string | null;
 }
 
-function AIStepCheck({ stepIdx, step, chapterId, chapterTitle }: AICheckProps) {
+function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot }: AICheckProps) {
   const navigate  = useNavigate();
   const videoRef  = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -581,12 +593,14 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle }: AICheckProps) {
   const { status: modelStatus, mode: modelMode, detect } = useComponentDetector();
 
   const comps = step ? parseComps(step.components) : [];
-
-  const referenceImage = useMemo(
+  // Generated canvas fallback (used only when 3D snapshot not yet ready)
+  const generatedReference = useMemo(
     () => comps.length > 0 ? buildReferenceImage(comps) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [comps.map(c => c.code + c.qty).join(",")]
   );
+  // Prefer the actual 3D render snapshot over the generated canvas grid
+  const referenceImage = referenceSnapshot ?? generatedReference;
 
   const startCamera = useCallback(async () => {
     setCameraError(null);
@@ -631,6 +645,8 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle }: AICheckProps) {
   const goToResearch = useCallback((method: ResearchNavState["method"]) => {
     if (!capturedImage) return;
     sessionStorage.setItem("blix_captured_image", capturedImage);
+    // Store the 3D snapshot so the research page can show it as reference
+    if (referenceImage) sessionStorage.setItem("blix_reference_image", referenceImage);
     const state: ResearchNavState = {
       method, step, stepIdx, chapterId, chapterTitle,
     };
@@ -1069,8 +1085,9 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
 
   const totalSteps = Math.max(chapter.build.steps.length, chapter.build.totalSteps);
   const step = chapter.build.steps[stepIdx] ?? null;
+  const [referenceSnapshot, setReferenceSnapshot] = useState<string | null>(null);
 
-  useEffect(() => { setStepIdx(0); }, [chapter.id]);
+  useEffect(() => { setStepIdx(0); setReferenceSnapshot(null); }, [chapter.id]);
 
   return (
     <div className="space-y-2">
@@ -1096,6 +1113,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
             step={step} totalSteps={totalSteps} stepIdx={stepIdx} exploded={exploded}
             onPrev={() => setStepIdx(i => Math.max(0, i - 1))}
             onNext={() => setStepIdx(i => Math.min(totalSteps - 1, i + 1))}
+            onSnapshot={setReferenceSnapshot}
           />
           <ARModule step={step} stepIdx={stepIdx} />
         </div>
@@ -1103,7 +1121,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
         {/* Right column */}
         <div className="space-y-3">
           <StepDetails chapter={chapter} stepIdx={stepIdx} onStepChange={setStepIdx} />
-          <AIStepCheck stepIdx={stepIdx} step={step} chapterId={chapter.id} chapterTitle={tr(chapter.title, "en")} />
+          <AIStepCheck stepIdx={stepIdx} step={step} chapterId={chapter.id} chapterTitle={tr(chapter.title, "en")} referenceSnapshot={referenceSnapshot} />
           <AskAIBuddy />
         </div>
       </div>

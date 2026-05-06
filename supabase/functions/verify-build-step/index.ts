@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { imageBase64, stepInstruction, stepNumber, pieces, chapterTitle } =
+    const { imageBase64, referenceBase64, stepInstruction, stepNumber, pieces, chapterTitle } =
       await req.json();
 
     if (!imageBase64 || typeof imageBase64 !== "string") {
@@ -35,14 +35,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Normalize to data URL
+    // Normalize to data URLs
     const dataUrl = imageBase64.startsWith("data:")
       ? imageBase64
       : `data:image/jpeg;base64,${imageBase64}`;
 
+    const refUrl = referenceBase64
+      ? (referenceBase64.startsWith("data:") ? referenceBase64 : `data:image/jpeg;base64,${referenceBase64}`)
+      : null;
+
     const systemPrompt =
       "You are a friendly STEM teacher checking if a child correctly completed a physical BLIX robotics build step. " +
-      "You look at a photo of their current build and decide if this specific step matches the instruction. " +
+      "You compare the child's photo against a 3D reference render of the exact components needed. " +
       "Be encouraging, concise, and kid-friendly (ages 7-14). Never scold. " +
       "Call the verify_step tool with your answer.";
 
@@ -50,22 +54,25 @@ Deno.serve(async (req) => {
       `Chapter: ${chapterTitle ?? "BLIX build"}\n` +
       `Step ${stepNumber ?? "?"}: ${stepInstruction}\n` +
       (Array.isArray(pieces) && pieces.length
-        ? `Expected pieces in this step: ${pieces.join(", ")}\n`
+        ? `Required components: ${pieces.join(", ")}\n`
         : "") +
-      `Check if the child's photo shows this step done correctly. ` +
+      (refUrl
+        ? `The FIRST image is the 3D reference showing exactly which components should be present and how they connect. ` +
+          `The SECOND image is the child's actual build photo. `
+        : "") +
+      `Compare them and check if the child's build matches the reference. ` +
       `If unsure, lean toward "needs_review" rather than failing them.`;
+
+    // Build content array — include reference image first if available
+    const userContent: object[] = [{ type: "text", text: userText }];
+    if (refUrl) userContent.push({ type: "image_url", image_url: { url: refUrl } });
+    userContent.push({ type: "image_url", image_url: { url: dataUrl } });
 
     const body = {
       model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: userText },
-            { type: "image_url", image_url: { url: dataUrl } },
-          ],
-        },
+        { role: "user", content: userContent },
       ],
       tools: [
         {
