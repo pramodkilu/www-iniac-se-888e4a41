@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Hero from "./Hero";
 import RoboLigaSection from "./RoboLigaSection";
 import ChapterWheel from "./ChapterWheel";
 
 const SECTIONS = [
-  { id: "sec-iniac",    label: "INIAC",    emoji: "🚀" },
-  { id: "sec-sweskola", label: "SweSkola", emoji: "🏆" },
-  { id: "sec-explore",  label: "Explore",  emoji: "🔭" },
+  { id: "sec-iniac",       label: "INIAC",       emoji: "🚀" },
+  { id: "sec-sweskola",    label: "SweSkola",    emoji: "🏆" },
+  { id: "sec-explore",     label: "Explore",     emoji: "🔭" },
+  { id: "sec-kitplanning", label: "EDU Kit Planning", emoji: "🧰" },
 ] as const;
 
 const LandingSections = () => {
@@ -76,9 +78,88 @@ const LandingSections = () => {
       <section id="sec-explore">
         <ChapterWheel />
       </section>
+
+      {/* ── Divider ────────────────────────────────────────────────── */}
+      <SectionDivider from="from-background" to="to-background" label="EDU Kit Planning" />
+
+      {/* ── Section 4: Kit Planning teaser ─────────────────────────── */}
+      <section id="sec-kitplanning">
+        <KitPlanningTeaser />
+      </section>
     </>
   );
 };
+
+// ── Kit Planning teaser ───────────────────────────────────────────────────────
+function KitPlanningTeaser() {
+  const navigate = useNavigate();
+  const features = [
+    {
+      emoji: "📖",
+      title: "Chapter Preview",
+      desc: "Browse all 30 STEM chapters, read the story, theory, and build steps before you start.",
+    },
+    {
+      emoji: "🗺️",
+      title: "Component Heatmap",
+      desc: "See which kit parts appear most across chapters — plan what you need before each session.",
+    },
+    {
+      emoji: "🌍",
+      title: "SDG Alignment",
+      desc: "Explore which UN Sustainable Development Goals each chapter connects to.",
+    },
+    {
+      emoji: "🔧",
+      title: "3D Build Guide",
+      desc: "Interactive 3D viewer with AI step check and AR marker overlay for every build step.",
+    },
+  ];
+
+  return (
+    <div className="container mx-auto px-4 py-16">
+      {/* Header */}
+      <div className="text-center mb-10">
+        <span className="inline-block bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full mb-3 tracking-wide uppercase">
+          🧰 EDU Kit Planning
+        </span>
+        <h2 className="text-3xl font-bold text-foreground mb-3">
+          Plan your build. Explore your kit.
+        </h2>
+        <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
+          Everything you need before touching a single piece — chapter previews, component maps,
+          SDG goals, and a 3D build guide with AI step verification.
+        </p>
+      </div>
+
+      {/* Feature cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        {features.map((f) => (
+          <div key={f.title}
+            className="bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-orange-200 transition-all duration-200 group cursor-pointer"
+            onClick={() => navigate("/kit-planning")}
+          >
+            <div className="text-2xl mb-3">{f.emoji}</div>
+            <h3 className="font-bold text-[14px] text-foreground mb-1 group-hover:text-orange-600 transition-colors">
+              {f.title}
+            </h3>
+            <p className="text-[12px] text-muted-foreground leading-relaxed">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => navigate("/kit-planning")}
+          className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-full text-sm flex items-center gap-2 shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-105"
+        >
+          🧰 Open EDU Kit Planning Explorer →
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // Small decorative divider between sections
 function SectionDivider({ from, to, label }: { from: string; to: string; label: string }) {
