@@ -15,6 +15,7 @@ import Education from "./pages/Education";
 import Programs from "./pages/Programs";
 import Curriculum from "./pages/Curriculum";
 import KitPlanning from "./pages/KitPlanning";
+import AIResearch from "./pages/AIResearch";
 import NotFound from "./pages/NotFound";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/programs" element={<Programs />} />
               <Route path="/curriculum" element={<Curriculum />} />
               <Route path="/kit-planning" element={<KitPlanning />} />
+              <Route path="/ai-research" element={<AIResearch />} />
               {/* Dashboard routes */}
               <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
               <Route path="/admin/*" element={<AdminDashboard />} />

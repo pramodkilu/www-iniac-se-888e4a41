@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2, Cpu } from "lucide-react";
 import { type Chapter, tr } from "@/data/chapters";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
+import type { ResearchNavState } from "@/pages/AIResearch";
 
 // ─── Component connections ────────────────────────────────────────────────────
 type ConnType = "gear" | "drive" | "structural" | "electronic";
@@ -559,9 +561,12 @@ type CheckPhase = "idle" | "camera" | "captured" | "done";
 interface AICheckProps {
   stepIdx: number;
   step: { title: { en: string }; components: string[] } | null;
+  chapterId: string;
+  chapterTitle: string;
 }
 
-function AIStepCheck({ stepIdx, step }: AICheckProps) {
+function AIStepCheck({ stepIdx, step, chapterId, chapterTitle }: AICheckProps) {
+  const navigate  = useNavigate();
   const videoRef  = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -622,65 +627,19 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
     setPhase("captured");
   }, [stopCamera]);
 
-  // ── Option A: Claude / Gemini Vision API ────────────────────────────────────
-  const checkVisionAPI = useCallback(async () => {
-    if (!capturedImage || checking) return;
-    setChecking("api");
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-build-step", {
-        body: {
-          imageBase64: capturedImage,
-          stepInstruction: step?.title.en ?? `Step ${stepIdx + 1}`,
-          stepNumber: stepIdx + 1,
-          pieces: comps.map(c => `${c.code} ×${c.qty}`),
-          chapterTitle: "BLIX Build Guide",
-        },
-      });
-      if (error) throw error;
-      const r = data as { status: string; confidence: number; feedback: string; tip: string };
-      setApiResult({
-        correct: r.status === "correct",
-        found: r.status === "correct" ? comps.map(c => c.code) : [],
-        missing: r.status !== "correct" ? comps.map(c => c.code) : [],
-        feedback: r.feedback,
-        tip: r.tip,
-        confidence: r.confidence,
-        source: "api",
-      });
-    } catch {
-      setApiResult({
-        correct: false, found: [], missing: comps.map(c => c.code),
-        feedback: "Could not reach AI service. Check your connection.",
-        tip: "Make sure you are online and try again.",
-        confidence: 0, source: "mock",
-      });
-    }
-    setChecking(null);
-    setPhase("done");
+  // ── Navigate to research page with captured image + method ─────────────────
+  const goToResearch = useCallback((method: ResearchNavState["method"]) => {
+    if (!capturedImage) return;
+    sessionStorage.setItem("blix_captured_image", capturedImage);
+    const state: ResearchNavState = {
+      method, step, stepIdx, chapterId, chapterTitle,
+    };
+    navigate("/ai-research", { state });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage, checking, stepIdx, comps.map(c => c.code).join(",")]);
+  }, [capturedImage, step, stepIdx, chapterId, chapterTitle]);
 
-  // ── Option B: TF.js custom / COCO-SSD model ──────────────────────────────
-  const checkMLModel = useCallback(async () => {
-    if (!capturedImage || checking || modelStatus !== "ready") return;
-    setChecking("model");
-    try {
-      const img = new Image();
-      img.src = capturedImage;
-      await img.decode();
-      const detected = await detect(img);
-      setModelResult(verifyComponents(detected, comps, modelMode));
-    } catch {
-      setModelResult({
-        correct: false, found: [], missing: comps.map(c => c.code),
-        feedback: "ML model inference failed.", tip: "",
-        confidence: 0, source: "demo-model",
-      });
-    }
-    setChecking(null);
-    setPhase("done");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage, checking, modelStatus, modelMode, comps.map(c => c.code).join(",")]);
+  const checkVisionAPI = useCallback(() => goToResearch("api"),  [goToResearch]);
+  const checkMLModel   = useCallback(() => goToResearch("model"), [goToResearch]);
 
   const reset = useCallback(() => {
     setCapturedImage(null);
@@ -1144,7 +1103,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
         {/* Right column */}
         <div className="space-y-3">
           <StepDetails chapter={chapter} stepIdx={stepIdx} onStepChange={setStepIdx} />
-          <AIStepCheck stepIdx={stepIdx} step={step} />
+          <AIStepCheck stepIdx={stepIdx} step={step} chapterId={chapter.id} chapterTitle={tr(chapter.title, "en")} />
           <AskAIBuddy />
         </div>
       </div>
