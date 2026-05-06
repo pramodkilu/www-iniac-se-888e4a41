@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2 } from "lucide-react";
 import { type Chapter, tr } from "@/data/chapters";
+import { supabase } from "@/integrations/supabase/client";
+import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
 
 // ─── Component connections ────────────────────────────────────────────────────
 type ConnType = "gear" | "drive" | "structural" | "electronic";
@@ -510,16 +512,18 @@ interface AICheckProps {
 }
 
 function AIStepCheck({ stepIdx, step }: AICheckProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [phase, setPhase] = useState<CheckPhase>("idle");
+  const videoRef    = useRef<HTMLVideoElement>(null);
+  const streamRef   = useRef<MediaStream | null>(null);
+  const [phase, setPhase]               = useState<CheckPhase>("idle");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [result, setResult] = useState<"ok" | "retry" | null>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [checkResult, setCheckResult]   = useState<VerifyResult | null>(null);
+  const [cameraError, setCameraError]   = useState<string | null>(null);
+
+  // Option B: TF.js custom model (ready when VITE_COMPONENT_MODEL_URL is set)
+  const { status: modelStatus, detect } = useComponentDetector();
 
   const comps = step ? parseComps(step.components) : [];
 
-  // Build reference image only when step components change
   const referenceImage = useMemo(
     () => comps.length > 0 ? buildReferenceImage(comps) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -529,7 +533,6 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
   const startCamera = useCallback(async () => {
     setCameraError(null);
     try {
-      // Try rear camera first, fall back to any camera
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -540,10 +543,11 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
       setPhase("camera");
     } catch (err) {
-      const msg = err instanceof Error && err.name === "NotAllowedError"
-        ? "Camera permission denied. Allow camera access and try again."
-        : "Could not start camera. Check your device settings.";
-      setCameraError(msg);
+      setCameraError(
+        err instanceof Error && err.name === "NotAllowedError"
+          ? "Camera permission denied. Allow camera access and try again."
+          : "Could not start camera. Check your device settings."
+      );
     }
   }, []);
 
@@ -565,18 +569,66 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
     setPhase("captured");
   }, [stopCamera]);
 
-  const checkWithAI = useCallback(() => {
+  const checkWithAI = useCallback(async () => {
+    if (!capturedImage) return;
     setPhase("checking");
-    // TODO: POST capturedImage + referenceImage to Supabase edge function → Claude vision API
-    setTimeout(() => {
-      setResult(Math.random() > 0.4 ? "ok" : "retry");
-      setPhase("done");
-    }, 2200);
-  }, []);
+
+    // ── Option B: TF.js custom model (offline, instant) ─────────────────────
+    if (modelStatus === "ready") {
+      try {
+        const img = new Image();
+        img.src = capturedImage;
+        await img.decode();
+        const detected = await detect(img);
+        const result = verifyComponents(detected, comps);
+        setCheckResult(result);
+        setPhase("done");
+        return;
+      } catch { /* fall through to API */ }
+    }
+
+    // ── Option A: Supabase Edge Function → Gemini vision API ────────────────
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-build-step", {
+        body: {
+          imageBase64: capturedImage,
+          stepInstruction: step?.title.en ?? `Step ${stepIdx + 1}`,
+          stepNumber: stepIdx + 1,
+          pieces: comps.map(c => `${c.code} ×${c.qty}`),
+          chapterTitle: "BLIX Build Guide",
+        },
+      });
+      if (error) throw error;
+      // Map edge function response → VerifyResult
+      const r = data as { status: string; confidence: number; feedback: string; tip: string };
+      setCheckResult({
+        correct: r.status === "correct",
+        found: r.status === "correct" ? comps.map(c => c.code) : [],
+        missing: r.status === "incorrect" ? comps.map(c => c.code) : [],
+        feedback: r.feedback,
+        tip: r.tip,
+        confidence: r.confidence,
+        source: "api",
+      });
+    } catch {
+      // Final fallback: optimistic mock so the UI never breaks
+      setCheckResult({
+        correct: false,
+        found: [],
+        missing: comps.map(c => c.code),
+        feedback: "Could not reach the AI service. Check your connection.",
+        tip: "Make sure you are online and try again.",
+        confidence: 0,
+        source: "mock",
+      });
+    }
+    setPhase("done");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImage, modelStatus, stepIdx, comps.map(c => c.code).join(",")]);
 
   const reset = useCallback(() => {
     setCapturedImage(null);
-    setResult(null);
+    setCheckResult(null);
     setPhase("idle");
   }, []);
 
@@ -715,39 +767,86 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
             )}
 
             {/* ── Results ── */}
-            {phase === "done" && result === "ok" && (
-              <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                  <p className="text-[12px] text-green-700 font-bold">Step looks correct!</p>
-                </div>
-                <p className="text-[11px] text-green-600 pl-6">All components appear to be placed correctly. Move to the next step.</p>
-              </div>
-            )}
-
-            {phase === "done" && result === "retry" && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-yellow-500">⚠️</span>
-                  <span className="font-bold text-[12px] text-orange-600">Let's fix this</span>
-                </div>
-                <p className="text-[11px] text-gray-600 leading-relaxed mb-2">
-                  Please take a picture in a well-lit area and make sure the robot is clearly visible in the photo.
-                </p>
-              </div>
-            )}
-
-            {phase === "done" && (
-              <div className="flex gap-2">
-                <button onClick={reset}
-                  className="flex-1 border border-gray-200 text-gray-500 text-[11px] font-semibold py-1.5 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-center gap-1">
-                  <RefreshCw className="w-3 h-3" /> Retake
-                </button>
-                {result === "ok" && (
-                  <div className="flex-1 bg-teal-500 text-white text-[11px] font-bold py-1.5 rounded-lg flex items-center justify-center">
-                    ✓ Step {stepIdx + 1} done
+            {phase === "done" && checkResult && (
+              <div className="space-y-2">
+                {/* Correct */}
+                {checkResult.correct && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                      <p className="text-[12px] text-green-700 font-bold">Step looks correct!</p>
+                    </div>
+                    <p className="text-[11px] text-green-600 leading-snug">{checkResult.feedback}</p>
                   </div>
                 )}
+
+                {/* Needs fix */}
+                {!checkResult.correct && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="text-yellow-500">⚠️</span>
+                      <span className="font-bold text-[12px] text-orange-600">Let's fix this</span>
+                    </div>
+                    <p className="text-[11px] text-gray-700 leading-snug mb-2">{checkResult.feedback}</p>
+                    {checkResult.tip && (
+                      <p className="text-[11px] text-orange-600 leading-snug">{checkResult.tip}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Found / missing component pills */}
+                {(checkResult.found.length > 0 || checkResult.missing.length > 0) && (
+                  <div className="space-y-1">
+                    {checkResult.found.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {checkResult.found.map(code => (
+                          <span key={code} className="font-mono text-[10px] bg-green-100 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5">
+                            ✓ {code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {checkResult.missing.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {checkResult.missing.map(code => (
+                          <span key={code} className="font-mono text-[10px] bg-red-100 text-red-600 border border-red-200 px-1.5 py-0.5 rounded-full font-semibold flex items-center gap-0.5">
+                            ✗ {code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Confidence bar */}
+                {checkResult.confidence > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 shrink-0">AI confidence</span>
+                    <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${checkResult.correct ? "bg-green-400" : "bg-orange-400"}`}
+                        style={{ width: `${Math.round(checkResult.confidence * 100)}%` }} />
+                    </div>
+                    <span className="text-[10px] text-gray-400 shrink-0">{Math.round(checkResult.confidence * 100)}%</span>
+                  </div>
+                )}
+
+                {/* Source badge + action buttons */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9px] text-gray-300 uppercase tracking-wide shrink-0">
+                    {checkResult.source === "model" ? "🤖 Local ML" : checkResult.source === "api" ? "☁️ AI vision" : "⚠ Offline"}
+                  </span>
+                  <div className="flex gap-2 flex-1 justify-end">
+                    <button onClick={reset}
+                      className="border border-gray-200 text-gray-500 text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-white hover:bg-gray-50 flex items-center gap-1">
+                      <RefreshCw className="w-3 h-3" /> Retake
+                    </button>
+                    {checkResult.correct && (
+                      <div className="bg-teal-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center">
+                        ✓ Step {stepIdx + 1} done
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
