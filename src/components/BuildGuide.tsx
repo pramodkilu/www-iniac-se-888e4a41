@@ -515,6 +515,7 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
   const [phase, setPhase] = useState<CheckPhase>("idle");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [result, setResult] = useState<"ok" | "retry" | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const comps = step ? parseComps(step.components) : [];
 
@@ -526,12 +527,24 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
   );
 
   const startCamera = useCallback(async () => {
+    setCameraError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      // Try rear camera first, fall back to any camera
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       streamRef.current = stream;
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
       setPhase("camera");
-    } catch { /* camera permission denied */ }
+    } catch (err) {
+      const msg = err instanceof Error && err.name === "NotAllowedError"
+        ? "Camera permission denied. Allow camera access and try again."
+        : "Could not start camera. Check your device settings.";
+      setCameraError(msg);
+    }
   }, []);
 
   const stopCamera = useCallback(() => {
@@ -600,39 +613,40 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
                 ))}
               </div>
             )}
+            {cameraError && (
+              <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-2.5 py-2 mb-2">
+                <span className="text-red-500 shrink-0 text-xs">⚠</span>
+                <p className="text-[11px] text-red-600 leading-snug">{cameraError}</p>
+              </div>
+            )}
             <button onClick={startCamera}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
-              <Camera className="w-3.5 h-3.5" /> Start Camera
+              <Camera className="w-3.5 h-3.5" /> {cameraError ? "Try Again" : "Start Camera"}
             </button>
           </div>
         )}
 
-        {/* ── Phase: camera — live video ── */}
-        {phase === "camera" && (
-          <div className="space-y-2">
-            <div className="rounded-xl overflow-hidden bg-black border border-gray-200 relative" style={{ aspectRatio: "4/3" }}>
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-                <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
-                  Point at your build and press Capture
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={capturePhoto}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1 transition-colors">
-                <Camera className="w-3 h-3" /> Capture Photo
-              </button>
-              <button onClick={() => { stopCamera(); setPhase("idle"); }}
-                className="flex-1 border border-gray-200 text-gray-500 text-[11px] font-semibold py-2 rounded-lg bg-white hover:bg-gray-50">
-                Cancel
-              </button>
+        {/* ── Phase: camera — live video (always mounted so ref stays stable) ── */}
+        <div className={phase === "camera" ? "space-y-2" : "hidden"}>
+          <div className="rounded-xl overflow-hidden bg-black border border-gray-200 relative" style={{ aspectRatio: "4/3" }}>
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center">
+              <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+                Point at your build and press Capture
+              </span>
             </div>
           </div>
-        )}
-
-        {/* Hidden video used only during capture phase; keeps ref alive */}
-        {phase !== "camera" && <video ref={videoRef} className="hidden" />}
+          <div className="flex gap-2">
+            <button onClick={capturePhoto}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold py-2 rounded-lg flex items-center justify-center gap-1 transition-colors">
+              <Camera className="w-3 h-3" /> Capture Photo
+            </button>
+            <button onClick={() => { stopCamera(); setPhase("idle"); }}
+              className="flex-1 border border-gray-200 text-gray-500 text-[11px] font-semibold py-2 rounded-lg bg-white hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </div>
 
         {/* ── Phase: captured / checking — side-by-side comparison ── */}
         {(phase === "captured" || phase === "checking" || phase === "done") && capturedImage && (
@@ -744,8 +758,8 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
 }
 
 // ─── AR Module ────────────────────────────────────────────────────────────────
-const AFRAME_SRC = "https://aframe.io/releases/1.4.0/aframe.min.js";
-const ARJS_SRC   = "https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js";
+const AFRAME_SRC = "https://cdn.jsdelivr.net/npm/aframe@1.4.0/dist/aframe.min.js";
+const ARJS_SRC   = "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js";
 const HIRO_IMG   = "https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png";
 
 function loadScript(src: string, id: string): Promise<void> {
@@ -858,7 +872,8 @@ function AROverlay({ step, stepIdx, onClose }: AROverlayProps) {
         try { containerRef.current.removeChild(sceneRef.current); } catch { /* ignore */ }
       }
     };
-  }, [loadState, stepIdx]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadState, stepIdx, step?.components?.join(",")]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black overflow-hidden">
