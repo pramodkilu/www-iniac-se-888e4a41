@@ -743,24 +743,212 @@ function AIStepCheck({ stepIdx, step }: AICheckProps) {
   );
 }
 
-// ─── AR & AI Buddy card ───────────────────────────────────────────────────────
-function ARBuddyCard() {
+// ─── AR Module ────────────────────────────────────────────────────────────────
+const AFRAME_SRC = "https://aframe.io/releases/1.4.0/aframe.min.js";
+const ARJS_SRC   = "https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js";
+const HIRO_IMG   = "https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png";
+
+function loadScript(src: string, id: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.getElementById(id)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.id = id; s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
+interface AROverlayProps {
+  step: { title: { en: string }; components: string[] } | null;
+  stepIdx: number;
+  onClose: () => void;
+}
+
+function AROverlay({ step, stepIdx, onClose }: AROverlayProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef     = useRef<Element | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
+  const [markerFound, setMarkerFound] = useState(false);
+
+  // Load A-Frame + AR.js from CDN once
+  useEffect(() => {
+    loadScript(AFRAME_SRC, "aframe-js")
+      .then(() => loadScript(ARJS_SRC, "arjs-js"))
+      .then(() => setLoadState("ready"))
+      .catch(() => setLoadState("error"));
+  }, []);
+
+  // Build A-Frame scene via DOM (not JSX — A-Frame uses custom elements)
+  useEffect(() => {
+    if (loadState !== "ready" || !containerRef.current) return;
+
+    // Remove previous scene if any
+    if (sceneRef.current && containerRef.current.contains(sceneRef.current)) {
+      try { containerRef.current.removeChild(sceneRef.current); } catch { /* ignore */ }
+    }
+    setMarkerFound(false);
+
+    const comps = step ? parseComps(step.components) : [];
+
+    const scene = document.createElement("a-scene");
+    scene.setAttribute("embedded", "");
+    scene.setAttribute("arjs", "sourceType: webcam; debugUIEnabled: false;");
+    scene.setAttribute("renderer", "logarithmicDepthBuffer: true; precision: medium;");
+    scene.setAttribute("vr-mode-ui", "enabled: false");
+    scene.style.cssText = "position:absolute;inset:0;width:100%;height:100%;";
+
+    const marker = document.createElement("a-marker");
+    marker.setAttribute("preset", "hiro");
+    marker.addEventListener("markerFound", () => setMarkerFound(true));
+    marker.addEventListener("markerLost",  () => setMarkerFound(false));
+
+    // Ground plane
+    const plane = document.createElement("a-plane");
+    plane.setAttribute("rotation", "-90 0 0");
+    plane.setAttribute("width", "2"); plane.setAttribute("height", "2");
+    plane.setAttribute("color", "#f9fafb"); plane.setAttribute("opacity", "0.7");
+    marker.appendChild(plane);
+
+    // Step label
+    const label = document.createElement("a-text");
+    label.setAttribute("value", `Step ${stepIdx + 1}: ${step?.title.en ?? ""}`);
+    label.setAttribute("position", "0 1.6 0");
+    label.setAttribute("align", "center");
+    label.setAttribute("color", "#f97316");
+    label.setAttribute("width", "3");
+    marker.appendChild(label);
+
+    // Component boxes — one per unique component, laid out in a grid
+    const cols = Math.ceil(Math.sqrt(comps.length));
+    comps.slice(0, 9).forEach(({ code, qty }, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x   = (col - (cols - 1) / 2) * 0.5;
+      const z   = (row - (Math.ceil(comps.length / cols) - 1) / 2) * 0.5;
+      const hex = "#" + codeColor(code).toString(16).padStart(6, "0");
+
+      const box = document.createElement("a-box");
+      box.setAttribute("position", `${x} 0.15 ${z}`);
+      box.setAttribute("scale", "0.28 0.28 0.28");
+      box.setAttribute("color", hex);
+      box.setAttribute("opacity", "0.92");
+      box.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear;");
+      marker.appendChild(box);
+
+      const codeLabel = document.createElement("a-text");
+      codeLabel.setAttribute("value", `${code}${qty > 1 ? ` ×${qty}` : ""}`);
+      codeLabel.setAttribute("position", `${x} 0.42 ${z}`);
+      codeLabel.setAttribute("align", "center");
+      codeLabel.setAttribute("color", "#111827");
+      codeLabel.setAttribute("width", "1.1");
+      marker.appendChild(codeLabel);
+    });
+
+    const camera = document.createElement("a-entity");
+    camera.setAttribute("camera", "");
+
+    scene.appendChild(marker);
+    scene.appendChild(camera);
+    containerRef.current.appendChild(scene);
+    sceneRef.current = scene;
+
+    return () => {
+      if (sceneRef.current && containerRef.current?.contains(sceneRef.current)) {
+        try { containerRef.current.removeChild(sceneRef.current); } catch { /* ignore */ }
+      }
+    };
+  }, [loadState, stepIdx]);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Box className="w-4 h-4 text-orange-500" />
-        <span className="font-bold text-[14px] text-gray-800">AR &amp; AI Buddy</span>
-      </div>
-      <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3">
-        <div className="flex items-start gap-2">
-          <span className="text-yellow-500 mt-0.5 shrink-0">💡</span>
-          <p className="text-[11px] text-gray-600 leading-relaxed">
-            <span className="font-bold text-amber-700">AR locked.</span>{" "}
-            Point your camera at your build to unlock AR overlay mode — see virtual connection hints layered on top of your real components.
-          </p>
+    <div className="fixed inset-0 z-50 bg-black overflow-hidden">
+      {/* A-Frame mounts here */}
+      <div ref={containerRef} className="absolute inset-0" />
+
+      {/* Loading */}
+      {loadState === "loading" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black gap-3 pointer-events-none">
+          <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-white text-sm">Loading AR engine…</p>
         </div>
+      )}
+
+      {/* Error */}
+      {loadState === "error" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black gap-3">
+          <p className="text-red-400 text-sm">Could not load AR engine. Check your connection.</p>
+          <button onClick={onClose} className="bg-white text-black text-sm font-bold px-5 py-2 rounded-full">
+            Close
+          </button>
+        </div>
+      )}
+
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
+        <div>
+          <p className="text-[11px] font-bold text-orange-400 uppercase tracking-wide">AR Build Guide</p>
+          <p className="text-[11px] text-white/80">Step {stepIdx + 1} — {step?.title.en}</p>
+        </div>
+        <button onClick={onClose} className="pointer-events-auto w-9 h-9 bg-black/50 border border-white/20 rounded-full flex items-center justify-center text-white text-sm hover:bg-black/70 transition-colors">
+          ✕
+        </button>
+      </div>
+
+      {/* Bottom status + print link */}
+      <div className="absolute bottom-6 left-0 right-0 z-10 flex flex-col items-center gap-2 pointer-events-none">
+        <div className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all shadow ${
+          markerFound
+            ? "bg-green-500 text-white shadow-green-500/40"
+            : "bg-black/50 text-white border border-white/20"
+        }`}>
+          {markerFound ? "✓ Marker detected — AR active!" : "Point camera at the Hiro marker"}
+        </div>
+        <a href={HIRO_IMG} target="_blank" rel="noreferrer"
+          className="pointer-events-auto text-[11px] text-white/50 underline underline-offset-2 hover:text-white/80 transition-colors">
+          🖨 Download &amp; print Hiro marker
+        </a>
       </div>
     </div>
+  );
+}
+
+// ─── AR Module card (replaces ARBuddyCard) ────────────────────────────────────
+interface ARModuleProps {
+  step: { title: { en: string }; components: string[] } | null;
+  stepIdx: number;
+}
+function ARModule({ step, stepIdx }: ARModuleProps) {
+  const [arOpen, setArOpen] = useState(false);
+
+  return (
+    <>
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Box className="w-4 h-4 text-orange-500" />
+            <span className="font-bold text-[14px] text-gray-800">AR Build Overlay</span>
+          </div>
+          <span className="text-[10px] bg-orange-100 text-orange-600 font-bold px-2 py-0.5 rounded-full tracking-wide">BETA</span>
+        </div>
+        <p className="text-[11px] text-gray-500 leading-relaxed mb-3">
+          Print the Hiro marker, place it next to your build, then launch AR to see each step's components floating above your kit in 3D.
+        </p>
+        <div className="flex gap-2">
+          <button onClick={() => setArOpen(true)}
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+            <Box className="w-3.5 h-3.5" /> Launch AR
+          </button>
+          <a href={HIRO_IMG} target="_blank" rel="noreferrer"
+            className="flex-1 border border-gray-200 text-gray-500 text-xs font-semibold py-2 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors">
+            🖨 Print Marker
+          </a>
+        </div>
+      </div>
+
+      {arOpen && (
+        <AROverlay step={step} stepIdx={stepIdx} onClose={() => setArOpen(false)} />
+      )}
+    </>
   );
 }
 
@@ -811,7 +999,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
             onPrev={() => setStepIdx(i => Math.max(0, i - 1))}
             onNext={() => setStepIdx(i => Math.min(totalSteps - 1, i + 1))}
           />
-          <ARBuddyCard />
+          <ARModule step={step} stepIdx={stepIdx} />
         </div>
 
         {/* Right column */}
