@@ -137,24 +137,49 @@ function buildReferenceImage(comps: { code: string; qty: number }[]): string {
 
 // ─── Component code → colour ──────────────────────────────────────────────────
 const CODE_COLOR: Record<string, number> = {
+  // Structural pillars — orange/amber
   P3: 0xfbbf24, P5: 0xfbbf24, P7: 0xfbbf24, P11: 0xf59e0b,
-  "P3+": 0xfbbf24, "P3 Plus": 0xfbbf24,
+  "P3+": 0xfbbf24, "P3 Plus": 0xfbbf24, PC3: 0xfbbf24,
   "P7x11": 0xd97706, "P7X11": 0xd97706,
-  "P21x21": 0xa3a3a3,
-  "PU5x7": 0xd97706, "PU5x13": 0xd97706,
+  "P21x21": 0xa3a3a3, "P21X21": 0xa3a3a3,
+  "PU5x7": 0xd97706, "PU5x13": 0xd97706, "PU5X7": 0xd97706, "PU5X13": 0xd97706,
+  "P5 Nut": 0xf59e0b, "P5-NUT": 0xf59e0b,
+  // Connectors — orange / blue
   CT2: 0xfbbf24, CT3: 0x3b82f6, CH2: 0x60a5fa, CL2: 0xfbbf24,
-  "CT(1x2)": 0x3b82f6, TW1: 0x9ca3af, TW2: 0x9ca3af,
+  "CT1X2": 0x3b82f6, "CT(1x2)": 0x3b82f6, TW1: 0x9ca3af, TW2: 0x9ca3af,
+  // Shafts — silver
   SH60: 0xc0c0c0, SH100: 0xc0c0c0, SH170: 0xc0c0c0,
-  G20: 0x60a5fa, "G20+": 0x60a5fa, "G20 Plus": 0x60a5fa, "G20 Idler": 0x60a5fa,
-  G60: 0xfbbf24, Rack: 0xfbbf24,
-  Wheel: 0x1f2937, "Wheel w/o tires": 0x374151,
-  "Motor with Battery Box": 0x374151,
-  Queaky: 0x4ade80, Thread: 0x94a3b8,
+  // Gears — blue / amber
+  G20: 0x60a5fa, "G20+": 0x60a5fa, "G20 Plus": 0x60a5fa,
+  "G20 Idler": 0x93c5fd, "G20-IDL": 0x93c5fd,
+  G60: 0xfbbf24, Rack: 0xfbbf24, "Power Screw": 0xfbbf24,
+  // Wheels & mechanical
+  Wheel: 0x1f2937, "Wheel w/o tires": 0x374151, "W-NT": 0x374151,
   Pulley: 0xfbbf24, Suspension: 0xfbbf24,
-  "P5 Nut": 0xf59e0b, "Power Screw": 0xfbbf24,
-  Balloon: 0xef4444,
+  Steering: 0x1f2937, "Steering wheel": 0x1f2937,
+  Spoiler: 0xfbbf24, MGL: 0xfbbf24, MGR: 0xfbbf24,
   "Mudguard Left": 0xfbbf24, "Mudguard Right": 0xfbbf24,
-  "Steering wheel": 0x1f2937, Spoiler: 0xfbbf24,
+  // Motors & power
+  "Motor with Battery Box": 0x374151,
+  BB: 0x374151, BB3V: 0xef4444, BB6V: 0xdc2626,
+  "M-ACC": 0x374151, Fan: 0x93c5fd,
+  // Logic blocks — colour-coded
+  "POWER-BLK": 0xfde047, "NOT-BLK": 0xf97316,
+  "LED-BLK": 0xef4444,   "BUZZER-BLK": 0x22c55e,
+  "MOTOR-BLK": 0x3b82f6, "DIST-BLK": 0xa855f7,
+  "IR-BLK": 0xec4899,    "SWITCH-BLK": 0xe5e7eb,
+  // Electronics
+  Queaky: 0x4ade80, Thread: 0x94a3b8, "CT-TWR": 0xfbbf24,
+  "AC-R": 0xef4444, "AC-B": 0x1f2937,
+  ESP32: 0x2563eb, SERVO: 0x3b82f6, DCMB: 0x16a34a,
+  "PCB-7SEG": 0x15803d, "IR-S": 0x374151, LS: 0x6b7280,
+  // Magnets
+  DM: 0x9ca3af, BM: 0xef4444,
+  // Marble stem
+  MRS14: 0xf97316, MRB7: 0xf97316, MRH5: 0xf97316,
+  MAR: 0x7dd3fc, P3C2: 0xf97316, BCKT: 0xfbbf24,
+  // Consumables
+  Balloon: 0xef4444, RB: 0xfbbf24,
 };
 function codeColor(code: string): number {
   if (CODE_COLOR[code]) return CODE_COLOR[code];
@@ -589,9 +614,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
   const [modelResult,    setModelResult]    = useState<VerifyResult | null>(null);
   const [checking,       setChecking]       = useState<"api" | "model" | null>(null);
 
-  // Model loads on the research page — no pre-load here to avoid WebGL conflict with Three.js
-  const modelStatus = "idle" as const;
-  const modelMode   = "none"  as const;
+  // Model runs on the AI Research page only — no pre-load here (avoids WebGL conflict with Three.js)
 
   const comps = step ? parseComps(step.components) : [];
   // Generated canvas fallback (used only when 3D snapshot not yet ready)
@@ -789,9 +812,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
                     ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
                     : <Cpu className="w-4 h-4 mb-0.5" />}
                   <span>{checking === "model" ? "Running…" : "INIAC-ML"}</span>
-                  <span className="text-[9px] font-normal opacity-75">
-                    {modelMode === "custom" ? "Custom Model" : "COCO-SSD Demo"}
-                  </span>
+                  <span className="text-[9px] font-normal opacity-75">COCO-SSD Demo</span>
                 </button>
               </div>
               <button onClick={() => { setCapturedImage(null); setApiResult(null); setModelResult(null); startCamera(); }}
@@ -805,7 +826,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
             {modelResult && (
               <ResultCard
                 result={modelResult}
-                label={modelMode === "custom" ? "🤖 INIAC-ML (Custom)" : "🤖 INIAC-ML (Demo)"}
+                label="🤖 INIAC-ML (Demo)"
                 accent="orange"
               />
             )}
