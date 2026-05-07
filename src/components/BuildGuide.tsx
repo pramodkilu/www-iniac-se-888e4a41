@@ -194,7 +194,9 @@ function mk(g: THREE.BufferGeometry, color: number, metalness = 0.15, roughness 
 }
 function buildShape(code: string): THREE.Object3D {
   const c = codeColor(code); const g = new THREE.Group(); const lc = code.toLowerCase();
-  if (lc.includes("p7x11") || lc.includes("p7X11")) {
+
+  // ── Structural pillars ──────────────────────────────────────────────────────
+  if (lc.includes("p7x11")) {
     const leg = () => mk(new THREE.BoxGeometry(0.3, 1.8, 0.42), c);
     const l = leg(); l.position.set(-0.55, 0, 0); g.add(l);
     const r = leg(); r.position.set( 0.55, 0, 0); g.add(r);
@@ -205,26 +207,38 @@ function buildShape(code: string): THREE.Object3D {
       const s = mk(new THREE.CylinderGeometry(0.065, 0.065, 0.09, 8), c);
       s.position.set(a * 0.37, 0.09, b2 * 0.37); g.add(s);
     }
-  } else if (/^p\d+$/i.test(code.trim())) {
+  } else if (lc.startsWith("pu")) {
+    [-0.6, 0.6].forEach(x => { const l = mk(new THREE.BoxGeometry(0.3, 1.9, 0.4), c); l.position.x = x; g.add(l); });
+    const b2 = mk(new THREE.BoxGeometry(1.5, 0.3, 0.4), c); b2.position.y = -1.1; g.add(b2);
+  } else if (lc === "p3+" || lc === "p3 plus") {
+    g.add(mk(new THREE.BoxGeometry(0.36, 0.72, 0.46), c));
+    const stud = mk(new THREE.CylinderGeometry(0.1, 0.1, 0.12, 8), c); stud.position.y = 0.42; g.add(stud);
+  } else if (lc === "pc3") {
+    g.add(mk(new THREE.BoxGeometry(1.1, 0.12, 0.38), c));
+    const arm = mk(new THREE.BoxGeometry(0.38, 0.12, 0.6), c); arm.position.z = 0.35; g.add(arm);
+  } else if (/^p\d+/i.test(code.trim())) {
     const holes = parseInt(code.replace(/\D/g, "")) || 5;
-    const h = 0.22 * holes + 0.06;
+    const h = 0.22 * Math.min(holes, 11) + 0.06;
     g.add(mk(new THREE.BoxGeometry(0.36, h, 0.46), c));
     for (let i = 0; i < Math.min(holes, 8); i++) {
       const hole = mk(new THREE.CylinderGeometry(0.07, 0.07, 0.5, 8), 0x775500, 0.05, 0.9);
       hole.rotation.z = Math.PI / 2; hole.position.set(0, -h / 2 + 0.14 + i * 0.22, 0); g.add(hole);
     }
-  } else if (lc.startsWith("pu")) {
-    [-0.6, 0.6].forEach(x => { const l = mk(new THREE.BoxGeometry(0.3, 1.9, 0.4), c); l.position.x = x; g.add(l); });
-    const b2 = mk(new THREE.BoxGeometry(1.5, 0.3, 0.4), c); b2.position.y = -1.1; g.add(b2);
+
+  // ── Connectors ──────────────────────────────────────────────────────────────
   } else if (lc.startsWith("ct") || lc.startsWith("ch") || lc.startsWith("cl")) {
     g.add(mk(new THREE.BoxGeometry(0.6, 0.38, 0.38), c));
     const pin = mk(new THREE.CylinderGeometry(0.07, 0.07, 0.2, 8), 0x888888, 0.5, 0.3);
     pin.rotation.z = Math.PI / 2; pin.position.x = 0.42; g.add(pin);
   } else if (lc.startsWith("tw")) {
     g.add(mk(new THREE.TorusGeometry(0.28, 0.09, 8, 20), c, 0.4, 0.5));
+
+  // ── Shafts ──────────────────────────────────────────────────────────────────
   } else if (lc.startsWith("sh")) {
     const len = (parseInt(code.replace(/\D/g, "")) || 60) / 60;
     g.add(mk(new THREE.CylinderGeometry(0.07, 0.07, len, 12), 0xc0c0c0, 0.7, 0.3));
+
+  // ── Gears & rack ────────────────────────────────────────────────────────────
   } else if (lc.startsWith("g20")) {
     g.add(mk(new THREE.TorusGeometry(0.6, 0.15, 8, 20), c));
     const h = mk(new THREE.CylinderGeometry(0.17, 0.17, 0.35, 12), c); h.rotation.x = Math.PI / 2; g.add(h);
@@ -234,17 +248,128 @@ function buildShape(code: string): THREE.Object3D {
   } else if (lc === "rack") {
     g.add(mk(new THREE.BoxGeometry(1.8, 0.22, 0.36), c));
     for (let i = 0; i < 7; i++) { const t = mk(new THREE.BoxGeometry(0.12, 0.16, 0.38), c); t.position.set(-0.78 + i * 0.26, 0.19, 0); g.add(t); }
-  } else if (lc === "wheel" || lc.includes("w/o")) {
+  } else if (lc.includes("power screw") || lc.includes("p5-nut") || lc.includes("p5 nut")) {
+    g.add(mk(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 12), 0xc0c0c0, 0.7, 0.2));
+    for (let i = 0; i < 6; i++) {
+      const t = mk(new THREE.TorusGeometry(0.14, 0.03, 6, 10), 0x888888, 0.5, 0.3);
+      t.rotation.x = Math.PI / 2; t.position.y = -0.5 + i * 0.2; g.add(t);
+    }
+
+  // ── Wheels & mechanical ──────────────────────────────────────────────────────
+  } else if (lc === "wheel" || lc.includes("w/o") || lc === "w-nt") {
     g.add(mk(new THREE.TorusGeometry(0.78, 0.28, 16, 32), 0x111111));
     const h = mk(new THREE.CylinderGeometry(0.33, 0.33, 0.3, 20), 0xf97316); h.rotation.x = Math.PI / 2; g.add(h);
-  } else if (lc.includes("motor") || lc.includes("gearbox")) {
-    g.add(mk(new THREE.CylinderGeometry(0.45, 0.45, 1.0, 20), 0x374151));
-    const s = mk(new THREE.CylinderGeometry(0.08, 0.08, 0.4, 10), 0x9ca3af, 0.7, 0.3); s.position.y = 0.7; g.add(s);
   } else if (lc === "pulley") {
     g.add(mk(new THREE.TorusGeometry(0.45, 0.15, 8, 24), c));
     const h = mk(new THREE.CylinderGeometry(0.12, 0.12, 0.32, 12), c); h.rotation.x = Math.PI / 2; g.add(h);
+  } else if (lc.includes("suspension")) {
+    for (let i = 0; i < 5; i++) {
+      const ring = mk(new THREE.TorusGeometry(0.22, 0.05, 6, 14), c, 0.3, 0.6);
+      ring.rotation.x = Math.PI / 2; ring.position.y = -0.4 + i * 0.2; g.add(ring);
+    }
+  } else if (lc.includes("steering")) {
+    g.add(mk(new THREE.TorusGeometry(0.6, 0.07, 8, 24), 0x1f2937));
+    const hub = mk(new THREE.CylinderGeometry(0.1, 0.1, 0.14, 10), 0x374151); hub.rotation.x = Math.PI / 2; g.add(hub);
+    [0, 1, 2].forEach(i => { const sp = mk(new THREE.BoxGeometry(0.08, 0.5, 0.06), 0x374151); sp.rotation.z = (i / 3) * Math.PI; g.add(sp); });
+  } else if (lc.includes("mudguard") || lc === "mgl" || lc === "mgr") {
+    g.add(mk(new THREE.BoxGeometry(0.9, 0.12, 0.55), c));
+    const arch = mk(new THREE.TorusGeometry(0.3, 0.06, 8, 12, Math.PI), c);
+    arch.rotation.x = Math.PI / 2; arch.position.y = 0.14; g.add(arch);
+  } else if (lc.includes("spoiler")) {
+    g.add(mk(new THREE.BoxGeometry(1.4, 0.08, 0.35), c));
+    [-0.6, 0.6].forEach(x => { const post = mk(new THREE.BoxGeometry(0.1, 0.5, 0.1), c); post.position.set(x, 0.29, 0); g.add(post); });
+
+  // ── Motors & power ───────────────────────────────────────────────────────────
+  } else if (lc.includes("motor")) {
+    const body = mk(new THREE.CylinderGeometry(0.35, 0.35, 0.8, 20), 0x374151); body.rotation.z = Math.PI / 2; g.add(body);
+    const bbox = mk(new THREE.BoxGeometry(0.7, 0.5, 0.45), 0xf97316); bbox.position.x = 0.65; g.add(bbox);
+    const shaft = mk(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 10), 0x9ca3af, 0.7, 0.2); shaft.rotation.z = Math.PI / 2; shaft.position.x = -0.55; g.add(shaft);
+  } else if (lc.startsWith("bb") || lc.includes("battery")) {
+    g.add(mk(new THREE.BoxGeometry(0.9, 0.55, 0.45), 0x374151));
+    const wire = mk(new THREE.CylinderGeometry(0.03, 0.03, 0.35, 6), lc === "bb3v" ? 0xef4444 : 0xdc2626, 0.2, 0.8);
+    wire.position.set(0.44, 0.45, 0); g.add(wire);
+  } else if (lc === "fan" || lc === "m-acc") {
+    g.add(mk(new THREE.CylinderGeometry(0.1, 0.1, 0.12, 10), 0x374151, 0.4, 0.6));
+    for (let i = 0; i < 3; i++) {
+      const blade = mk(new THREE.BoxGeometry(0.08, 0.5, 0.04), 0x93c5fd, 0.1, 0.8);
+      blade.position.y = 0.28; blade.rotation.z = (i / 3) * Math.PI * 2; g.add(blade);
+    }
+
+  // ── Logic blocks (colour-coded rectangular) ──────────────────────────────────
+  } else if (lc.endsWith("-blk")) {
+    g.add(mk(new THREE.BoxGeometry(0.75, 0.55, 0.55), c));
+    const nub = () => mk(new THREE.CylinderGeometry(0.07, 0.07, 0.12, 8), 0xffffff, 0.1, 0.9);
+    const nl = nub(); nl.rotation.z = Math.PI / 2; nl.position.x = -0.44; g.add(nl);
+    const nr = nub(); nr.rotation.z = Math.PI / 2; nr.position.x =  0.44; g.add(nr);
+
+  // ── Electronics ──────────────────────────────────────────────────────────────
+  } else if (lc === "queaky") {
+    g.add(mk(new THREE.BoxGeometry(0.6, 0.42, 0.28), 0x4ade80));
+    [-0.18, 0.18].forEach(z => {
+      const ear = mk(new THREE.BoxGeometry(0.22, 0.08, 0.06), 0x9ca3af, 0.7, 0.3); ear.position.set(0, 0.25, z); g.add(ear);
+    });
+  } else if (lc === "esp32") {
+    g.add(mk(new THREE.BoxGeometry(1.3, 0.06, 0.7), 0x1d4ed8));
+    for (let i = 0; i < 8; i++) {
+      const p = mk(new THREE.BoxGeometry(0.05, 0.12, 0.05), 0xe5e7eb); p.position.set(-0.55 + i * 0.16, 0.09, 0.32); g.add(p);
+      const p2 = mk(new THREE.BoxGeometry(0.05, 0.12, 0.05), 0xe5e7eb); p2.position.set(-0.55 + i * 0.16, 0.09, -0.32); g.add(p2);
+    }
+    const ant = mk(new THREE.BoxGeometry(0.22, 0.06, 0.16), 0x93c5fd); ant.position.set(0.56, 0.06, 0); g.add(ant);
+  } else if (lc === "servo") {
+    g.add(mk(new THREE.BoxGeometry(0.7, 0.6, 0.38), 0x3b82f6));
+    const horn = mk(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 12), 0xe5e7eb); horn.position.set(0, 0.34, 0); g.add(horn);
+    const arm = mk(new THREE.BoxGeometry(0.38, 0.07, 0.09), 0xe5e7eb); arm.position.set(0.26, 0.34, 0); g.add(arm);
+  } else if (lc === "dcmb") {
+    g.add(mk(new THREE.BoxGeometry(0.8, 0.06, 0.6), 0x16a34a));
+    const ic = mk(new THREE.BoxGeometry(0.28, 0.1, 0.22), 0x1f2937); ic.position.y = 0.08; g.add(ic);
+  } else if (lc.includes("pcb") || lc.includes("7seg")) {
+    g.add(mk(new THREE.BoxGeometry(0.9, 0.06, 0.65), 0x15803d));
+    const disp = mk(new THREE.BoxGeometry(0.32, 0.08, 0.5), 0xef4444); disp.position.set(0.1, 0.07, 0); g.add(disp);
+  } else if (lc.includes("ct-twr") || lc.includes("connecting tower")) {
+    g.add(mk(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 8), c));
+    const top = mk(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 8), 0xc0c0c0, 0.7, 0.2); top.position.y = 0.28; g.add(top);
+  } else if (lc.includes("ir-s") || lc.includes("ir sensor") || lc === "ls") {
+    g.add(mk(new THREE.BoxGeometry(0.55, 0.3, 0.22), 0x374151));
+    [-0.1, 0.1].forEach(z => {
+      const eye = mk(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 10), 0x1f2937); eye.rotation.z = Math.PI / 2; eye.position.set(0.32, 0, z); g.add(eye);
+    });
+
+  // ── Magnets ──────────────────────────────────────────────────────────────────
+  } else if (lc === "dm" || lc.includes("donut magnet")) {
+    g.add(mk(new THREE.TorusGeometry(0.5, 0.18, 12, 28), 0x9ca3af, 0.8, 0.2));
+  } else if (lc === "bm" || lc.includes("bar magnet")) {
+    g.add(mk(new THREE.BoxGeometry(1.4, 0.3, 0.22), 0x9ca3af, 0.7, 0.2));
+    const np = mk(new THREE.BoxGeometry(0.5, 0.3, 0.22), 0x3b82f6); np.position.x = -0.45; g.add(np);
+    const sp2 = mk(new THREE.BoxGeometry(0.5, 0.3, 0.22), 0xef4444); sp2.position.x = 0.45; g.add(sp2);
+
+  // ── Marble stem ──────────────────────────────────────────────────────────────
+  } else if (lc === "mrs14") {
+    g.add(mk(new THREE.BoxGeometry(1.8, 0.08, 0.38), 0xf97316));
+    [-0.18, 0.18].forEach(z => { const r2 = mk(new THREE.BoxGeometry(1.8, 0.12, 0.04), 0xea580c); r2.position.set(0, 0.1, z); g.add(r2); });
+  } else if (lc === "mrb7") {
+    g.add(mk(new THREE.TorusGeometry(0.7, 0.14, 6, 16, Math.PI * 0.75), 0xf97316));
+  } else if (lc === "mrh5") {
+    g.add(mk(new THREE.ConeGeometry(0.5, 0.7, 12, 1, true), 0xf97316, 0.1, 0.9));
+    const rim = mk(new THREE.TorusGeometry(0.5, 0.05, 6, 20), 0xea580c); rim.position.y = 0.35; g.add(rim);
+  } else if (lc === "mar") {
+    g.add(mk(new THREE.SphereGeometry(0.25, 16, 16), 0x7dd3fc, 0.1, 0.05));
+  } else if (lc === "bckt") {
+    g.add(mk(new THREE.CylinderGeometry(0.25, 0.2, 0.4, 12, 1, true), c, 0.1, 0.9));
+    const base = mk(new THREE.CylinderGeometry(0.2, 0.2, 0.04, 12), c); base.position.y = -0.2; g.add(base);
+
+  // ── Consumables ──────────────────────────────────────────────────────────────
   } else if (lc === "balloon") {
     g.add(mk(new THREE.SphereGeometry(0.7, 20, 20), 0xef4444, 0.05, 0.05));
+    const tie = mk(new THREE.CylinderGeometry(0.04, 0.04, 0.25, 6), 0xdc2626); tie.position.y = -0.72; g.add(tie);
+  } else if (lc === "rb" || lc.includes("rubber band")) {
+    g.add(mk(new THREE.TorusGeometry(0.38, 0.06, 8, 24), 0xfbbf24, 0.1, 0.9));
+  } else if (lc === "thread" || lc === "wire") {
+    for (let i = 0; i < 4; i++) {
+      const ring = mk(new THREE.TorusGeometry(0.28, 0.03, 6, 16), 0x94a3b8, 0.2, 0.9);
+      ring.rotation.x = Math.PI / 2; ring.position.y = -0.15 + i * 0.1; g.add(ring);
+    }
+
+  // ── Default ──────────────────────────────────────────────────────────────────
   } else {
     g.add(mk(new THREE.BoxGeometry(0.9, 0.9, 0.9), c));
   }
