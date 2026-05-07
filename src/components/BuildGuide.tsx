@@ -477,20 +477,355 @@ function disposeGroup(g: THREE.Group) {
   g.clear();
 }
 
+// ─── Final assembled model builders (one per chapter) ────────────────────────
+function buildFinalAssembly(chapterId: number): THREE.Group {
+  const g = new THREE.Group();
+  const yw = 0xfbbf24; const bl = 0x60a5fa; const wh = 0xe5e7eb;
+  const bk = 0x1f2937; const gr = 0x16a34a; const or = 0xf97316;
+
+  // Helper: add a wheel at position (with tyre)
+  const wheel = (x: number, y: number, z: number, r = 0) => {
+    const wg = new THREE.Group();
+    wg.add(mk(new THREE.TorusGeometry(0.82, 0.3, 16, 32), 0x111111, 0.05, 0.9));
+    const hub = mk(new THREE.CylinderGeometry(0.38, 0.38, 0.26, 20), or); hub.rotation.x = Math.PI / 2; wg.add(hub);
+    for (let i = 0; i < 5; i++) { const sp = mk(new THREE.BoxGeometry(0.65, 0.07, 0.1), or); sp.rotation.set(Math.PI / 2, (i / 5) * Math.PI * 2, 0); wg.add(sp); }
+    wg.position.set(x, y, z); wg.rotation.y = r; g.add(wg);
+  };
+  // Helper: beam
+  const beam = (x: number, y: number, z: number, w: number, h: number, d: number, col = yw, rx = 0, ry = 0, rz = 0) => {
+    const m = mk(new THREE.BoxGeometry(w, h, d), col); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m); return m;
+  };
+  // Helper: cylinder
+  const cyl = (x: number, y: number, z: number, r: number, h: number, col: number, rx = 0, ry = 0, rz = 0) => {
+    const m = mk(new THREE.CylinderGeometry(r, r, h, 16), col); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m);
+  };
+  // Helper: sphere
+  const sph = (x: number, y: number, z: number, r: number, col: number) => {
+    const m = mk(new THREE.SphereGeometry(r, 16, 16), col, 0.1, 0.3); m.position.set(x, y, z); g.add(m);
+  };
+
+  switch (chapterId) {
+    case 1: { // Wheeling Cart — two beams + 4 wheels + axles
+      beam(0, 0, 0.9, 3.2, 0.18, 0.42);   // left chassis beam
+      beam(0, 0, -0.9, 3.2, 0.18, 0.42);  // right chassis beam
+      beam(0, 0, 0, 1.0, 0.14, 2.2, 0xe5e7eb); // front cross-brace
+      beam(1.2, 0, 0, 0.14, 0.14, 2.2, 0xe5e7eb); // rear cross-brace
+      cyl(1.1, -0.3, 0, 0.07, 2.2, 0x111111, 0, 0, Math.PI / 2); // rear axle
+      cyl(-1.1, -0.3, 0, 0.07, 2.2, 0x111111, 0, 0, Math.PI / 2); // front axle
+      wheel(-1.1, -0.3, 1.15); wheel(-1.1, -0.3, -1.15);
+      wheel( 1.1, -0.3, 1.15); wheel( 1.1, -0.3, -1.15);
+      break;
+    }
+    case 2: { // Aerodynamics Car — sloped body, 4 wheels, spoiler
+      beam(0, 0.1, 0.85, 3.0, 0.16, 0.42);   // chassis left
+      beam(0, 0.1, -0.85, 3.0, 0.16, 0.42);  // chassis right
+      beam(-0.2, 0.45, 0, 2.2, 0.52, 1.8, 0xf97316); // body
+      beam(-0.9, 0.65, 0, 0.8, 0.15, 1.6, 0xfde047); // windscreen slope
+      beam(1.3, 0.58, 0, 1.5, 0.08, 1.6, 0xf97316);  // spoiler
+      [-0.1, 0.8].forEach(mx => { const p = mk(new THREE.BoxGeometry(0.1, 0.48, 0.08), yw); p.position.set(1.3 + mx * 0.5, 0.82, 0.6); g.add(p); });
+      cyl( 1.1, -0.32, 0, 0.07, 2.0, 0x111111, 0, 0, Math.PI / 2);
+      cyl(-1.1, -0.32, 0, 0.07, 2.0, 0x111111, 0, 0, Math.PI / 2);
+      wheel(-1.1, -0.32, 1.05); wheel(-1.1, -0.32, -1.05);
+      wheel( 1.1, -0.32, 1.05); wheel( 1.1, -0.32, -1.05);
+      break;
+    }
+    case 3: case 7: case 9: case 21: case 22: case 25: case 26: case 28: case 29: {
+      // Checkpoint chapters — trophy/star visual
+      cyl(0, -0.5, 0, 0.15, 1.2, yw);
+      cyl(0, -0.9, 0, 0.6, 0.18, yw);
+      sph(0, 0.55, 0, 0.55, 0xfde047);
+      const star = mk(new THREE.TorusGeometry(0.45, 0.07, 8, 5), 0xfbbf24); star.position.y = 0.55; g.add(star);
+      break;
+    }
+    case 4: { // Trebuchet — A-frame base + arm + counterweight
+      // Base frame A-shape
+      const ang = Math.PI / 6;
+      [1, -1].forEach(s => { const leg = mk(new THREE.BoxGeometry(0.14, 2.2, 0.14), yw); leg.position.set(s * 0.7, 0, 0); leg.rotation.z = s * ang; g.add(leg); });
+      beam(0, -1.1, 0, 2.0, 0.14, 0.14); // base crossbar
+      beam(0, -0.2, 0.8, 2.0, 0.14, 0.14); // cross brace
+      // Pivot post + throwing arm
+      cyl(0, 0.9, 0, 0.09, 1.6, wh, 0, 0, Math.PI / 2); // pivot axle
+      const arm = mk(new THREE.BoxGeometry(2.8, 0.12, 0.12), yw); arm.position.set(0.3, 0.9, 0); arm.rotation.z = -0.3; g.add(arm);
+      sph(-0.9, 1.4, 0, 0.3, bk); // counterweight
+      sph(1.5, 0.6, 0, 0.15, 0xfde047); // projectile
+      break;
+    }
+    case 5: { // Sign Boards — post + 3 boards at angles
+      beam(0, 0, 0, 0.14, 3.0, 0.14); // post
+      [0.8, 0.2, -0.4].forEach((y, i) => {
+        const board = mk(new THREE.BoxGeometry(1.2, 0.38, 0.08), [0xef4444, 0x3b82f6, 0x22c55e][i]);
+        board.position.set(0.7, y, 0); board.rotation.z = 0.2; g.add(board);
+      });
+      break;
+    }
+    case 6: { // Suspension Car — chassis + wheels + suspension + steering
+      beam(0, 0.12, 0.9, 3.2, 0.16, 0.42);
+      beam(0, 0.12, -0.9, 3.2, 0.16, 0.42);
+      beam(0, 0.28, 0, 3.0, 0.55, 1.9, or); // body
+      // Suspension springs at each corner
+      [[-1.0, 0.9], [-1.0, -0.9], [1.0, 0.9], [1.0, -0.9]].forEach(([x, z]) => {
+        const susp = mk(new THREE.CylinderGeometry(0.07, 0.07, 0.5, 10), bk); susp.position.set(x as number, -0.1, z as number); g.add(susp);
+        for (let i = 0; i < 3; i++) { const ring = mk(new THREE.TorusGeometry(0.14, 0.03, 6, 12), yw); ring.rotation.x = Math.PI / 2; ring.position.set(x as number, -0.18 + i * 0.12, z as number); g.add(ring); }
+      });
+      cyl( 1.1, -0.32, 0, 0.07, 2.0, 0x111111, 0, 0, Math.PI / 2);
+      cyl(-1.1, -0.32, 0, 0.07, 2.0, 0x111111, 0, 0, Math.PI / 2);
+      wheel(-1.1, -0.32, 1.05); wheel(-1.1, -0.32, -1.05);
+      wheel( 1.1, -0.32, 1.05); wheel( 1.1, -0.32, -1.05);
+      // Steering wheel on top
+      const sw = mk(new THREE.TorusGeometry(0.3, 0.05, 8, 20), bk); sw.position.set(-0.6, 0.88, 0.4); sw.rotation.x = Math.PI / 3; g.add(sw);
+      break;
+    }
+    case 8: { // Rack & Pinion Lift — vertical rack + gear + frame
+      // Vertical frame
+      [-0.6, 0.6].forEach(x => cyl(x, 0, 0, 0.08, 3.0, yw));
+      beam(0, 1.3, 0, 1.5, 0.14, 0.14); // top bar
+      beam(0, -1.3, 0, 1.5, 0.14, 0.14); // bottom bar
+      // Vertical rack
+      beam(0, 0, 0, 0.22, 2.8, 0.38, yw);
+      for (let i = 0; i < 9; i++) { beam(0.18, -1.2 + i * 0.28, 0, 0.14, 0.16, 0.4, yw); }
+      // Gear on rack
+      const gear = mk(new THREE.CylinderGeometry(0.55, 0.55, 0.22, 32), bl); gear.rotation.x = Math.PI / 2; gear.position.set(-0.4, 0.2, 0); g.add(gear);
+      // Lift platform
+      beam(-0.8, 0.8, 0, 1.2, 0.12, 0.8, 0xf97316);
+      break;
+    }
+    case 10: { // Car Jack — scissor mechanism
+      // X-crossed beams
+      const a1 = mk(new THREE.BoxGeometry(2.8, 0.14, 0.14), yw); a1.rotation.z = 0.45; g.add(a1);
+      const a2 = mk(new THREE.BoxGeometry(2.8, 0.14, 0.14), yw); a2.rotation.z = -0.45; g.add(a2);
+      // Second X below
+      const b1 = mk(new THREE.BoxGeometry(2.2, 0.14, 0.14), yw); b1.position.y = -0.9; b1.rotation.z = 0.55; g.add(b1);
+      const b2 = mk(new THREE.BoxGeometry(2.2, 0.14, 0.14), yw); b2.position.y = -0.9; b2.rotation.z = -0.55; g.add(b2);
+      // Top platform
+      beam(0, 0.78, 0, 1.6, 0.1, 0.4, wh);
+      // Screw rod through centre
+      cyl(0, -0.4, 0, 0.06, 2.2, 0x9ca3af, 0, 0, Math.PI / 2);
+      break;
+    }
+    case 11: { // Bear Trap — two jaw plates + spring base
+      // Lower jaw
+      const jaw1 = mk(new THREE.BoxGeometry(1.8, 0.12, 0.8), yw); jaw1.position.set(0, -0.2, 0); jaw1.rotation.x = -0.3; g.add(jaw1);
+      // Upper jaw (open)
+      const jaw2 = mk(new THREE.BoxGeometry(1.8, 0.12, 0.8), yw); jaw2.position.set(0, 0.55, 0); jaw2.rotation.x = 0.3; g.add(jaw2);
+      // Pivot hinge
+      cyl(0, 0.18, 0, 0.1, 1.85, bl, 0, 0, Math.PI / 2);
+      // Spring
+      for (let i = 0; i < 4; i++) { const ring = mk(new THREE.TorusGeometry(0.22, 0.05, 8, 12), or); ring.rotation.x = Math.PI / 2; ring.position.set(0, -0.65 + i * 0.12, 0); g.add(ring); }
+      break;
+    }
+    case 12: { // Pasta Maker — two cylindrical rollers + frame
+      // Frame sides
+      [-0.9, 0.9].forEach(z => { beam(0, 0, z as number, 0.14, 2.4, 0.14); beam(0, 1.1, z as number, 1.8, 0.14, 0.14); });
+      // Two rollers
+      cyl(0, 0.25, 0, 0.35, 1.9, yw, 0, 0, Math.PI / 2);
+      cyl(0, -0.4, 0, 0.35, 1.9, 0xf97316, 0, 0, Math.PI / 2);
+      // Handle crank
+      cyl(0, 0.25, 1.2, 0.07, 0.6, 0x9ca3af, 0, 0, Math.PI / 2);
+      const crank = mk(new THREE.BoxGeometry(0.1, 0.55, 0.1), yw); crank.position.set(0, 0.55, 1.55); g.add(crank);
+      sph(0, 0.85, 1.55, 0.14, or); // handle grip
+      break;
+    }
+    case 13: { // Merry-Go-Round — hub + 4 arms + riders + gears
+      // Base platform
+      const base = mk(new THREE.CylinderGeometry(1.8, 1.8, 0.15, 32), yw); base.position.y = -0.2; g.add(base);
+      // Central shaft
+      cyl(0, 0.55, 0, 0.12, 1.5, bl);
+      // G60 gear at base
+      const gear = mk(new THREE.CylinderGeometry(0.9, 0.9, 0.18, 60), 0xfbbf24); gear.position.y = -0.28; g.add(gear);
+      // 4 radial arms
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const arm = mk(new THREE.BoxGeometry(0.1, 0.1, 1.7), yw);
+        arm.position.set(Math.cos(a) * 0.85, 0.18, Math.sin(a) * 0.85); arm.rotation.y = a; g.add(arm);
+        sph(Math.cos(a) * 1.65, 0.38, Math.sin(a) * 1.65, 0.22, [or, 0xef4444, bl, 0x22c55e][i]);
+      }
+      break;
+    }
+    case 14: { // Spinning Top — motor + gears + top disc
+      const body = mk(new THREE.CylinderGeometry(0.34, 0.34, 0.78, 20), gr); body.rotation.z = Math.PI / 2; body.position.y = 0.2; g.add(body);
+      // G60 large gear (driven)
+      const lg = mk(new THREE.CylinderGeometry(0.9, 0.9, 0.2, 60), 0xfbbf24); lg.position.y = -0.4; g.add(lg);
+      // G20 small gear (driver)
+      const sg = mk(new THREE.CylinderGeometry(0.58, 0.58, 0.2, 32), bl); sg.position.set(-0.95, -0.4, 0); g.add(sg);
+      // Spinning top disc
+      const top = mk(new THREE.CylinderGeometry(0.7, 0.05, 0.1, 32), yw); top.position.y = -1.0; g.add(top);
+      cyl(0, -0.62, 0, 0.08, 0.9, bl);
+      break;
+    }
+    case 15: { // Lock & Key — box with rack slot + gear key
+      // Lock body
+      beam(0, 0, 0, 2.2, 1.4, 0.9, bk);
+      // Rack slot (lighter)
+      beam(0.3, 0, 0.46, 1.6, 0.22, 0.06, 0x374151);
+      // Key: shaft + gear
+      cyl(1.8, 0, 0, 0.09, 1.2, 0x9ca3af, 0, 0, Math.PI / 2);
+      const key = mk(new THREE.CylinderGeometry(0.4, 0.4, 0.2, 32), bl); key.position.set(2.45, 0, 0); key.rotation.z = Math.PI / 2; g.add(key);
+      // Teeth on key gear
+      for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; const t = mk(new THREE.BoxGeometry(0.2, 0.1, 0.1), bl); t.position.set(2.45 + Math.cos(a) * 0.42, Math.sin(a) * 0.42, 0); t.rotation.z = a; g.add(t); }
+      break;
+    }
+    case 16: { // Trundle Wheel — long handle + large measuring wheel
+      // Handle (P11 beam)
+      cyl(0, 1.2, 0, 0.08, 2.6, yw);
+      beam(-0.1, 1.1, 0, 0.7, 0.1, 0.1, yw); // grip crossbar
+      // Large wheel
+      const wr = 1.0;
+      g.add(mk(new THREE.TorusGeometry(wr, 0.3, 16, 32), 0x111111));
+      const hub = mk(new THREE.CylinderGeometry(wr * 0.38, wr * 0.38, 0.28, 20), or); hub.rotation.x = Math.PI / 2; g.add(hub);
+      for (let i = 0; i < 5; i++) { const sp = mk(new THREE.BoxGeometry(wr * 1.7, 0.07, 0.1), or); sp.rotation.set(Math.PI / 2, (i / 5) * Math.PI * 2, 0); g.add(sp); }
+      cyl(0, 0, 0, 0.09, 0.35, bk, Math.PI / 2);
+      break;
+    }
+    case 17: { // Zipline — angled cable + pulley rider
+      // Angled cable
+      cyl(0, 0, 0, 0.04, 3.6, 0x9ca3af, 0, 0, Math.PI / 4);
+      // Top anchor
+      beam(-1.2, 1.2, 0, 0.14, 0.9, 0.14, bk);
+      // Pulley car on cable
+      const pc = new THREE.Group();
+      pc.position.set(-0.3, 0.5, 0);
+      pc.add(mk(new THREE.CylinderGeometry(0.4, 0.4, 0.32, 20), bl)); // pulley wheel
+      pc.add(mk(new THREE.BoxGeometry(0.5, 0.3, 0.5), yw)).position.y = -0.45;
+      // Rider
+      sph(-0.3, 0.15, 0, 0.22, or);
+      g.add(pc);
+      break;
+    }
+    case 18: { // Dancing Robot — humanoid linkage body
+      sph(0, 1.55, 0, 0.3, or);  // head
+      beam(0, 0.9, 0, 0.6, 0.7, 0.45, yw); // torso
+      // Arms
+      const armL = mk(new THREE.BoxGeometry(0.12, 0.85, 0.12), yw); armL.position.set(-0.5, 0.9, 0); armL.rotation.z = 0.4; g.add(armL);
+      const armR = mk(new THREE.BoxGeometry(0.12, 0.85, 0.12), yw); armR.position.set( 0.5, 0.9, 0); armR.rotation.z = -0.4; g.add(armR);
+      // Legs
+      beam(-0.18, 0.0, 0, 0.12, 0.85, 0.12, yw);
+      beam( 0.18, 0.0, 0, 0.12, 0.85, 0.12, yw);
+      // Motor at back
+      const mot = mk(new THREE.CylinderGeometry(0.28, 0.28, 0.6, 16), gr); mot.rotation.z = Math.PI / 2; mot.position.set(0.7, 0.88, 0); g.add(mot);
+      // G60 gear
+      const gm = mk(new THREE.CylinderGeometry(0.65, 0.65, 0.18, 60), 0xfbbf24); gm.rotation.z = Math.PI / 2; gm.position.set(0.25, 0.88, 0); g.add(gm);
+      break;
+    }
+    case 19: { // Digital Clock — 7-segment display frame
+      beam(0, 0, 0, 2.2, 1.4, 0.12, bk); // PCB board
+      // 7-segment digit representation
+      const seg = (x: number, y: number, h: boolean) => {
+        const s = mk(new THREE.BoxGeometry(h ? 0.38 : 0.08, h ? 0.08 : 0.38, 0.14), or);
+        s.position.set(x, y, 0.07); g.add(s);
+      };
+      seg(-0.2, 0.45, true); seg(-0.2, -0.45, true); seg(-0.2, 0, true); // horizontals
+      seg(-0.42, 0.25, false); seg(0.02, 0.25, false); // left/right top verticals
+      seg(-0.42, -0.25, false); seg(0.02, -0.25, false); // left/right bottom verticals
+      // Frame pillars
+      [-0.9, 0.9].forEach(x => { beam(x as number, 0, 0, 0.1, 1.45, 0.12, yw); });
+      break;
+    }
+    case 20: { // Earth-Moon-Sun — orrery
+      // Sun
+      sph(0, 0, 0, 0.55, 0xfde047);
+      // Earth orbit arm
+      beam(0.85, 0, 0, 1.7, 0.08, 0.08, 0x9ca3af);
+      sph(1.7, 0, 0, 0.25, 0x3b82f6); // Earth
+      // Moon orbit arm
+      beam(2.1, 0.1, 0, 0.8, 0.06, 0.06, 0xd1d5db);
+      sph(2.5, 0.1, 0, 0.14, 0xd1d5db); // Moon
+      // Central shaft
+      cyl(0, -0.6, 0, 0.1, 1.2, bl);
+      // G60 gear at base
+      const orrGear = mk(new THREE.CylinderGeometry(0.7, 0.7, 0.16, 60), 0xfbbf24); orrGear.position.y = -1.2; g.add(orrGear);
+      break;
+    }
+    case 23: { // Balance Scale — Y-stand + horizontal beam + two pans
+      // Vertical stand
+      cyl(0, -0.5, 0, 0.1, 1.5, yw);
+      beam(0, -1.22, 0, 1.4, 0.12, 0.5, yw); // base
+      // Horizontal beam
+      beam(0, 0.55, 0, 3.0, 0.12, 0.12, yw);
+      // Strings
+      cyl(-1.3, 0.1, 0, 0.03, 0.9, 0x9ca3af);
+      cyl( 1.3, 0.1, 0, 0.03, 0.9, 0x9ca3af);
+      // Pans
+      const panL = mk(new THREE.CylinderGeometry(0.52, 0.52, 0.08, 20), 0xe5e7eb, 0.4, 0.7); panL.position.set(-1.3, -0.35, 0); g.add(panL);
+      const panR = mk(new THREE.CylinderGeometry(0.52, 0.52, 0.08, 20), 0xe5e7eb, 0.4, 0.7); panR.position.set( 1.3, -0.35, 0); g.add(panR);
+      break;
+    }
+    case 24: { // Plowing Machine — wheeled chassis + front plow blade
+      beam(0, 0.12, 0.7, 2.5, 0.16, 0.42);
+      beam(0, 0.12, -0.7, 2.5, 0.16, 0.42);
+      beam(0, 0.28, 0, 2.2, 0.5, 1.5, or); // body
+      // Plow blade at front
+      const plow = mk(new THREE.BoxGeometry(0.12, 0.7, 1.8), 0x374151); plow.position.set(-1.5, 0.2, 0); plow.rotation.z = 0.25; g.add(plow);
+      cyl( 1.1, -0.32, 0, 0.07, 1.6, bk, 0, 0, Math.PI / 2);
+      cyl(-0.8, -0.32, 0, 0.07, 1.6, bk, 0, 0, Math.PI / 2);
+      wheel(-0.8, -0.32, 0.82); wheel(-0.8, -0.32, -0.82);
+      wheel( 1.1, -0.32, 0.82); wheel( 1.1, -0.32, -0.82);
+      // Motor at back
+      const motP = mk(new THREE.CylinderGeometry(0.28, 0.28, 0.55, 16), gr); motP.rotation.z = Math.PI / 2; motP.position.set(1.05, 0.38, 0); g.add(motP);
+      break;
+    }
+    case 27: { // First Circuit — Queaky + connecting towers + wires
+      // Queaky device
+      const qg = new THREE.Group();
+      qg.add(mk(new THREE.BoxGeometry(1.4, 0.45, 0.72), 0xfde047, 0.05, 0.8));
+      [-0.78, 0.78].forEach(x => { const ear = mk(new THREE.BoxGeometry(0.22, 0.1, 0.24), 0x9ca3af, 0.6, 0.3); ear.position.set(x, 0.08, 0); qg.add(ear); });
+      [[-0.28, 0], [0.28, 0]].forEach(([x, z]) => {
+        qg.add(mk(new THREE.CylinderGeometry(0.1, 0.1, 0.06, 14), wh, 0, 1.0)).position.set(x as number, 0.26, 0.38);
+        qg.add(mk(new THREE.CylinderGeometry(0.05, 0.05, 0.07, 10), bk, 0, 1.0)).position.set(x as number, 0.26, 0.39);
+      });
+      g.add(qg);
+      // Connecting towers
+      [-1.4, 1.4].forEach(x => {
+        cyl(x as number, -0.1, 0.5, 0.1, 0.9, wh, 0, 0, 0);
+        const th = mk(new THREE.CylinderGeometry(0.2, 0.2, 0.22, 10), bk); th.position.set(x as number, 0.36, 0.5); g.add(th);
+      });
+      // Wires connecting
+      const wirePath = new THREE.CatmullRomCurve3([new THREE.Vector3(-1.4, 0.36, 0.5), new THREE.Vector3(-0.7, 0.8, 0.3), new THREE.Vector3(-0.7, 0.3, 0), new THREE.Vector3(-0.78, 0.08, 0)]);
+      const wGeom = new THREE.TubeGeometry(wirePath, 12, 0.025, 8, false);
+      g.add(mk(wGeom, 0x374151, 0.2, 0.9));
+      break;
+    }
+    case 30: { // Balloon Rocket Car — chassis + 4 wheels + balloon
+      beam(0, 0.1, 0.75, 2.6, 0.16, 0.42);
+      beam(0, 0.1, -0.75, 2.6, 0.16, 0.42);
+      beam(0, 0.2, 0, 2.0, 0.18, 1.6, 0x374151); // dark chassis body
+      cyl( 0.9, -0.32, 0, 0.07, 1.65, bk, 0, 0, Math.PI / 2);
+      cyl(-0.9, -0.32, 0, 0.07, 1.65, bk, 0, 0, Math.PI / 2);
+      wheel(-0.9, -0.32, 0.88); wheel(-0.9, -0.32, -0.88);
+      wheel( 0.9, -0.32, 0.88); wheel( 0.9, -0.32, -0.88);
+      // Balloon mount
+      cyl(1.0, 0.45, 0, 0.07, 0.55, yw);
+      // Balloon
+      sph(1.0, 0.88, 0, 0.55, 0xef4444);
+      const tie = mk(new THREE.CylinderGeometry(0.04, 0.04, 0.2, 6), 0xdc2626); tie.position.set(1.0, 0.3, 0); g.add(tie);
+      break;
+    }
+    default: { // Generic final model for unmapped chapters
+      // Show all step components from the chapter in a ring layout (fallback)
+      const placeholder = mk(new THREE.BoxGeometry(1.8, 0.3, 1.8), yw, 0.1, 0.8); placeholder.position.y = -0.3; g.add(placeholder);
+      sph(0, 0.5, 0, 0.55, bl);
+      cyl(0, -0.3, 0, 0.1, 0.7, 0x9ca3af);
+      break;
+    }
+  }
+  return g;
+}
+
 // ─── Left: 3-D Viewer ─────────────────────────────────────────────────────────
 interface ViewerProps {
   step: { components: string[]; title: { en: string }; stepNumber: number } | null;
   totalSteps: number; stepIdx: number; exploded: boolean;
+  chapterId?: number;
   onPrev: () => void; onNext: () => void;
   onSnapshot?: (dataUrl: string) => void;
 }
-function StepViewer3D({ step, totalSteps, stepIdx, exploded, onPrev, onNext, onSnapshot }: ViewerProps) {
+function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, onNext, onSnapshot }: ViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const groupRef = useRef<THREE.Group>(new THREE.Group());
   const frameRef = useRef(0);
   const dragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+  const [showFinal, setShowFinal] = useState(false);
 
   useEffect(() => {
     const mount = mountRef.current; if (!mount) return;
@@ -526,7 +861,25 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, onPrev, onNext, onS
     };
   }, []);
 
+  // Load final assembled model
   useEffect(() => {
+    if (!showFinal || !chapterId) return;
+    const grp = groupRef.current; disposeGroup(grp);
+    const assembly = buildFinalAssembly(chapterId);
+    assembly.scale.setScalar(0.001); grp.add(assembly);
+    grp.rotation.set(0.15, 0.5, 0);
+    const start = performance.now();
+    const grow = () => { const t = Math.min((performance.now() - start) / 400, 1); assembly.scale.setScalar(1 - Math.pow(1 - t, 3)); if (t < 1) requestAnimationFrame(grow); };
+    requestAnimationFrame(grow);
+    if (onSnapshot) {
+      const timer = setTimeout(() => { if (rendererRef.current) onSnapshot(rendererRef.current.domElement.toDataURL("image/jpeg", 0.9)); }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showFinal, chapterId]);
+
+  // Load step components
+  useEffect(() => {
+    if (showFinal) return;
     const grp = groupRef.current; disposeGroup(grp);
     if (!step || !step.components.length) return;
     const items = parseComps(step.components);
@@ -545,28 +898,38 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, onPrev, onNext, onS
       }
     }
     grp.rotation.set(0, 0.3, 0);
-
-    // Capture a snapshot after the grow animation settles (~350ms)
     if (onSnapshot) {
-      const timer = setTimeout(() => {
-        if (rendererRef.current) {
-          onSnapshot(rendererRef.current.domElement.toDataURL("image/jpeg", 0.9));
-        }
-      }, 400);
+      const timer = setTimeout(() => { if (rendererRef.current) onSnapshot(rendererRef.current.domElement.toDataURL("image/jpeg", 0.9)); }, 400);
       return () => clearTimeout(timer);
     }
-  }, [step, exploded]);
+  }, [step, exploded, showFinal]);
 
   const comps = step ? parseComps(step.components) : [];
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col">
       <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-orange-500">🔧</span>
-          <span className="font-bold text-[15px] text-gray-800">Interactive 3D Building Guide</span>
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-orange-500">🔧</span>
+            <span className="font-bold text-[15px] text-gray-800">Interactive 3D Building Guide</span>
+          </div>
+          {chapterId && (
+            <button
+              onClick={() => setShowFinal(f => !f)}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all ${
+                showFinal
+                  ? "bg-teal-500 text-white border-teal-500 shadow"
+                  : "bg-white text-teal-600 border-teal-300 hover:bg-teal-50"
+              }`}
+            >
+              🏁 {showFinal ? "Final Model" : "View Final"}
+            </button>
+          )}
         </div>
-        <p className="text-xs text-gray-500">Watch the 3D model as you follow each step.</p>
+        <p className="text-xs text-gray-500">
+          {showFinal ? "Complete assembled model — drag to rotate." : "Watch the 3D model as you follow each step."}
+        </p>
       </div>
 
       <div className="flex mx-4 mb-0 border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
@@ -1348,6 +1711,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
         <div className="space-y-3">
           <StepViewer3D
             step={step} totalSteps={totalSteps} stepIdx={stepIdx} exploded={exploded}
+            chapterId={chapter.id}
             onPrev={() => setStepIdx(i => Math.max(0, i - 1))}
             onNext={() => setStepIdx(i => Math.min(totalSteps - 1, i + 1))}
             onSnapshot={setReferenceSnapshot}
