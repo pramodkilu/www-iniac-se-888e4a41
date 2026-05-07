@@ -955,8 +955,8 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
               onClick={() => setShowFinal(f => !f)}
               className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all ${
                 showFinal
-                  ? "bg-teal-500 text-white border-teal-500 shadow"
-                  : "bg-white text-teal-600 border-teal-300 hover:bg-teal-50"
+                  ? "bg-orange-500 text-white border-orange-500 shadow"
+                  : "bg-white text-orange-600 border-orange-300 hover:bg-orange-50"
               }`}
             >
               📖 {showFinal ? "Book Page" : "View Book Page"}
@@ -970,16 +970,16 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
 
       {/* ── Final picture: real book page ─────────────────────────────── */}
       {showFinal && chapterId && CHAPTER_PAGE_IMAGES[chapterId] ? (
-        <div className="mx-4 mb-2 rounded-xl overflow-hidden border border-teal-200 bg-teal-50" style={{ minHeight: 280 }}>
+        <div className="mx-4 mb-2 rounded-xl overflow-hidden border border-orange-200 bg-orange-50" style={{ minHeight: 280 }}>
           <img
             src={CHAPTER_PAGE_IMAGES[chapterId]}
             alt={`Chapter ${chapterId} book page`}
             className="w-full object-contain"
             style={{ maxHeight: 480 }}
           />
-          <div className="px-3 py-2 flex items-center gap-2 border-t border-teal-200">
-            <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wide">📖 Official Blix Curriculum Book</span>
-            <span className="text-[10px] text-teal-500 ml-auto">Chapter {chapterId} reference</span>
+          <div className="px-3 py-2 flex items-center gap-2 border-t border-orange-200">
+            <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">📖 Official Blix Curriculum Book</span>
+            <span className="text-[10px] text-orange-500 ml-auto">Chapter {chapterId} reference</span>
           </div>
         </div>
       ) : (
@@ -1033,7 +1033,7 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
         {comps.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2.5">
             {comps.flatMap(c => Array.from({ length: Math.min(c.qty, 4) }, (_, i) => (
-              <span key={`${c.code}-${i}`} className="font-mono text-[11px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-semibold">
+              <span key={`${c.code}-${i}`} className="font-mono text-[11px] bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-semibold">
                 {c.code}
               </span>
             )))}
@@ -1092,7 +1092,7 @@ function StepDetails({ chapter, stepIdx, onStepChange }: DetailsProps) {
         {/* Progress track */}
         <div className="relative mb-3">
           <div className="h-1.5 bg-gray-100 rounded-full">
-            <div className="h-1.5 bg-teal-400 rounded-full transition-all duration-300"
+            <div className="h-1.5 bg-orange-400 rounded-full transition-all duration-300"
               style={{ width: `${((stepIdx + 1) / totalSteps) * 100}%` }} />
           </div>
           <div className="absolute -top-1 w-4 h-4 bg-white border-2 border-orange-500 rounded-full transition-all duration-300"
@@ -1104,7 +1104,7 @@ function StepDetails({ chapter, stepIdx, onStepChange }: DetailsProps) {
           {Array.from({ length: Math.min(totalSteps, 12) }, (_, i) => (
             <button key={i} onClick={() => onStepChange(i)}
               className={`w-7 h-7 rounded-full text-xs font-semibold transition-all ${
-                i === stepIdx ? "bg-orange-500 text-white shadow" : i < stepIdx ? "bg-teal-100 text-teal-700 border border-teal-200" : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
+                i === stepIdx ? "bg-orange-500 text-white shadow" : i < stepIdx ? "bg-orange-100 text-orange-700 border border-orange-200" : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
               }`}>
               {i + 1}
             </button>
@@ -1129,7 +1129,7 @@ function StepDetails({ chapter, stepIdx, onStepChange }: DetailsProps) {
             {comps.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {comps.map((c, i) => (
-                  <span key={i} className="font-mono text-[11px] bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-full font-semibold">
+                  <span key={i} className="font-mono text-[11px] bg-orange-50 text-orange-700 border border-orange-200 px-2 py-0.5 rounded-full font-semibold">
                     {c.code} ×{c.qty}
                   </span>
                 ))}
@@ -1345,7 +1345,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
             {comps.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {comps.map((c, i) => (
-                  <span key={i} className="font-mono text-[10px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-full font-semibold">
+                  <span key={i} className="font-mono text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">
                     {c.code} ×{c.qty}
                   </span>
                 ))}
@@ -1392,12 +1392,12 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1">Reference</p>
-                <div className="rounded-lg overflow-hidden border-2 border-teal-400 bg-gray-50 relative" style={{ aspectRatio: "4/3" }}>
+                <div className="rounded-lg overflow-hidden border-2 border-orange-400 bg-gray-50 relative" style={{ aspectRatio: "4/3" }}>
                   {referenceImage
                     ? <img src={referenceImage} alt="Reference build" className="w-full h-full object-cover" />
                     : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">No ref</div>
                   }
-                  <div className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center shadow">
+                  <div className="absolute top-1 right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow">
                     <span className="text-white text-[8px] font-bold">✓</span>
                   </div>
                 </div>
@@ -1496,7 +1496,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
 
             {/* ── Step done banner ── */}
             {(apiResult?.correct || modelResult?.correct) && !checking && (
-              <div className="bg-teal-500 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
+              <div className="bg-orange-500 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Step {stepIdx + 1} verified ✓
               </div>
             )}
