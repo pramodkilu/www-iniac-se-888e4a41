@@ -195,181 +195,270 @@ function mk(g: THREE.BufferGeometry, color: number, metalness = 0.15, roughness 
 function buildShape(code: string): THREE.Object3D {
   const c = codeColor(code); const g = new THREE.Group(); const lc = code.toLowerCase();
 
-  // ── Structural pillars ──────────────────────────────────────────────────────
-  if (lc.includes("p7x11")) {
-    const leg = () => mk(new THREE.BoxGeometry(0.3, 1.8, 0.42), c);
-    const l = leg(); l.position.set(-0.55, 0, 0); g.add(l);
-    const r = leg(); r.position.set( 0.55, 0, 0); g.add(r);
-    const b = mk(new THREE.BoxGeometry(1.4, 0.3, 0.42), c); b.position.y = -0.9; g.add(b);
-  } else if (lc.includes("p21x21")) {
-    g.add(mk(new THREE.BoxGeometry(1.9, 0.1, 1.9), c));
+  // ── Base plates (flat rectangular plates with stud holes) ────────────────────
+  if (lc.includes("p21x21")) {
+    // Large grey square base plate
+    g.add(mk(new THREE.BoxGeometry(1.9, 0.1, 1.9), 0xa3a3a3));
     for (let a = -2; a <= 2; a++) for (let b2 = -2; b2 <= 2; b2++) {
-      const s = mk(new THREE.CylinderGeometry(0.065, 0.065, 0.09, 8), c);
+      const s = mk(new THREE.CylinderGeometry(0.065, 0.065, 0.09, 8), 0xa3a3a3);
       s.position.set(a * 0.37, 0.09, b2 * 0.37); g.add(s);
     }
+  } else if (lc.includes("p7x11")) {
+    // Flat rectangular plate (grey) — NOT a U-shape
+    const W = 1.6; const D = 1.0;
+    g.add(mk(new THREE.BoxGeometry(W, 0.1, D), 0xd1d5db));
+    for (let a = 0; a < 3; a++) for (let b2 = 0; b2 < 2; b2++) {
+      const s = mk(new THREE.CylinderGeometry(0.055, 0.055, 0.08, 8), 0xd1d5db);
+      s.position.set(-0.48 + a * 0.48, 0.09, -0.22 + b2 * 0.44); g.add(s);
+    }
+
+  // ── U-pillars (two legs + crosspiece) ────────────────────────────────────────
   } else if (lc.startsWith("pu")) {
-    [-0.6, 0.6].forEach(x => { const l = mk(new THREE.BoxGeometry(0.3, 1.9, 0.4), c); l.position.x = x; g.add(l); });
-    const b2 = mk(new THREE.BoxGeometry(1.5, 0.3, 0.4), c); b2.position.y = -1.1; g.add(b2);
-  } else if (lc === "p3+" || lc === "p3 plus") {
-    g.add(mk(new THREE.BoxGeometry(0.36, 0.72, 0.46), c));
-    const stud = mk(new THREE.CylinderGeometry(0.1, 0.1, 0.12, 8), c); stud.position.y = 0.42; g.add(stud);
+    const h = lc.includes("13") ? 2.2 : 1.6;
+    [-0.6, 0.6].forEach(x => { const l = mk(new THREE.BoxGeometry(0.3, h, 0.4), c); l.position.x = x; g.add(l); });
+    const b2 = mk(new THREE.BoxGeometry(1.5, 0.3, 0.4), c); b2.position.y = -(h / 2) - 0.0; g.add(b2);
+
+  // ── Pillars (yellow rectangular beams with circular holes) ───────────────────
+  } else if (lc === "p3+" || lc === "p3 plus" || lc === "p3+") {
+    // Short pillar with through holes + stud on top
+    g.add(mk(new THREE.BoxGeometry(0.52, 0.44, 0.44), c));
+    for (let i = 0; i < 2; i++) {
+      const bore = mk(new THREE.CylinderGeometry(0.1, 0.1, 0.48, 10), 0x5a3d00, 0.05, 0.9);
+      bore.rotation.z = Math.PI / 2; bore.position.x = -0.13 + i * 0.26; g.add(bore);
+    }
   } else if (lc === "pc3") {
     g.add(mk(new THREE.BoxGeometry(1.1, 0.12, 0.38), c));
     const arm = mk(new THREE.BoxGeometry(0.38, 0.12, 0.6), c); arm.position.z = 0.35; g.add(arm);
   } else if (/^p\d+/i.test(code.trim())) {
     const holes = parseInt(code.replace(/\D/g, "")) || 5;
-    const h = 0.22 * Math.min(holes, 11) + 0.06;
-    g.add(mk(new THREE.BoxGeometry(0.36, h, 0.46), c));
+    const w = 0.52; const depth = 0.44;
+    const totalW = w * Math.min(holes, 8);
+    g.add(mk(new THREE.BoxGeometry(totalW, 0.44, depth), c));
     for (let i = 0; i < Math.min(holes, 8); i++) {
-      const hole = mk(new THREE.CylinderGeometry(0.07, 0.07, 0.5, 8), 0x775500, 0.05, 0.9);
-      hole.rotation.z = Math.PI / 2; hole.position.set(0, -h / 2 + 0.14 + i * 0.22, 0); g.add(hole);
+      const bore = mk(new THREE.CylinderGeometry(0.1, 0.1, depth + 0.05, 10), 0x5a3d00, 0.05, 0.9);
+      bore.rotation.x = Math.PI / 2;
+      bore.position.set(-totalW / 2 + w * 0.5 + i * w, 0, 0); g.add(bore);
     }
 
   // ── Connectors ──────────────────────────────────────────────────────────────
-  } else if (lc.startsWith("ct") || lc.startsWith("ch") || lc.startsWith("cl")) {
-    g.add(mk(new THREE.BoxGeometry(0.6, 0.38, 0.38), c));
-    const pin = mk(new THREE.CylinderGeometry(0.07, 0.07, 0.2, 8), 0x888888, 0.5, 0.3);
-    pin.rotation.z = Math.PI / 2; pin.position.x = 0.42; g.add(pin);
-  } else if (lc.startsWith("tw")) {
-    g.add(mk(new THREE.TorusGeometry(0.28, 0.09, 8, 20), c, 0.4, 0.5));
+  } else if (lc === "ch2") {
+    // Blue connector with cylindrical barrel port on top
+    g.add(mk(new THREE.BoxGeometry(0.55, 0.5, 0.55), 0x60a5fa));
+    const port = mk(new THREE.CylinderGeometry(0.18, 0.18, 0.28, 12), 0x3b82f6, 0.2, 0.7);
+    port.position.y = 0.39; g.add(port);
+    g.add(mk(new THREE.CylinderGeometry(0.09, 0.09, 0.52, 10), 0x1e3a5f, 0.05, 1.0));
+  } else if (lc === "cl2") {
+    // Flat yellow double-tab clip
+    [-0.28, 0.28].forEach(x => {
+      g.add(mk(new THREE.BoxGeometry(0.48, 0.22, 0.44), c) as THREE.Mesh).position.x = x;
+      const bore = mk(new THREE.CylinderGeometry(0.1, 0.1, 0.48, 10), 0x5a3d00, 0.05, 1.0);
+      bore.rotation.z = Math.PI / 2; bore.position.x = x; g.add(bore);
+    });
+  } else if (lc.startsWith("ct")) {
+    // Orange T-shape with through-bore
+    g.add(mk(new THREE.BoxGeometry(1.0, 0.42, 0.44), c));
+    g.add(mk(new THREE.BoxGeometry(0.42, 0.58, 0.44), c)).position.y = -0.46;
+    const bore = mk(new THREE.CylinderGeometry(0.13, 0.13, 1.05, 12), 0x5a3d00, 0.05, 1.0);
+    bore.rotation.z = Math.PI / 2; g.add(bore);
+  } else if (lc.startsWith("cl")) {
+    // L-connector (right-angle)
+    g.add(mk(new THREE.BoxGeometry(0.8, 0.4, 0.42), c));
+    const arm = mk(new THREE.BoxGeometry(0.4, 0.7, 0.42), c); arm.position.set(-0.2, 0.55, 0); g.add(arm);
 
-  // ── Shafts ──────────────────────────────────────────────────────────────────
+  // ── Axle sleeves / washers (short solid cylinders, NOT rings) ────────────────
+  } else if (lc.startsWith("tw")) {
+    // Short solid black cylinder — matches real TW1 photo
+    g.add(mk(new THREE.CylinderGeometry(0.36, 0.36, 0.44, 16), 0x111111, 0.2, 0.8));
+    g.add(mk(new THREE.CylinderGeometry(0.13, 0.13, 0.48, 10), 0x374151, 0.1, 1.0));
+
+  // ── Shafts (silver metal rods) ───────────────────────────────────────────────
   } else if (lc.startsWith("sh")) {
     const len = (parseInt(code.replace(/\D/g, "")) || 60) / 60;
     g.add(mk(new THREE.CylinderGeometry(0.07, 0.07, len, 12), 0xc0c0c0, 0.7, 0.3));
 
-  // ── Gears & rack ────────────────────────────────────────────────────────────
+  // ── Gears (flat disc with teeth + plus-hub) ──────────────────────────────────
   } else if (lc.startsWith("g20")) {
-    g.add(mk(new THREE.TorusGeometry(0.6, 0.15, 8, 20), c));
-    const h = mk(new THREE.CylinderGeometry(0.17, 0.17, 0.35, 12), c); h.rotation.x = Math.PI / 2; g.add(h);
+    const r = 0.62; const thick = 0.22; const teeth = 16;
+    g.add(mk(new THREE.CylinderGeometry(r, r, thick, 32), c));
+    for (let i = 0; i < teeth; i++) {
+      const a = (i / teeth) * Math.PI * 2;
+      const t = mk(new THREE.BoxGeometry(0.12, thick, 0.14), c);
+      t.position.set(Math.cos(a) * (r + 0.07), 0, Math.sin(a) * (r + 0.07)); t.rotation.y = a; g.add(t);
+    }
+    g.add(mk(new THREE.CylinderGeometry(r * 0.22, r * 0.22, thick + 0.04, 12), c));
+    [0, Math.PI / 2].forEach(a => {
+      const sl = mk(new THREE.BoxGeometry(r * 0.52, thick + 0.06, r * 0.13), 0x000000, 0, 1.0);
+      sl.rotation.y = a; g.add(sl);
+    });
   } else if (lc === "g60") {
-    g.add(mk(new THREE.TorusGeometry(0.95, 0.18, 8, 60), c));
-    const h = mk(new THREE.CylinderGeometry(0.28, 0.28, 0.4, 12), c); h.rotation.x = Math.PI / 2; g.add(h);
+    const r = 0.95; const thick = 0.24; const teeth = 28;
+    g.add(mk(new THREE.CylinderGeometry(r, r, thick, 60), 0xfbbf24));
+    for (let i = 0; i < teeth; i++) {
+      const a = (i / teeth) * Math.PI * 2;
+      const t = mk(new THREE.BoxGeometry(0.13, thick, 0.15), 0xfbbf24);
+      t.position.set(Math.cos(a) * (r + 0.075), 0, Math.sin(a) * (r + 0.075)); t.rotation.y = a; g.add(t);
+    }
+    g.add(mk(new THREE.CylinderGeometry(r * 0.25, r * 0.25, thick + 0.04, 12), 0xfbbf24));
+    [0, Math.PI / 2].forEach(a => {
+      const sl = mk(new THREE.BoxGeometry(r * 0.5, thick + 0.06, r * 0.13), 0x000000, 0, 1.0);
+      sl.rotation.y = a; g.add(sl);
+    });
   } else if (lc === "rack") {
     g.add(mk(new THREE.BoxGeometry(1.8, 0.22, 0.36), c));
-    for (let i = 0; i < 7; i++) { const t = mk(new THREE.BoxGeometry(0.12, 0.16, 0.38), c); t.position.set(-0.78 + i * 0.26, 0.19, 0); g.add(t); }
+    for (let i = 0; i < 7; i++) { const t = mk(new THREE.BoxGeometry(0.12, 0.18, 0.38), c); t.position.set(-0.78 + i * 0.26, 0.2, 0); g.add(t); }
   } else if (lc.includes("power screw") || lc.includes("p5-nut") || lc.includes("p5 nut")) {
     g.add(mk(new THREE.CylinderGeometry(0.08, 0.08, 1.2, 12), 0xc0c0c0, 0.7, 0.2));
-    for (let i = 0; i < 6; i++) {
-      const t = mk(new THREE.TorusGeometry(0.14, 0.03, 6, 10), 0x888888, 0.5, 0.3);
-      t.rotation.x = Math.PI / 2; t.position.y = -0.5 + i * 0.2; g.add(t);
-    }
+    for (let i = 0; i < 6; i++) { const t = mk(new THREE.TorusGeometry(0.14, 0.03, 6, 10), 0x888888, 0.5, 0.3); t.rotation.x = Math.PI / 2; t.position.y = -0.5 + i * 0.2; g.add(t); }
 
-  // ── Wheels & mechanical ──────────────────────────────────────────────────────
+  // ── Wheels (orange spoke hub + black tyre torus) ──────────────────────────────
   } else if (lc === "wheel" || lc.includes("w/o") || lc === "w-nt") {
-    g.add(mk(new THREE.TorusGeometry(0.78, 0.28, 16, 32), 0x111111));
-    const h = mk(new THREE.CylinderGeometry(0.33, 0.33, 0.3, 20), 0xf97316); h.rotation.x = Math.PI / 2; g.add(h);
-  } else if (lc === "pulley") {
-    g.add(mk(new THREE.TorusGeometry(0.45, 0.15, 8, 24), c));
-    const h = mk(new THREE.CylinderGeometry(0.12, 0.12, 0.32, 12), c); h.rotation.x = Math.PI / 2; g.add(h);
-  } else if (lc.includes("suspension")) {
+    const withTyre = !lc.includes("w/o") && lc !== "w-nt";
+    if (withTyre) g.add(mk(new THREE.TorusGeometry(0.82, 0.3, 16, 32), 0x111111, 0.05, 0.9));
+    const hubR = withTyre ? 0.38 : 0.78;
+    const hub = mk(new THREE.CylinderGeometry(hubR, hubR, 0.26, 20), 0xf97316);
+    hub.rotation.x = Math.PI / 2; g.add(hub);
     for (let i = 0; i < 5; i++) {
-      const ring = mk(new THREE.TorusGeometry(0.22, 0.05, 6, 14), c, 0.3, 0.6);
-      ring.rotation.x = Math.PI / 2; ring.position.y = -0.4 + i * 0.2; g.add(ring);
+      const sp = mk(new THREE.BoxGeometry(hubR * 1.8, 0.07, 0.11), 0xf97316);
+      sp.rotation.set(Math.PI / 2, (i / 5) * Math.PI * 2, 0); g.add(sp);
     }
+    const axle = mk(new THREE.CylinderGeometry(0.09, 0.09, 0.32, 10), 0x374151, 0.6, 0.3);
+    axle.rotation.x = Math.PI / 2; g.add(axle);
+
+  // ── Pulley (blue bobbin/spool with flanged edges) ────────────────────────────
+  } else if (lc === "pulley") {
+    g.add(mk(new THREE.CylinderGeometry(0.44, 0.44, 0.36, 20), 0x2563eb, 0.15, 0.6));
+    const fl = (y: number) => { const f = mk(new THREE.CylinderGeometry(0.7, 0.7, 0.13, 24), 0x3b82f6, 0.1, 0.7); f.position.y = y; g.add(f); };
+    fl(0.245); fl(-0.245);
+    g.add(mk(new THREE.CylinderGeometry(0.12, 0.12, 0.65, 10), 0x1e3a5f, 0.1, 1.0));
+
+  // ── Suspension (black rod + yellow spring coils + end caps) ──────────────────
+  } else if (lc.includes("suspension")) {
+    g.add(mk(new THREE.CylinderGeometry(0.07, 0.07, 2.0, 10), 0x111111, 0.5, 0.5));
+    for (let i = 0; i < 7; i++) { const ring = mk(new THREE.TorusGeometry(0.26, 0.055, 8, 16), 0xfbbf24, 0.1, 0.8); ring.rotation.x = Math.PI / 2; ring.position.y = -0.55 + i * 0.18; g.add(ring); }
+    const cap = mk(new THREE.CylinderGeometry(0.19, 0.19, 0.16, 12), 0x1f2937, 0.3, 0.7); cap.position.y = 0.96; g.add(cap);
+    const ring2 = mk(new THREE.TorusGeometry(0.2, 0.07, 8, 16), 0xf97316, 0.1, 0.7); ring2.rotation.x = Math.PI / 2; ring2.position.y = -0.96; g.add(ring2);
+
+  // ── Steering wheel ────────────────────────────────────────────────────────────
   } else if (lc.includes("steering")) {
     g.add(mk(new THREE.TorusGeometry(0.6, 0.07, 8, 24), 0x1f2937));
     const hub = mk(new THREE.CylinderGeometry(0.1, 0.1, 0.14, 10), 0x374151); hub.rotation.x = Math.PI / 2; g.add(hub);
     [0, 1, 2].forEach(i => { const sp = mk(new THREE.BoxGeometry(0.08, 0.5, 0.06), 0x374151); sp.rotation.z = (i / 3) * Math.PI; g.add(sp); });
+
+  // ── Mudguard ──────────────────────────────────────────────────────────────────
   } else if (lc.includes("mudguard") || lc === "mgl" || lc === "mgr") {
     g.add(mk(new THREE.BoxGeometry(0.9, 0.12, 0.55), c));
-    const arch = mk(new THREE.TorusGeometry(0.3, 0.06, 8, 12, Math.PI), c);
-    arch.rotation.x = Math.PI / 2; arch.position.y = 0.14; g.add(arch);
+    const arch = mk(new THREE.TorusGeometry(0.3, 0.06, 8, 12, Math.PI), c); arch.rotation.x = Math.PI / 2; arch.position.y = 0.14; g.add(arch);
+
+  // ── Spoiler ───────────────────────────────────────────────────────────────────
   } else if (lc.includes("spoiler")) {
     g.add(mk(new THREE.BoxGeometry(1.4, 0.08, 0.35), c));
     [-0.6, 0.6].forEach(x => { const post = mk(new THREE.BoxGeometry(0.1, 0.5, 0.1), c); post.position.set(x, 0.29, 0); g.add(post); });
 
-  // ── Motors & power ───────────────────────────────────────────────────────────
+  // ── Motor + battery box (green cylinder + orange box + shaft) ─────────────────
   } else if (lc.includes("motor")) {
-    const body = mk(new THREE.CylinderGeometry(0.35, 0.35, 0.8, 20), 0x374151); body.rotation.z = Math.PI / 2; g.add(body);
-    const bbox = mk(new THREE.BoxGeometry(0.7, 0.5, 0.45), 0xf97316); bbox.position.x = 0.65; g.add(bbox);
-    const shaft = mk(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 10), 0x9ca3af, 0.7, 0.2); shaft.rotation.z = Math.PI / 2; shaft.position.x = -0.55; g.add(shaft);
+    const body = mk(new THREE.CylinderGeometry(0.34, 0.34, 0.78, 20), 0x16a34a, 0.15, 0.6);
+    body.rotation.z = Math.PI / 2; g.add(body);
+    const bbox = mk(new THREE.BoxGeometry(0.68, 0.48, 0.44), 0xf97316); bbox.position.x = 0.62; g.add(bbox);
+    const shaft = mk(new THREE.CylinderGeometry(0.06, 0.06, 0.28, 10), 0x9ca3af, 0.7, 0.2); shaft.rotation.z = Math.PI / 2; shaft.position.x = -0.52; g.add(shaft);
+
+  // ── Battery boxes ─────────────────────────────────────────────────────────────
   } else if (lc.startsWith("bb") || lc.includes("battery")) {
     g.add(mk(new THREE.BoxGeometry(0.9, 0.55, 0.45), 0x374151));
-    const wire = mk(new THREE.CylinderGeometry(0.03, 0.03, 0.35, 6), lc === "bb3v" ? 0xef4444 : 0xdc2626, 0.2, 0.8);
-    wire.position.set(0.44, 0.45, 0); g.add(wire);
+    const wireCol = lc.includes("3v") ? 0xef4444 : 0xdc2626;
+    const rw = mk(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6), 0xef4444, 0.2, 0.8); rw.position.set(0.36, 0.47, 0.1); g.add(rw);
+    const bw = mk(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6), wireCol === 0xef4444 ? 0x111111 : wireCol, 0.2, 0.8); bw.position.set(0.36, 0.47, -0.1); g.add(bw);
+
+  // ── Fan ───────────────────────────────────────────────────────────────────────
   } else if (lc === "fan" || lc === "m-acc") {
     g.add(mk(new THREE.CylinderGeometry(0.1, 0.1, 0.12, 10), 0x374151, 0.4, 0.6));
     for (let i = 0; i < 3; i++) {
-      const blade = mk(new THREE.BoxGeometry(0.08, 0.5, 0.04), 0x93c5fd, 0.1, 0.8);
-      blade.position.y = 0.28; blade.rotation.z = (i / 3) * Math.PI * 2; g.add(blade);
+      const pivot = new THREE.Object3D(); pivot.rotation.y = (i / 3) * Math.PI * 2;
+      const blade = mk(new THREE.BoxGeometry(0.22, 0.05, 0.62), 0x93c5fd, 0.1, 0.8); blade.position.set(0.33, 0, 0); blade.rotation.z = 0.25;
+      pivot.add(blade); g.add(pivot);
     }
 
-  // ── Logic blocks (colour-coded rectangular) ──────────────────────────────────
-  } else if (lc.endsWith("-blk")) {
-    g.add(mk(new THREE.BoxGeometry(0.75, 0.55, 0.55), c));
-    const nub = () => mk(new THREE.CylinderGeometry(0.07, 0.07, 0.12, 8), 0xffffff, 0.1, 0.9);
-    const nl = nub(); nl.rotation.z = Math.PI / 2; nl.position.x = -0.44; g.add(nl);
-    const nr = nub(); nr.rotation.z = Math.PI / 2; nr.position.x =  0.44; g.add(nr);
+  // ── Logic blocks (colour-coded square tiles) ──────────────────────────────────
+  } else if (lc.endsWith("-blk") || ["power-blk","not-blk","led-blk","buzzer-blk","motor-blk","dist-blk","ir-blk","switch-blk"].includes(lc)) {
+    g.add(mk(new THREE.BoxGeometry(1.3, 0.65, 1.3), 0x1f2937));
+    g.add(mk(new THREE.BoxGeometry(0.88, 0.07, 0.88), c, 0.05, 0.75)).position.y = 0.36;
+    const pL = mk(new THREE.CylinderGeometry(0.13, 0.13, 0.22, 12), 0x9ca3af, 0.6, 0.3); pL.rotation.z = Math.PI / 2; pL.position.x = -0.78; g.add(pL);
+    const pR = mk(new THREE.CylinderGeometry(0.13, 0.13, 0.22, 12), 0x9ca3af, 0.6, 0.3); pR.rotation.z = Math.PI / 2; pR.position.x =  0.78; g.add(pR);
 
-  // ── Electronics ──────────────────────────────────────────────────────────────
+  // ── Queaky (yellow flat device + silver ear tabs + eyes) ──────────────────────
   } else if (lc === "queaky") {
-    g.add(mk(new THREE.BoxGeometry(0.6, 0.42, 0.28), 0x4ade80));
-    [-0.18, 0.18].forEach(z => {
-      const ear = mk(new THREE.BoxGeometry(0.22, 0.08, 0.06), 0x9ca3af, 0.7, 0.3); ear.position.set(0, 0.25, z); g.add(ear);
+    g.add(mk(new THREE.BoxGeometry(1.7, 0.52, 0.85), 0xfde047, 0.05, 0.8));
+    [-0.98, 0.98].forEach(x => { const ear = mk(new THREE.BoxGeometry(0.26, 0.11, 0.28), 0x9ca3af, 0.6, 0.3); ear.position.set(x, 0.1, 0); g.add(ear); });
+    [-0.35, 0.35].forEach(x => {
+      g.add(mk(new THREE.CylinderGeometry(0.13, 0.13, 0.06, 14), 0xffffff, 0, 1.0)).position.set(x, 0.28, 0.44);
+      g.add(mk(new THREE.CylinderGeometry(0.06, 0.06, 0.07, 10), 0x111111, 0, 1.0)).position.set(x, 0.28, 0.45);
     });
+
+  // ── ESP32 ─────────────────────────────────────────────────────────────────────
   } else if (lc === "esp32") {
-    g.add(mk(new THREE.BoxGeometry(1.3, 0.06, 0.7), 0x1d4ed8));
+    g.add(mk(new THREE.BoxGeometry(1.3, 0.06, 0.7), 0x1e3a5f));
     for (let i = 0; i < 8; i++) {
       const p = mk(new THREE.BoxGeometry(0.05, 0.12, 0.05), 0xe5e7eb); p.position.set(-0.55 + i * 0.16, 0.09, 0.32); g.add(p);
       const p2 = mk(new THREE.BoxGeometry(0.05, 0.12, 0.05), 0xe5e7eb); p2.position.set(-0.55 + i * 0.16, 0.09, -0.32); g.add(p2);
     }
     const ant = mk(new THREE.BoxGeometry(0.22, 0.06, 0.16), 0x93c5fd); ant.position.set(0.56, 0.06, 0); g.add(ant);
+    const mcu = mk(new THREE.BoxGeometry(0.52, 0.1, 0.52), 0x0f172a); mcu.position.y = 0.08; g.add(mcu);
+
+  // ── Servo ─────────────────────────────────────────────────────────────────────
   } else if (lc === "servo") {
-    g.add(mk(new THREE.BoxGeometry(0.7, 0.6, 0.38), 0x3b82f6));
-    const horn = mk(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 12), 0xe5e7eb); horn.position.set(0, 0.34, 0); g.add(horn);
-    const arm = mk(new THREE.BoxGeometry(0.38, 0.07, 0.09), 0xe5e7eb); arm.position.set(0.26, 0.34, 0); g.add(arm);
-  } else if (lc === "dcmb") {
-    g.add(mk(new THREE.BoxGeometry(0.8, 0.06, 0.6), 0x16a34a));
-    const ic = mk(new THREE.BoxGeometry(0.28, 0.1, 0.22), 0x1f2937); ic.position.y = 0.08; g.add(ic);
-  } else if (lc.includes("pcb") || lc.includes("7seg")) {
+    g.add(mk(new THREE.BoxGeometry(0.7, 0.6, 0.38), 0x374151));
+    const horn = mk(new THREE.CylinderGeometry(0.18, 0.18, 0.1, 12), 0xd1d5db); horn.position.set(0, 0.35, 0); g.add(horn);
+    const arm = mk(new THREE.BoxGeometry(0.38, 0.07, 0.09), 0xd1d5db); arm.position.set(0.26, 0.35, 0); g.add(arm);
+
+  // ── PCB / 7-segment ───────────────────────────────────────────────────────────
+  } else if (lc.includes("pcb") || lc.includes("7seg") || lc === "dcmb") {
     g.add(mk(new THREE.BoxGeometry(0.9, 0.06, 0.65), 0x15803d));
-    const disp = mk(new THREE.BoxGeometry(0.32, 0.08, 0.5), 0xef4444); disp.position.set(0.1, 0.07, 0); g.add(disp);
+    g.add(mk(new THREE.BoxGeometry(0.32, 0.09, 0.5), 0xef4444)).position.set(0.1, 0.075, 0);
+
+  // ── Connecting tower ──────────────────────────────────────────────────────────
   } else if (lc.includes("ct-twr") || lc.includes("connecting tower")) {
-    g.add(mk(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 8), c));
-    const top = mk(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 8), 0xc0c0c0, 0.7, 0.2); top.position.y = 0.28; g.add(top);
+    g.add(mk(new THREE.CylinderGeometry(0.1, 0.12, 1.0, 10), 0xe5e7eb, 0.05, 0.6));
+    g.add(mk(new THREE.CylinderGeometry(0.22, 0.22, 0.26, 10), 0x111111, 0.3, 0.7)).position.y = 0.63;
+    for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2; const pr = mk(new THREE.BoxGeometry(0.42, 0.09, 0.1), 0x111111, 0.3, 0.7); pr.position.set(Math.cos(a) * 0.22, 0.63, Math.sin(a) * 0.22); pr.rotation.y = a; g.add(pr); }
+
+  // ── IR sensor / limit switch ───────────────────────────────────────────────────
   } else if (lc.includes("ir-s") || lc.includes("ir sensor") || lc === "ls") {
     g.add(mk(new THREE.BoxGeometry(0.55, 0.3, 0.22), 0x374151));
-    [-0.1, 0.1].forEach(z => {
-      const eye = mk(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 10), 0x1f2937); eye.rotation.z = Math.PI / 2; eye.position.set(0.32, 0, z); g.add(eye);
-    });
+    [-0.1, 0.1].forEach(z => { const eye = mk(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 10), 0x1f2937); eye.rotation.z = Math.PI / 2; eye.position.set(0.32, 0, z); g.add(eye); });
 
-  // ── Magnets ──────────────────────────────────────────────────────────────────
+  // ── Magnets ───────────────────────────────────────────────────────────────────
   } else if (lc === "dm" || lc.includes("donut magnet")) {
     g.add(mk(new THREE.TorusGeometry(0.5, 0.18, 12, 28), 0x9ca3af, 0.8, 0.2));
   } else if (lc === "bm" || lc.includes("bar magnet")) {
     g.add(mk(new THREE.BoxGeometry(1.4, 0.3, 0.22), 0x9ca3af, 0.7, 0.2));
     const np = mk(new THREE.BoxGeometry(0.5, 0.3, 0.22), 0x3b82f6); np.position.x = -0.45; g.add(np);
-    const sp2 = mk(new THREE.BoxGeometry(0.5, 0.3, 0.22), 0xef4444); sp2.position.x = 0.45; g.add(sp2);
+    const sp2 = mk(new THREE.BoxGeometry(0.5, 0.3, 0.22), 0xef4444); sp2.position.x =  0.45; g.add(sp2);
 
-  // ── Marble stem ──────────────────────────────────────────────────────────────
+  // ── Marble stem ───────────────────────────────────────────────────────────────
   } else if (lc === "mrs14") {
-    g.add(mk(new THREE.BoxGeometry(1.8, 0.08, 0.38), 0xf97316));
-    [-0.18, 0.18].forEach(z => { const r2 = mk(new THREE.BoxGeometry(1.8, 0.12, 0.04), 0xea580c); r2.position.set(0, 0.1, z); g.add(r2); });
+    // Blue U-channel slide (matches photo)
+    g.add(mk(new THREE.BoxGeometry(1.85, 0.09, 0.5), 0x3b82f6));
+    [-0.23, 0.23].forEach(z => { const w = mk(new THREE.BoxGeometry(1.85, 0.26, 0.09), 0x2563eb); w.position.set(0, 0.18, z); g.add(w); });
   } else if (lc === "mrb7") {
-    g.add(mk(new THREE.TorusGeometry(0.7, 0.14, 6, 16, Math.PI * 0.75), 0xf97316));
+    g.add(mk(new THREE.TorusGeometry(0.7, 0.14, 8, 18, Math.PI * 0.75), 0x3b82f6));
   } else if (lc === "mrh5") {
-    g.add(mk(new THREE.ConeGeometry(0.5, 0.7, 12, 1, true), 0xf97316, 0.1, 0.9));
-    const rim = mk(new THREE.TorusGeometry(0.5, 0.05, 6, 20), 0xea580c); rim.position.y = 0.35; g.add(rim);
+    g.add(mk(new THREE.ConeGeometry(0.5, 0.7, 12, 1, true), 0x3b82f6, 0.1, 0.9));
+    const rim = mk(new THREE.TorusGeometry(0.5, 0.05, 6, 20), 0x2563eb); rim.position.y = 0.35; g.add(rim);
   } else if (lc === "mar") {
     g.add(mk(new THREE.SphereGeometry(0.25, 16, 16), 0x7dd3fc, 0.1, 0.05));
   } else if (lc === "bckt") {
     g.add(mk(new THREE.CylinderGeometry(0.25, 0.2, 0.4, 12, 1, true), c, 0.1, 0.9));
     const base = mk(new THREE.CylinderGeometry(0.2, 0.2, 0.04, 12), c); base.position.y = -0.2; g.add(base);
 
-  // ── Consumables ──────────────────────────────────────────────────────────────
+  // ── Consumables ───────────────────────────────────────────────────────────────
   } else if (lc === "balloon") {
     g.add(mk(new THREE.SphereGeometry(0.7, 20, 20), 0xef4444, 0.05, 0.05));
     const tie = mk(new THREE.CylinderGeometry(0.04, 0.04, 0.25, 6), 0xdc2626); tie.position.y = -0.72; g.add(tie);
   } else if (lc === "rb" || lc.includes("rubber band")) {
-    g.add(mk(new THREE.TorusGeometry(0.38, 0.06, 8, 24), 0xfbbf24, 0.1, 0.9));
+    g.add(mk(new THREE.TorusGeometry(0.38, 0.06, 8, 24), 0xd4a373, 0.0, 0.9));
   } else if (lc === "thread" || lc === "wire") {
-    for (let i = 0; i < 4; i++) {
-      const ring = mk(new THREE.TorusGeometry(0.28, 0.03, 6, 16), 0x94a3b8, 0.2, 0.9);
-      ring.rotation.x = Math.PI / 2; ring.position.y = -0.15 + i * 0.1; g.add(ring);
-    }
+    for (let i = 0; i < 4; i++) { const ring = mk(new THREE.TorusGeometry(0.28, 0.03, 6, 16), 0x94a3b8, 0.2, 0.9); ring.rotation.x = Math.PI / 2; ring.position.y = -0.15 + i * 0.1; g.add(ring); }
 
-  // ── Default ──────────────────────────────────────────────────────────────────
+  // ── Default ───────────────────────────────────────────────────────────────────
   } else {
     g.add(mk(new THREE.BoxGeometry(0.9, 0.9, 0.9), c));
   }
