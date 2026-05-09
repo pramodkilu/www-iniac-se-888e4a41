@@ -1110,11 +1110,11 @@ const BalanceExp = () => {
 const MotorExp = () => {
   const [voltage, setVoltage] = useState([6]);
   const [load, setLoad] = useState([2]);
-  const rpm = Math.max(0, ((voltage[0] * 180) / load[0]).toFixed(0));
+  const rpm = Math.max(0, Math.round((voltage[0] * 180) / load[0]));
   const [angle, setAngle] = useState(0);
   const animRef = useRef<number>();
   useEffect(() => {
-    const step = () => { setAngle(a => a + parseFloat(rpm as string) * 0.002); animRef.current = requestAnimationFrame(step); };
+    const step = () => { setAngle(a => a + rpm * 0.002); animRef.current = requestAnimationFrame(step); };
     animRef.current = requestAnimationFrame(step);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [rpm]);
