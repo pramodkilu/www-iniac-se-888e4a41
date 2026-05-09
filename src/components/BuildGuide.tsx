@@ -968,57 +968,60 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
         </p>
       </div>
 
-      {/* ── Final picture: real book page ─────────────────────────────── */}
-      {showFinal && chapterId && CHAPTER_PAGE_IMAGES[chapterId] ? (
-        <div className="mx-4 mb-2 rounded-xl overflow-hidden border border-orange-200 bg-orange-50" style={{ minHeight: 280 }}>
-          <img
-            src={CHAPTER_PAGE_IMAGES[chapterId]}
-            alt={`Chapter ${chapterId} book page`}
-            className="w-full object-contain"
-            style={{ maxHeight: 480 }}
-          />
-          <div className="px-3 py-2 flex items-center gap-2 border-t border-orange-200">
-            <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">📖 Official Blix Curriculum Book</span>
-            <span className="text-[10px] text-orange-500 ml-auto">Chapter {chapterId} reference</span>
-          </div>
-        </div>
-      ) : (
-        <div className="flex mx-4 mb-0 border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
-          {/* Sidebar */}
-          <div className="w-[120px] shrink-0 p-3 border-r border-gray-200 bg-white flex flex-col gap-3">
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">View Controls</p>
-              {[["Exploded View", false], ["Show Measurements", false]].map(([label]) => (
-                <label key={label as string} className="flex items-start gap-1.5 mb-2.5 cursor-pointer">
-                  <div className="w-3.5 h-3.5 mt-0.5 rounded-full border-2 border-gray-300 shrink-0" />
-                  <span className="text-[11px] text-gray-600 leading-tight">{label as string}</span>
-                </label>
-              ))}
+      {/* ── Final picture: real book page — always in DOM, shown via CSS ── */}
+      <div className={`mx-4 mb-2 rounded-xl overflow-hidden border border-orange-200 bg-orange-50 ${(!showFinal || !chapterId || !CHAPTER_PAGE_IMAGES[chapterId!]) ? "hidden" : ""}`} style={{ minHeight: 280 }}>
+        {chapterId && CHAPTER_PAGE_IMAGES[chapterId] && (
+          <>
+            <img
+              src={CHAPTER_PAGE_IMAGES[chapterId]}
+              alt={`Chapter ${chapterId} book page`}
+              className="w-full object-contain"
+              style={{ maxHeight: 480 }}
+            />
+            <div className="px-3 py-2 flex items-center gap-2 border-t border-orange-200">
+              <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wide">📖 Official Blix Curriculum Book</span>
+              <span className="text-[10px] text-orange-500 ml-auto">Chapter {chapterId} reference</span>
             </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">Components</p>
-              {comps.slice(0, 4).map((c, i) => (
-                <div key={i} className="flex items-start gap-1 mb-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-orange-500 shrink-0 mt-0.5" />
-                  <span className="text-[10px] text-gray-600 font-mono leading-tight">{c.code}{c.qty > 1 ? ` ×${c.qty}` : ""}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          </>
+        )}
+      </div>
 
-          {/* Canvas */}
-          <div className="flex-1 relative">
-            <div ref={mountRef} className="w-full" style={{ height: 280 }} />
-            <div className="absolute right-2 top-2 flex flex-col gap-1.5">
-              {["+", "−", "⟳", "⊞"].map(icon => (
-                <button key={icon} className="w-7 h-7 bg-white border border-gray-200 rounded-lg text-xs text-gray-500 shadow-sm hover:bg-gray-50 flex items-center justify-center">
-                  {icon}
-                </button>
-              ))}
-            </div>
+      {/* 3D canvas — always mounted so Three.js renderer stays alive */}
+      <div className={`flex mx-4 mb-0 border border-gray-200 rounded-xl overflow-hidden bg-gray-50 ${showFinal ? "hidden" : ""}`}>
+        {/* Sidebar */}
+        <div className="w-[120px] shrink-0 p-3 border-r border-gray-200 bg-white flex flex-col gap-3">
+          <div>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">View Controls</p>
+            {[["Exploded View", false], ["Show Measurements", false]].map(([label]) => (
+              <label key={label as string} className="flex items-start gap-1.5 mb-2.5 cursor-pointer">
+                <div className="w-3.5 h-3.5 mt-0.5 rounded-full border-2 border-gray-300 shrink-0" />
+                <span className="text-[11px] text-gray-600 leading-tight">{label as string}</span>
+              </label>
+            ))}
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2">Components</p>
+            {comps.slice(0, 4).map((c, i) => (
+              <div key={i} className="flex items-start gap-1 mb-1.5">
+                <CheckCircle2 className="w-3 h-3 text-orange-500 shrink-0 mt-0.5" />
+                <span className="text-[10px] text-gray-600 font-mono leading-tight">{c.code}{c.qty > 1 ? ` ×${c.qty}` : ""}</span>
+              </div>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Canvas */}
+        <div className="flex-1 relative">
+          <div ref={mountRef} className="w-full" style={{ height: 280 }} />
+          <div className="absolute right-2 top-2 flex flex-col gap-1.5">
+            {["+", "−", "⟳", "⊞"].map(icon => (
+              <button key={icon} className="w-7 h-7 bg-white border border-gray-200 rounded-lg text-xs text-gray-500 shadow-sm hover:bg-gray-50 flex items-center justify-center">
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Step footer */}
       <div className="mx-4 mt-2 border border-gray-200 rounded-xl bg-white px-3 py-2.5">

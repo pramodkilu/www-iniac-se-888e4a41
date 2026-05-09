@@ -8,7 +8,7 @@ import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb, Sparkles, Box, Bookma
 import { useState, useEffect } from "react";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
 import StoryViewer from "@/components/StoryViewer";
-import FrictionSimulator from "@/components/FrictionSimulator";
+import ChapterExperiment from "@/components/ChapterExperiment";
 import StepCamera from "@/components/StepCamera";
 import AIAssistant from "@/components/AIAssistant";
 import ARViewer from "@/components/ARViewer";
@@ -350,7 +350,7 @@ const Chapter = () => {
               </CardContent>
             </Card>
 
-            <FrictionSimulator />
+            <ChapterExperiment chapterId={chapterIdNum} lang={lang} />
           </TabsContent>
 
           {/* Build Tab — 3 columns: 3D viewer | Instructions | Step-Check + AR */}
