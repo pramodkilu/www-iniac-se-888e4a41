@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Play, Book, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Play, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
 import StoryViewer from "@/components/StoryViewer";
 import ChapterExperiment from "@/components/ChapterExperiment";
@@ -13,7 +15,7 @@ import StepCamera from "@/components/StepCamera";
 import AIAssistant from "@/components/AIAssistant";
 import ARViewer from "@/components/ARViewer";
 import { useChapterProgress } from "@/hooks/useChapterProgress";
-import { getChapter, tr, LGR22_STRANDS, SDG_INFO, chapterComponents } from "@/data/chapters";
+import { getChapter, tr, LGR22_STRANDS, SDG_INFO } from "@/data/chapters";
 import { useLanguage, useUIStrings } from "@/i18n/LanguageContext";
 
 const Chapter = () => {
@@ -25,11 +27,26 @@ const Chapter = () => {
   const [resumeDismissed, setResumeDismissed] = useState(false);
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
   const [activeBuildStep, setActiveBuildStep] = useState(1);
+  const [challengeDone, setChallengeDone] = useState(false);
+  const [challengeSaving, setChallengeSaving] = useState(false);
   const { lang } = useLanguage();
   const ui = useUIStrings();
+  const { user } = useAuth();
 
   // Pull chapter from the bilingual data file
   const chapter = getChapter(chapterIdNum);
+
+  const handleCompleteChallenge = async () => {
+    if (challengeDone || challengeSaving || !user) return;
+    setChallengeSaving(true);
+    const gradeId = chapterIdNum <= 6 ? 1 : chapterIdNum <= 12 ? 2 : chapterIdNum <= 18 ? 3 : chapterIdNum <= 24 ? 4 : 5;
+    await supabase.from("completed_chapters").upsert(
+      [{ user_id: user.id, chapter_id: chapterIdNum, grade_id: gradeId, completed_at: new Date().toISOString() }],
+      { onConflict: "user_id,chapter_id" }
+    );
+    setChallengeDone(true);
+    setChallengeSaving(false);
+  };
 
   // Sync slider to saved progress when it loads
   useEffect(() => {
@@ -559,17 +576,29 @@ const Chapter = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between p-4 bg-card rounded-lg border-2 border-accent">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {lang === "sv" ? "Belöning" : "Reward"}
-                    </p>
-                    <p className="text-2xl font-bold text-accent">100 XP</p>
+                {challengeDone ? (
+                  <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border-2 border-emerald-500 rounded-lg">
+                    <CheckCircle2 className="h-8 w-8 text-emerald-500 shrink-0" />
+                    <div>
+                      <p className="font-bold text-emerald-700">{lang === "sv" ? "Utmaning klar! +100 XP" : "Challenge Complete! +100 XP"}</p>
+                      <p className="text-sm text-muted-foreground">{lang === "sv" ? "Fantastiskt arbete! Nästa kapitel låst upp." : "Great work! Next chapter unlocked."}</p>
+                    </div>
                   </div>
-                  <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    {lang === "sv" ? "Klara utmaningen" : "Complete Challenge"}
-                  </Button>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-between p-4 bg-card rounded-lg border-2 border-accent">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{lang === "sv" ? "Belöning" : "Reward"}</p>
+                      <p className="text-2xl font-bold text-accent">100 XP</p>
+                    </div>
+                    <Button
+                      className="bg-accent text-accent-foreground hover:bg-accent/90"
+                      onClick={handleCompleteChallenge}
+                      disabled={challengeSaving}
+                    >
+                      {challengeSaving ? "…" : lang === "sv" ? "Klara utmaningen" : "Complete Challenge"}
+                    </Button>
+                  </div>
+                )}
 
                 <div className="mt-6 grid sm:grid-cols-2 gap-3">
                   <Button
@@ -614,12 +643,21 @@ const Chapter = () => {
               {lang === "sv" ? "Tillbaka till kapitel" : "Back to Chapters"}
             </Button>
           </Link>
-          <Link to={`/chapter/${chapterIdNum + 1}`}>
-            <Button>
-              {lang === "sv" ? "Nästa kapitel" : "Next Chapter"}
-              <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
-            </Button>
-          </Link>
+          {chapterIdNum < 30 && (
+            <Link to={`/chapter/${chapterIdNum + 1}`}>
+              <Button>
+                {lang === "sv" ? "Nästa kapitel" : "Next Chapter"}
+                <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
+              </Button>
+            </Link>
+          )}
+          {chapterIdNum >= 30 && (
+            <Link to="/">
+              <Button variant="outline">
+                {lang === "sv" ? "Tillbaka till start" : "Back to Home"}
+              </Button>
+            </Link>
+          )}
         </div>
       </main>
 

@@ -204,11 +204,24 @@ export function ChapterPreview({ defaultChapterId }: { defaultChapterId?: number
                   )}
                 </>
               ) : (
-                <Card className="bg-muted/30">
-                  <CardContent className="py-6 text-center text-sm text-muted-foreground">
-                    Full story dialogue coming soon for this chapter.
-                  </CardContent>
-                </Card>
+                <div className="space-y-2">
+                  {[
+                    { speaker: "Laya", text: "Let's explore this chapter together and see what we can build!" },
+                    { speaker: "Kit",  text: "I've got all the pieces ready. Let's follow the steps carefully." },
+                    { speaker: "Rob",  text: "I can't wait to see how it all comes together. Let's go!" },
+                  ].map((line, i) => {
+                    const s = charStyle(line.speaker);
+                    return (
+                      <div key={i} className={`flex gap-3 p-3 rounded-xl ${s.ring} opacity-60`}>
+                        <div className={`w-8 h-8 rounded-full ${s.bg} text-white font-bold text-sm flex items-center justify-center shrink-0`}>
+                          {s.initial}
+                        </div>
+                        <p className="text-sm leading-relaxed pt-1">{line.text}</p>
+                      </div>
+                    );
+                  })}
+                  <p className="text-[11px] text-muted-foreground text-center pt-1 italic">Full story dialogue will be added for this chapter soon.</p>
+                </div>
               )}
             </div>
           )}

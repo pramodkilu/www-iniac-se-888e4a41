@@ -1,43 +1,22 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lock, CheckCircle2 } from "lucide-react";
+import { CheckCircle2, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
+import { chapters, tr } from "@/data/chapters";
 
-interface Chapter {
-  id: number;
-  title: string;
-  description: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  category: string;
-  locked?: boolean;
-  completed?: boolean;
-}
-
-const chapters: Chapter[] = [
-  { id: 1, title: "Cart With Wheels", description: "Learn about friction and motion", difficulty: "Easy", category: "Mechanics", completed: true },
-  { id: 2, title: "Aerodynamic Car", description: "Discover aerodynamics and speed", difficulty: "Easy", category: "Physics" },
-  { id: 3, title: "Challenge Ladder", description: "Calculate and build structures", difficulty: "Medium", category: "Math" },
-  { id: 4, title: "Trebuchet", description: "Explore gravity and levers", difficulty: "Medium", category: "Physics" },
-  { id: 5, title: "Sign Boards", description: "Learn about shapes and design", difficulty: "Easy", category: "Design" },
-  { id: 6, title: "Suspension Car", description: "Understand suspension systems", difficulty: "Medium", category: "Engineering" },
-  { id: 7, title: "Trundle Wheel", description: "Measure distance accurately", difficulty: "Medium", category: "Math" },
-  { id: 8, title: "Pasta Maker", description: "Build mechanical tools", difficulty: "Medium", category: "Mechanics" },
-  { id: 9, title: "Bottle Opener", description: "Simple machines in action", difficulty: "Easy", category: "Mechanics" },
-  { id: 10, title: "Launcher", description: "Force and projectile motion", difficulty: "Hard", category: "Physics", locked: true },
-  { id: 11, title: "Flipping Picture", description: "Optical illusions and art", difficulty: "Easy", category: "Art" },
-  { id: 12, title: "Zip Line", description: "Energy and motion", difficulty: "Medium", category: "Physics" },
-  { id: 13, title: "Merry-Go-Round", description: "Rotational mechanics", difficulty: "Medium", category: "Mechanics", locked: true },
-  { id: 14, title: "Screw Press", description: "Mechanical advantage", difficulty: "Hard", category: "Engineering", locked: true },
-  { id: 15, title: "Crane", description: "Lifting and construction", difficulty: "Hard", category: "Engineering", locked: true },
-];
-
-const difficultyColors = {
-  Easy: "bg-success text-success-foreground",
-  Medium: "bg-accent text-accent-foreground",
-  Hard: "bg-destructive text-destructive-foreground"
+const difficultyForChapter = (id: number): "Easy" | "Medium" | "Hard" => {
+  if (id <= 6) return "Easy";
+  if (id <= 18) return "Medium";
+  return "Hard";
 };
 
-const ChapterGrid = () => {
+const difficultyColors = {
+  Easy: "bg-emerald-500/20 text-emerald-700 border-emerald-500/30",
+  Medium: "bg-amber-500/20 text-amber-700 border-amber-500/30",
+  Hard: "bg-rose-500/20 text-rose-700 border-rose-500/30",
+};
+
+const ChapterGrid = ({ completedIds = [] }: { completedIds?: number[] }) => {
   return (
     <section className="py-16 px-4">
       <div className="container mx-auto max-w-7xl">
@@ -47,54 +26,47 @@ const ChapterGrid = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {chapters.map((chapter) => (
-            <Link 
-              key={chapter.id} 
-              to={chapter.locked ? "#" : `/chapter/${chapter.id}`}
-              className={chapter.locked ? "pointer-events-none" : ""}
-            >
-              <Card className={`hover:shadow-lg transition-all duration-300 hover:scale-105 ${
-                chapter.locked ? "opacity-60" : ""
-              } ${chapter.completed ? "border-success border-2" : ""}`}>
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      Chapter {chapter.id}
-                    </Badge>
-                    {chapter.locked && <Lock className="w-4 h-4 text-muted-foreground" />}
-                    {chapter.completed && <CheckCircle2 className="w-5 h-5 text-success" />}
-                  </div>
-                  <CardTitle className="text-xl">{chapter.title}</CardTitle>
-                  <CardDescription>{chapter.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <Badge className={difficultyColors[chapter.difficulty]}>
-                      {chapter.difficulty}
-                    </Badge>
-                    <Badge variant="secondary">{chapter.category}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {chapters.map((chapter) => {
+            const difficulty = difficultyForChapter(chapter.id);
+            const completed = completedIds.includes(chapter.id);
+            const title = tr(chapter.title, "en");
+            const subtitle = tr(chapter.subtitle, "en");
+            const concept = tr(chapter.theory.concept, "en");
 
-          {/* Placeholder cards for remaining chapters */}
-          {Array.from({ length: 15 }, (_, i) => i + 16).map((num) => (
-            <Card key={num} className="opacity-40">
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant="outline" className="text-xs">Chapter {num}</Badge>
-                  <Lock className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <CardTitle className="text-xl">Coming Soon</CardTitle>
-                <CardDescription>More exciting projects to discover!</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Badge variant="secondary">Locked</Badge>
-              </CardContent>
-            </Card>
-          ))}
+            return (
+              <Link key={chapter.id} to={`/chapter/${chapter.id}`}>
+                <Card className={`hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full ${
+                  completed ? "border-emerald-400 border-2 bg-emerald-50/30" : ""
+                } ${chapter.isCheckpoint ? "ring-2 ring-amber-400/50" : ""}`}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-xs font-mono">Ch {chapter.id}</Badge>
+                        {chapter.isCheckpoint && (
+                          <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-300">Checkpoint</Badge>
+                        )}
+                      </div>
+                      {completed
+                        ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                        : <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />}
+                    </div>
+                    <CardTitle className="text-lg leading-snug">{title}</CardTitle>
+                    <CardDescription className="text-xs line-clamp-2">{subtitle}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="outline" className={`text-xs ${difficultyColors[difficulty]}`}>
+                        {difficulty}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs truncate max-w-[180px]">
+                        {concept}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
