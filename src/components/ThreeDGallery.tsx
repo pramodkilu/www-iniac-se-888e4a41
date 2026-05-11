@@ -753,6 +753,9 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
     let frame = 0;
     let renderer: THREE.WebGLRenderer | null = null;
     let object: THREE.Object3D | null = null;
+    let scene: THREE.Scene | null = null;
+    let camera: THREE.PerspectiveCamera | null = null;
+    let resizeHandler: (() => void) | null = null;
     let dragging = false, lastX = 0, lastY = 0;
 
     const onDown = (e: PointerEvent) => {
@@ -776,12 +779,16 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
       if (renderer) return;
       const W = Math.max(container.clientWidth, 1);
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(48, W / CANVAS_H, 0.1, 100);
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(48, W / CANVAS_H, 0.1, 100);
       camera.position.set(2.8, 1.8, 3.2);
       camera.lookAt(0, 0, 0);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      } catch {
+        return;
+      }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(W, CANVAS_H);
 
@@ -791,6 +798,10 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
       canvas.addEventListener("pointermove", onMove);
       canvas.addEventListener("pointerup", onUp);
       canvas.addEventListener("pointercancel", onUp);
+      canvas.addEventListener("webglcontextlost", (e) => {
+        e.preventDefault();
+        disposeRenderer();
+      });
       container.appendChild(canvas);
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.7));
@@ -807,48 +818,61 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
       object = buildObject(item);
       scene.add(object);
 
-      const handleResize = () => {
-        if (!renderer || !container) return;
+      resizeHandler = () => {
+        if (!renderer || !container || !camera) return;
         const w = Math.max(container.clientWidth, 1);
         camera.aspect = w / CANVAS_H;
         camera.updateProjectionMatrix();
         renderer.setSize(w, CANVAS_H);
       };
-      window.addEventListener("resize", handleResize);
-      (renderer as THREE.WebGLRenderer & { _resize?: () => void })._resize = handleResize;
+      window.addEventListener("resize", resizeHandler);
 
       const animate = () => {
         frame = requestAnimationFrame(animate);
-        if (!renderer) return;
+        if (!renderer || !scene || !camera) return;
         if (rotRef.current && !dragging && object) object.rotation.y += 0.008;
         renderer.render(scene, camera);
       };
       animate();
     };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) initRenderer(); },
-      { threshold: 0, rootMargin: "60px" }
-    );
-    observer.observe(container);
-
-    return () => {
+    const disposeRenderer = () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
+      frame = 0;
+      if (resizeHandler) {
+        window.removeEventListener("resize", resizeHandler);
+        resizeHandler = null;
+      }
       if (renderer) {
-        const r = renderer as THREE.WebGLRenderer & { _resize?: () => void };
-        if (r._resize) window.removeEventListener("resize", r._resize);
-        const canvas = r.domElement;
+        const canvas = renderer.domElement;
         canvas.removeEventListener("pointerdown", onDown);
         canvas.removeEventListener("pointermove", onMove);
         canvas.removeEventListener("pointerup", onUp);
         canvas.removeEventListener("pointercancel", onUp);
         canvas.parentNode?.removeChild(canvas);
-        if (object) disposeObject(object);
-        r.dispose();
+        renderer.dispose();
         renderer = null;
+      }
+      if (object) {
+        disposeObject(object);
         object = null;
       }
+      scene = null;
+      camera = null;
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) initRenderer();
+        else disposeRenderer();
+      },
+      { threshold: 0, rootMargin: "120px" }
+    );
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+      disposeRenderer();
     };
   }, [item]);
 
