@@ -753,6 +753,9 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
     let frame = 0;
     let renderer: THREE.WebGLRenderer | null = null;
     let object: THREE.Object3D | null = null;
+    let scene: THREE.Scene | null = null;
+    let camera: THREE.PerspectiveCamera | null = null;
+    let resizeHandler: (() => void) | null = null;
     let dragging = false, lastX = 0, lastY = 0;
 
     const onDown = (e: PointerEvent) => {
