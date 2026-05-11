@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { useSafeBack } from "@/lib/safeBack";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ const Chapter = () => {
   const { progress, saveStepVerdict, saveArPose, clearArPose } = useChapterProgress(chapterIdNum);
   const [activeBuildStep, setActiveBuildStep] = useState(1);
   const [challengeDone, setChallengeDone] = useState(false);
+  const goBack = useSafeBack("/");
   const [challengeSaving, setChallengeSaving] = useState(false);
   const { lang } = useLanguage();
   const ui = useUIStrings();
@@ -125,11 +127,9 @@ const Chapter = () => {
       <header className="border-b bg-card shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Badge variant="outline">{ui.chapter} {id}</Badge>
