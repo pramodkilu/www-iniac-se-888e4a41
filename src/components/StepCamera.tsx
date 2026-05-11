@@ -214,7 +214,6 @@ const StepCamera = ({ step, chapterTitle, savedVerdict, onVerified, onAdvance }:
           <>
             <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden border">
               {snapshot ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img src={snapshot} alt="Captured build" className="w-full h-full object-contain bg-black" />
               ) : (
                 <video

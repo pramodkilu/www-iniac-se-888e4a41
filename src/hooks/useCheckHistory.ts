@@ -46,7 +46,7 @@ export function computeStats(history: CheckRecord[]) {
   stepKeys.forEach(key => {
     const a = api.find(r => `${r.chapterId}-${r.stepIdx}` === key);
     const m = model.find(r => `${r.chapterId}-${r.stepIdx}` === key);
-    if (a && m) { a.correct === m.correct ? agreed++ : disputed++; }
+    if (a && m) { if (a.correct === m.correct) agreed++; else disputed++; }
   });
   const bothRun = agreed + disputed;
 

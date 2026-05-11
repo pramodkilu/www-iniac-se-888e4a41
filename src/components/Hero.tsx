@@ -42,7 +42,7 @@ const Hero = () => {
           </div>
           
           <p className="text-base md:text-lg text-white/85 max-w-2xl leading-relaxed">
-            INIAC combines <strong>AI + AR </strong> to make robotics easy, fun, and scalable. 
+            INIAC combines <strong>AI + AR </strong> to make robotics easy, fun, and scalable. 
             With Blix robotics kits and guided learning, students build real robots, learn through 
             immersive simulations, and compete in Robo League challenges.
           </p>

@@ -90,10 +90,10 @@ const FrictionSimulator = () => {
     // Camera control state
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
-    let spherical = { 
-      theta: Math.atan2(camera.position.x, camera.position.z), 
-      phi: Math.acos(camera.position.y / camera.position.length()), 
-      radius: camera.position.length() 
+    const spherical = {
+      theta: Math.atan2(camera.position.x, camera.position.z),
+      phi: Math.acos(camera.position.y / camera.position.length()),
+      radius: camera.position.length()
     };
     const target = new THREE.Vector3(0, 0, 0);
 
