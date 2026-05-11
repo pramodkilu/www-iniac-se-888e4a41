@@ -88,6 +88,7 @@ function ResultPanel({ result, label, accent, loading }: {
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   const navigate  = useNavigate();
+  const goBack = useSafeBack("/");
   const location  = useLocation();
   const state     = (location.state ?? {}) as ResearchNavState;
 
@@ -237,7 +238,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
       {!inline && (
         <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-            <button onClick={() => navigate(-1)}
+            <button onClick={goBack} aria-label="Back"
               className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
               <ChevronLeft className="w-4 h-4" />
             </button>
