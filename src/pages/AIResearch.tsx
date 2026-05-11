@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
 import { getCheckHistory, saveCheckRecord, clearCheckHistory, computeStats, type CheckRecord } from "@/hooks/useCheckHistory";
 import { CheckCircle2, XCircle, ChevronLeft, Trash2, Cpu, Sparkles } from "lucide-react";
+import { useSafeBack } from "@/lib/safeBack";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 export interface ResearchNavState {
