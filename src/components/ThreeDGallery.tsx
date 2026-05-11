@@ -732,156 +732,104 @@ function buildObject(item: KitComponent): THREE.Object3D {
 }
 
 // ─── ModelCard ────────────────────────────────────────────────────────────────
+// Uses ONE shared offscreen WebGL renderer to produce a static PNG thumbnail per
+// card. Avoids browser WebGL context cap (~16) entirely.
 
 const CANVAS_H = 160;
+const THUMB_W = 320;
+const THUMB_H = CANVAS_H * 2;
+
+let sharedRenderer: THREE.WebGLRenderer | null = null;
+let sharedScene: THREE.Scene | null = null;
+let sharedCamera: THREE.PerspectiveCamera | null = null;
+
+function getSharedRenderer(): { renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera } | null {
+  if (sharedRenderer && sharedScene && sharedCamera) {
+    return { renderer: sharedRenderer, scene: sharedScene, camera: sharedCamera };
+  }
+  try {
+    sharedRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  } catch {
+    return null;
+  }
+  sharedRenderer.setPixelRatio(1);
+  sharedRenderer.setSize(THUMB_W, THUMB_H);
+
+  sharedScene = new THREE.Scene();
+  sharedScene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(5, 6, 5);
+  sharedScene.add(key);
+  const fill = new THREE.DirectionalLight(0x8888ff, 0.35);
+  fill.position.set(-4, 2, -4);
+  sharedScene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.3);
+  rim.position.set(0, -4, -4);
+  sharedScene.add(rim);
+
+  sharedCamera = new THREE.PerspectiveCamera(48, THUMB_W / THUMB_H, 0.1, 100);
+  sharedCamera.position.set(2.8, 1.8, 3.2);
+  sharedCamera.lookAt(0, 0, 0);
+
+  return { renderer: sharedRenderer, scene: sharedScene, camera: sharedCamera };
+}
+
+const thumbCache = new Map<string, string>();
+
+function renderThumbnail(item: KitComponent): string | null {
+  if (thumbCache.has(item.id)) return thumbCache.get(item.id)!;
+  const ctx = getSharedRenderer();
+  if (!ctx) return null;
+  const { renderer, scene, camera } = ctx;
+  const obj = buildObject(item);
+  scene.add(obj);
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL("image/png");
+  scene.remove(obj);
+  disposeObject(obj);
+  thumbCache.set(item.id, url);
+  return url;
+}
 
 interface CardProps {
   item: KitComponent;
   autoRotate: boolean;
 }
 
-const ModelCard = ({ item, autoRotate }: CardProps) => {
+const ModelCard = ({ item }: CardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const rotRef = useRef(autoRotate);
-
-  useEffect(() => { rotRef.current = autoRotate; }, [autoRotate]);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    const img = imgRef.current;
+    if (!container || !img) return;
 
-    let frame = 0;
-    let renderer: THREE.WebGLRenderer | null = null;
-    let object: THREE.Object3D | null = null;
-    let scene: THREE.Scene | null = null;
-    let camera: THREE.PerspectiveCamera | null = null;
-    let resizeHandler: (() => void) | null = null;
-    let dragging = false, lastX = 0, lastY = 0;
-
-    const onDown = (e: PointerEvent) => {
-      dragging = true; lastX = e.clientX; lastY = e.clientY;
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!dragging || !object) return;
-      object.rotation.y += (e.clientX - lastX) * 0.01;
-      object.rotation.x += (e.clientY - lastY) * 0.01;
-      lastX = e.clientX; lastY = e.clientY;
-    };
-    const onUp = (e: PointerEvent) => {
-      dragging = false;
-      try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
-    };
-
-    // Lazy-init: only create a WebGL context when the card enters the viewport.
-    // Browsers cap contexts at ~16 — creating 70+ at once causes silent failures.
-    const initRenderer = () => {
-      if (renderer) return;
-      const W = Math.max(container.clientWidth, 1);
-
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(48, W / CANVAS_H, 0.1, 100);
-      camera.position.set(2.8, 1.8, 3.2);
-      camera.lookAt(0, 0, 0);
-
-      try {
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      } catch {
-        return;
-      }
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(W, CANVAS_H);
-
-      const canvas = renderer.domElement;
-      canvas.style.cursor = "grab";
-      canvas.addEventListener("pointerdown", onDown);
-      canvas.addEventListener("pointermove", onMove);
-      canvas.addEventListener("pointerup", onUp);
-      canvas.addEventListener("pointercancel", onUp);
-      canvas.addEventListener("webglcontextlost", (e) => {
-        e.preventDefault();
-        disposeRenderer();
-      });
-      container.appendChild(canvas);
-
-      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-      const key = new THREE.DirectionalLight(0xffffff, 1.1);
-      key.position.set(5, 6, 5);
-      scene.add(key);
-      const fill = new THREE.DirectionalLight(0x8888ff, 0.35);
-      fill.position.set(-4, 2, -4);
-      scene.add(fill);
-      const rim = new THREE.DirectionalLight(0xffffff, 0.3);
-      rim.position.set(0, -4, -4);
-      scene.add(rim);
-
-      object = buildObject(item);
-      scene.add(object);
-
-      resizeHandler = () => {
-        if (!renderer || !container || !camera) return;
-        const w = Math.max(container.clientWidth, 1);
-        camera.aspect = w / CANVAS_H;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, CANVAS_H);
-      };
-      window.addEventListener("resize", resizeHandler);
-
-      const animate = () => {
-        frame = requestAnimationFrame(animate);
-        if (!renderer || !scene || !camera) return;
-        if (rotRef.current && !dragging && object) object.rotation.y += 0.008;
-        renderer.render(scene, camera);
-      };
-      animate();
-    };
-
-    const disposeRenderer = () => {
-      cancelAnimationFrame(frame);
-      frame = 0;
-      if (resizeHandler) {
-        window.removeEventListener("resize", resizeHandler);
-        resizeHandler = null;
-      }
-      if (renderer) {
-        const canvas = renderer.domElement;
-        canvas.removeEventListener("pointerdown", onDown);
-        canvas.removeEventListener("pointermove", onMove);
-        canvas.removeEventListener("pointerup", onUp);
-        canvas.removeEventListener("pointercancel", onUp);
-        canvas.parentNode?.removeChild(canvas);
-        renderer.dispose();
-        renderer = null;
-      }
-      if (object) {
-        disposeObject(object);
-        object = null;
-      }
-      scene = null;
-      camera = null;
-    };
-
+    let rendered = false;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) initRenderer();
-        else disposeRenderer();
+        if (entry.isIntersecting && !rendered) {
+          const url = renderThumbnail(item);
+          if (url) {
+            img.src = url;
+            rendered = true;
+          }
+        }
       },
-      { threshold: 0, rootMargin: "120px" }
+      { threshold: 0, rootMargin: "200px" }
     );
     observer.observe(container);
-
-    return () => {
-      observer.disconnect();
-      disposeRenderer();
-    };
+    return () => observer.disconnect();
   }, [item]);
 
   return (
     <div className="rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all p-3">
       <div
         ref={containerRef}
-        className="w-full h-[160px] rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 mb-3 overflow-hidden"
-      />
+        className="w-full h-[160px] rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 mb-3 overflow-hidden flex items-center justify-center"
+      >
+        <img ref={imgRef} alt={item.name} className="w-full h-full object-contain" />
+      </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-1">
           <span className="font-mono text-[11px] font-bold bg-muted px-1.5 py-0.5 rounded text-foreground">
