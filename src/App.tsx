@@ -24,6 +24,21 @@ import TeacherDashboard from "./pages/dashboards/TeacherDashboard";
 import TeacherStudents from "./pages/dashboards/teacher/TeacherStudents";
 import TeacherProgress from "./pages/dashboards/teacher/TeacherProgress";
 import StudentDashboard from "./pages/dashboards/StudentDashboard";
+import SchoolPlatformOverview from "./pages/school/SchoolPlatformOverview";
+import SignUp from "./pages/school/SignUp";
+import RoleSelection from "./pages/school/RoleSelection";
+import DashboardRolePage from "./pages/school/DashboardRolePage";
+import Attendance from "./pages/school/modules/Attendance";
+import Payments from "./pages/school/modules/Payments";
+import Courses from "./pages/school/modules/Courses";
+import Messages from "./pages/school/modules/Messages";
+import SchoolCalendar from "./pages/school/modules/Calendar";
+import Timetable from "./pages/school/modules/Timetable";
+import Library from "./pages/school/modules/Library";
+import RoboticsLearning from "./pages/school/robotics/RoboticsLearning";
+import MobileAppPreview from "./pages/school/mobile/MobileAppPreview";
+import AnalyticsReports from "./pages/school/reports/AnalyticsReports";
+import SystemArchitecture from "./pages/school/SystemArchitecture";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +62,22 @@ const App = () => (
               <Route path="/curriculum" element={<Curriculum />} />
               <Route path="/kit-planning" element={<KitPlanning />} />
               <Route path="/ai-research" element={<AIResearch />} />
+              {/* EduFlex-style school platform UI flow */}
+              <Route path="/school" element={<SchoolPlatformOverview />} />
+              <Route path="/school/signup" element={<SignUp />} />
+              <Route path="/school/roles" element={<RoleSelection />} />
+              <Route path="/school/dashboard/:role" element={<DashboardRolePage />} />
+              <Route path="/school/modules/attendance" element={<Attendance />} />
+              <Route path="/school/modules/payments" element={<Payments />} />
+              <Route path="/school/modules/courses" element={<Courses />} />
+              <Route path="/school/modules/messages" element={<Messages />} />
+              <Route path="/school/modules/calendar" element={<SchoolCalendar />} />
+              <Route path="/school/modules/timetable" element={<Timetable />} />
+              <Route path="/school/modules/library" element={<Library />} />
+              <Route path="/school/robotics" element={<RoboticsLearning />} />
+              <Route path="/school/mobile" element={<MobileAppPreview />} />
+              <Route path="/school/reports" element={<AnalyticsReports />} />
+              <Route path="/school/architecture" element={<SystemArchitecture />} />
               {/* Dashboard routes */}
               <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
               <Route path="/admin/*" element={<AdminDashboard />} />

@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "INIAC",
+    "slug": "iniac-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "iniac",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "se.iniac.mobile"
+    },
+    "android": {
+      "package": "se.iniac.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#5b21b6"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
