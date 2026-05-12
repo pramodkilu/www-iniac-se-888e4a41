@@ -17,6 +17,7 @@ import AIAssistant from "@/components/AIAssistant";
 import ARViewer from "@/components/ARViewer";
 import { useChapterProgress } from "@/hooks/useChapterProgress";
 import { getChapter, tr, LGR22_STRANDS, SDG_INFO } from "@/data/chapters";
+import { getStepAsset } from "@/data/stepAssets";
 import { useLanguage, useUIStrings } from "@/i18n/LanguageContext";
 
 const Chapter = () => {
@@ -375,6 +376,7 @@ const Chapter = () => {
             {(() => {
               const totalSteps = steps.length;
               const currentStep = steps.find((s) => s.number === activeBuildStep) ?? steps[0];
+              const stepAsset = getStepAsset(chapterIdNum, currentStep.number);
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
               const verdict = progress.step_verdicts[String(currentStep.number)];
@@ -492,6 +494,7 @@ const Chapter = () => {
                           step={currentStep}
                           chapterTitle={chapterTitle}
                           savedVerdict={verdict}
+                          referenceImage={stepAsset.referenceImage}
                           onVerified={(v) => saveStepVerdict(currentStep.number, v)}
                           onAdvance={() => setActiveBuildStep((s) => Math.min(totalSteps, s + 1))}
                         />
@@ -672,6 +675,7 @@ const Chapter = () => {
         onOpenChange={setArOpen}
         title={chapterTitle}
         chapterId={chapterIdNum}
+        modelUrl={getStepAsset(chapterIdNum, activeBuildStep).modelUrl}
         savedPose={progress.ar_pose}
         onSavePose={saveArPose}
         onClearPose={clearArPose}

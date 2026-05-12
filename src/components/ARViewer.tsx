@@ -4,7 +4,19 @@ import { Button } from "@/components/ui/button";
 import * as THREE from "three";
 import { Loader2, Smartphone, Maximize2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { buildFinalAssembly, mk } from "@/components/BuildGuide";
+import { buildFinalAssembly } from "@/components/BuildGuide";
+
+// model-viewer is loaded via CDN to avoid Three.js version conflicts.
+// The script is injected once and the custom element registers itself.
+function loadModelViewer() {
+  const id = "model-viewer-script";
+  if (document.getElementById(id)) return;
+  const s = document.createElement("script");
+  s.id = id;
+  s.type = "module";
+  s.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js";
+  document.head.appendChild(s);
+}
 
 interface ARPose {
   matrix: number[];
@@ -16,6 +28,7 @@ interface ARViewerProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   chapterId?: number;
+  modelUrl?: string | null;
   savedPose?: ARPose | null;
   onSavePose?: (matrix: number[]) => void;
   onClearPose?: () => void;
@@ -33,7 +46,7 @@ function makeReticle() {
 }
 
 const ARViewer = ({
-  open, onOpenChange, title, chapterId = 1,
+  open, onOpenChange, title, chapterId = 1, modelUrl,
   savedPose, onSavePose, onClearPose,
 }: ARViewerProps) => {
   const mountRef   = useRef<HTMLDivElement>(null);
@@ -61,6 +74,7 @@ const ARViewer = ({
       rendererRef.current = null;
       return;
     }
+    loadModelViewer();
 
     const container = mountRef.current;
     if (!container) return;
@@ -270,90 +284,121 @@ const ARViewer = ({
           </DialogDescription>
         </DialogHeader>
 
-        {/* 3D canvas */}
-        <div
-          ref={mountRef}
-          className="w-full bg-slate-950 cursor-grab active:cursor-grabbing select-none"
-          style={{ height: 340 }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}
-          onWheel={onWheel}
-        />
+        {/* Viewer — model-viewer (GLB) when available, Three.js canvas otherwise */}
+        {modelUrl ? (
+          <div className="w-full bg-slate-950" style={{ height: 360 }}>
+            <model-viewer
+              src={modelUrl}
+              alt={`3D model — ${title}`}
+              camera-controls
+              auto-rotate
+              ar
+              ar-modes="webxr scene-viewer quick-look"
+              shadow-intensity="1"
+              style={{ width: "100%", height: "100%", background: "transparent" }}
+            />
+          </div>
+        ) : (
+          /* Three.js procedural fallback — uses buildFinalAssembly() */
+          <div
+            ref={mountRef}
+            className="w-full bg-slate-950 cursor-grab active:cursor-grabbing select-none"
+            style={{ height: 340 }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerLeave={onPointerUp}
+            onWheel={onWheel}
+          />
+        )}
 
         {/* Controls bar */}
         <div className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3 flex-wrap">
           {/* Left: AR status */}
           <div className="flex items-center gap-2">
-            {xrSupported === null && (
-              <span className="flex items-center gap-1.5 text-xs text-slate-400">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking AR support…
-              </span>
-            )}
-            {xrSupported === false && (
+            {/* model-viewer handles its own AR button — show note instead */}
+            {modelUrl ? (
               <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-full px-3 py-1">
-                <Smartphone className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-xs text-slate-400">
-                  Full WebXR AR works on Android Chrome — preview above
+                <Smartphone className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-xs text-slate-300">
+                  Tap the AR button inside the viewer on Android / iOS
                 </span>
               </div>
-            )}
-            {xrSupported && !xrRunning && (
-              <Button
-                size="sm"
-                className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8"
-                onClick={startXR}
-              >
-                <Maximize2 className="w-3.5 h-3.5 mr-1.5" />
-                Enter AR
-              </Button>
-            )}
-            {xrRunning && (
-              <span className="text-xs text-green-400 font-semibold">AR session running — tap a surface to place</span>
+            ) : (
+              <>
+                {xrSupported === null && (
+                  <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking AR support…
+                  </span>
+                )}
+                {xrSupported === false && (
+                  <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-full px-3 py-1">
+                    <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-xs text-slate-400">
+                      Full WebXR AR works on Android Chrome — preview above
+                    </span>
+                  </div>
+                )}
+                {xrSupported && !xrRunning && (
+                  <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8" onClick={startXR}>
+                    <Maximize2 className="w-3.5 h-3.5 mr-1.5" /> Enter AR
+                  </Button>
+                )}
+                {xrRunning && (
+                  <span className="text-xs text-green-400 font-semibold">AR running — tap a surface to place</span>
+                )}
+              </>
             )}
           </div>
 
-          {/* Right: viewer controls */}
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm" variant="ghost"
-              className="h-8 text-xs text-slate-400 hover:text-white"
-              onClick={() => {
-                drag.current.rotX = 0.3; drag.current.rotY = 0.5; drag.current.dist = 5;
-                if (cameraRef.current) cameraRef.current.position.setLength(5);
-              }}
-            >
-              <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
-            </Button>
-            <Button
-              size="sm" variant="ghost"
-              className={`h-8 text-xs ${autoRotate ? "text-orange-400" : "text-slate-400"} hover:text-white`}
-              onClick={() => setAutoRotate(v => !v)}
-            >
-              {autoRotate ? "Auto-rotate on" : "Auto-rotate off"}
-            </Button>
-            {savedPose && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs text-slate-400 hover:text-red-400"
-                onClick={() => onClearPose?.()}>
-                Clear pose
+          {/* Right: Three.js orbit controls (only relevant without GLB) */}
+          {!modelUrl && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" className="h-8 text-xs text-slate-400 hover:text-white"
+                onClick={() => {
+                  drag.current.rotX = 0.3; drag.current.rotY = 0.5; drag.current.dist = 5;
+                  if (cameraRef.current) cameraRef.current.position.setLength(5);
+                }}>
+                <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
               </Button>
-            )}
-          </div>
+              <Button size="sm" variant="ghost"
+                className={`h-8 text-xs ${autoRotate ? "text-orange-400" : "text-slate-400"} hover:text-white`}
+                onClick={() => setAutoRotate(v => !v)}>
+                {autoRotate ? "Auto-rotate on" : "Auto-rotate off"}
+              </Button>
+              {savedPose && (
+                <Button size="sm" variant="ghost" className="h-8 text-xs text-slate-400 hover:text-red-400"
+                  onClick={() => onClearPose?.()}>Clear pose</Button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Coming-soon banner */}
+        {/* Info banner */}
         <div className="px-4 pb-3">
-          <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
-            <span className="text-lg">🚀</span>
-            <div>
-              <p className="text-orange-300 text-xs font-bold">Full AR mode — in development</p>
-              <p className="text-slate-400 text-[11px] mt-0.5">
-                Point your camera at a desk and tap to place the exact BLIX model in your real classroom.
-                Works today on Android Chrome with ARCore. iOS WebXR coming soon.
-              </p>
+          {modelUrl ? (
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
+              <span className="text-lg">📦</span>
+              <div>
+                <p className="text-green-300 text-xs font-bold">3D model preview available</p>
+                <p className="text-slate-400 text-[11px] mt-0.5">
+                  AR works best on Android Chrome or iOS Quick Look compatible devices.
+                  Use the built-in AR button in the viewer above.
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
+              <span className="text-lg">🚀</span>
+              <div>
+                <p className="text-orange-300 text-xs font-bold">No AR model linked for this step yet</p>
+                <p className="text-slate-400 text-[11px] mt-0.5">
+                  Showing procedural 3D preview. GLB models are being added — check back soon.
+                  Full AR on Android Chrome with ARCore will be enabled automatically once available.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

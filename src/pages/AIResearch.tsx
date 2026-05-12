@@ -155,7 +155,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
     refreshHistory();
   }, [capturedImage, step, stepIdx, chapterId, chapterTitle]);
 
-  // ── Run INIAC-ML model ─────────────────────────────────────────────────────
+  // ── Run Demo COCO-SSD model ─────────────────────────────────────────────────────
   const runMLModel = useCallback(async () => {
     if (!capturedImage || !step || modelStatus !== "ready") return;
     setLoadingModel(true);
@@ -198,21 +198,21 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   // ── Chart data ─────────────────────────────────────────────────────────────
   const accuracyData = [
     { name: "Claude Vision", accuracy: stats.apiAcc ?? 0, fill: "#3b82f6" },
-    { name: "INIAC-ML",      accuracy: stats.modelAcc ?? 0, fill: "#f97316" },
+    { name: "COCO-SSD",      accuracy: stats.modelAcc ?? 0, fill: "#f97316" },
   ];
 
   const confidenceData = [...history].reverse().slice(-20).map((r, i) => ({
     check: i + 1,
-    [r.method === "api" ? "Claude Vision" : "INIAC-ML"]: Math.round(r.confidence * 100),
+    [r.method === "api" ? "Claude Vision" : "COCO-SSD"]: Math.round(r.confidence * 100),
   }));
 
   const radarData = [
-    { metric: "Accuracy",   "Claude Vision": stats.apiAcc ?? 0,   "INIAC-ML": stats.modelAcc ?? 0   },
-    { metric: "Confidence", "Claude Vision": stats.apiConf ?? 0,  "INIAC-ML": stats.modelConf ?? 0  },
-    { metric: "Agreement",  "Claude Vision": stats.agreementRate ?? 0, "INIAC-ML": stats.agreementRate ?? 0 },
+    { metric: "Accuracy",   "Claude Vision": stats.apiAcc ?? 0,   "COCO-SSD": stats.modelAcc ?? 0   },
+    { metric: "Confidence", "Claude Vision": stats.apiConf ?? 0,  "COCO-SSD": stats.modelConf ?? 0  },
+    { metric: "Agreement",  "Claude Vision": stats.agreementRate ?? 0, "COCO-SSD": stats.agreementRate ?? 0 },
     { metric: "Speed",
       "Claude Vision": stats.apiMs ? Math.max(0, 100 - Math.round(stats.apiMs / 100)) : 0,
-      "INIAC-ML":      stats.modelMs ? Math.max(0, 100 - Math.round(stats.modelMs / 50)) : 0,
+      "COCO-SSD":      stats.modelMs ? Math.max(0, 100 - Math.round(stats.modelMs / 50)) : 0,
     },
   ];
 
@@ -229,7 +229,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   ).map(([step, v]) => ({
     step,
     "Claude Vision": v.api   ? Math.round(v.apiOk   / v.api   * 100) : 0,
-    "INIAC-ML":      v.model ? Math.round(v.modelOk / v.model * 100) : 0,
+    "COCO-SSD":      v.model ? Math.round(v.modelOk / v.model * 100) : 0,
   }));
 
   return (
@@ -310,12 +310,12 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
                 )}
               </div>
               <div className="space-y-2">
-                <ResultPanel result={modelResult} label="🤖 INIAC-ML" accent="orange" loading={loadingModel} />
+                <ResultPanel result={modelResult} label="🤖 Demo COCO-SSD / Local Model" accent="orange" loading={loadingModel} />
                 {!modelResult && !loadingModel && modelStatus !== "unavailable" && (
                   <button onClick={runMLModel} disabled={modelStatus !== "ready"}
                     className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
                     <Cpu className="w-3.5 h-3.5" />
-                    {modelStatus === "loading" ? "Loading COCO-SSD model…" : "Run INIAC-ML"}
+                    {modelStatus === "loading" ? "Loading COCO-SSD model…" : "Run Demo COCO-SSD"}
                   </button>
                 )}
                 {modelStatus === "loading" && (
@@ -325,9 +325,12 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
                 )}
                 {modelStatus === "unavailable" && !modelResult && (
                   <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-[11px] text-red-600">
-                    ⚠ INIAC-ML model failed to load. Check your connection and refresh.
+                    ⚠ Demo COCO-SSD model failed to load. Check your connection and refresh.
                   </div>
                 )}
+                <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 text-[11px] text-orange-700 mt-1">
+                  ⚠ Demo mode is not trained on BLIX parts. For production, connect a Roboflow custom BLIX model via <code className="font-mono">VITE_ROBOFLOW_MODEL_ID</code>.
+                </div>
               </div>
             </div>
 
@@ -352,7 +355,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard label="Total Checks" value={history.length} sub={`${stats.api.length} API · ${stats.model.length} ML`} color="text-gray-800" isCount />
             <StatCard label="Claude Vision Accuracy" value={stats.apiAcc} sub={`${stats.api.length} checks`} color="text-blue-600" />
-            <StatCard label="INIAC-ML Accuracy" value={stats.modelAcc} sub={`${stats.model.length} checks`} color="text-orange-500" />
+            <StatCard label="Demo COCO-SSD Accuracy" value={stats.modelAcc} sub={`${stats.model.length} checks`} color="text-orange-500" />
             <StatCard label="Agreement Rate" value={stats.agreementRate} sub={`${stats.bothRun} paired steps`} color="text-purple-600" />
           </div>
         </section>
@@ -389,7 +392,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
                     <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
                     <Radar name="Claude Vision" dataKey="Claude Vision" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
-                    <Radar name="INIAC-ML"      dataKey="INIAC-ML"      stroke="#f97316" fill="#f97316" fillOpacity={0.2} />
+                    <Radar name="COCO-SSD"      dataKey="COCO-SSD"      stroke="#f97316" fill="#f97316" fillOpacity={0.2} />
                     <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                     <Tooltip formatter={(v: number) => `${v}%`} />
                   </RadarChart>
@@ -408,7 +411,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
                   <Tooltip formatter={(v: number) => `${v}%`} />
                   <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                   <Line type="monotone" dataKey="Claude Vision" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                  <Line type="monotone" dataKey="INIAC-ML"      stroke="#f97316" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey="COCO-SSD"      stroke="#f97316" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -425,7 +428,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
                     <Tooltip formatter={(v: number) => `${v}%`} />
                     <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                     <Bar dataKey="Claude Vision" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="INIAC-ML"      fill="#f97316" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="COCO-SSD"      fill="#f97316" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -460,7 +463,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
                         <td className="px-3 py-2">
                           {r.method === "api"
                             ? <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">☁️ Vision</span>
-                            : <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">🤖 INIAC-ML</span>
+                            : <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">🤖 Demo COCO-SSD / Local Model</span>
                           }
                         </td>
                         <td className="px-3 py-2">
