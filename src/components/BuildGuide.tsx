@@ -1301,14 +1301,13 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
   const goToResearch = useCallback((method: ResearchNavState["method"]) => {
     if (!capturedImage) return;
     sessionStorage.setItem("blix_captured_image", capturedImage);
-    // Store the 3D snapshot so the research page can show it as reference
     if (referenceImage) sessionStorage.setItem("blix_reference_image", referenceImage);
+    else sessionStorage.removeItem("blix_reference_image");
     const state: ResearchNavState = {
       method, step, stepIdx, chapterId, chapterTitle,
     };
     navigate("/ai-research", { state });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage, step, stepIdx, chapterId, chapterTitle]);
+  }, [capturedImage, referenceImage, step, stepIdx, chapterId, chapterTitle, navigate]);
 
   const checkVisionAPI = useCallback(() => goToResearch("api"),  [goToResearch]);
   const checkMLModel   = useCallback(() => goToResearch("model"), [goToResearch]);
@@ -1743,6 +1742,7 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
   const [referenceSnapshot, setReferenceSnapshot] = useState<string | null>(null);
 
   useEffect(() => { setStepIdx(0); setReferenceSnapshot(null); }, [chapter.id]);
+  useEffect(() => { setReferenceSnapshot(null); }, [stepIdx]);
 
   return (
     <div className="space-y-2">
