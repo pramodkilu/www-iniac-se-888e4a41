@@ -671,6 +671,7 @@ const Chapter = () => {
         open={arOpen}
         onOpenChange={setArOpen}
         title={chapterTitle}
+        chapterId={chapterIdNum}
         savedPose={progress.ar_pose}
         onSavePose={saveArPose}
         onClearPose={clearArPose}

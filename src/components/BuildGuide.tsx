@@ -181,7 +181,7 @@ const CODE_COLOR: Record<string, number> = {
   // Consumables
   Balloon: 0xef4444, RB: 0xfbbf24,
 };
-function codeColor(code: string): number {
+export function codeColor(code: string): number {
   if (CODE_COLOR[code]) return CODE_COLOR[code];
   for (const k of Object.keys(CODE_COLOR))
     if (code.toLowerCase().startsWith(k.toLowerCase())) return CODE_COLOR[k];
@@ -189,7 +189,7 @@ function codeColor(code: string): number {
 }
 
 // ─── Three.js helpers ─────────────────────────────────────────────────────────
-function mk(g: THREE.BufferGeometry, color: number, metalness = 0.15, roughness = 0.5) {
+export function mk(g: THREE.BufferGeometry, color: number, metalness = 0.15, roughness = 0.5) {
   return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, metalness, roughness }));
 }
 function buildShape(code: string): THREE.Object3D {
@@ -514,7 +514,7 @@ const CHAPTER_PAGE_IMAGES: Record<number, string> = {
 };
 
 // ─── Final assembled model builders (one per chapter) ────────────────────────
-function buildFinalAssembly(chapterId: number): THREE.Group {
+export function buildFinalAssembly(chapterId: number): THREE.Group {
   const g = new THREE.Group();
   const yw = 0xfbbf24; const bl = 0x60a5fa; const wh = 0xe5e7eb;
   const bk = 0x1f2937; const gr = 0x16a34a; const or = 0xf97316;

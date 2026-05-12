@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import * as THREE from "three";
-import { Loader2 } from "lucide-react";
+import { Loader2, Smartphone, Maximize2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { buildFinalAssembly, mk } from "@/components/BuildGuide";
 
 interface ARPose {
   matrix: number[];
@@ -14,147 +15,243 @@ interface ARViewerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  chapterId?: number;
   savedPose?: ARPose | null;
   onSavePose?: (matrix: number[]) => void;
   onClearPose?: () => void;
 }
 
-// Minimal WebXR AR overlay that places a simple BLIX-cart proxy in the real world.
-const ARViewer = ({ open, onOpenChange, title, savedPose, onSavePose, onClearPose }: ARViewerProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [supported, setSupported] = useState<boolean | null>(null);
-  const [running, setRunning] = useState(false);
-  const cleanupRef = useRef<() => void>(() => {});
+// ── Reticle ring geometry used in WebXR hit-test ───────────────────────────────
+function makeReticle() {
+  const mesh = new THREE.Mesh(
+    new THREE.RingGeometry(0.08, 0.1, 32).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0xff6b35, side: THREE.DoubleSide }),
+  );
+  mesh.matrixAutoUpdate = false;
+  mesh.visible = false;
+  return mesh;
+}
 
-  useEffect(() => {
-    if (!open) return;
-    const anyNav = navigator as any;
-    if (!anyNav.xr?.isSessionSupported) {
-      setSupported(false);
-      return;
-    }
-    anyNav.xr.isSessionSupported("immersive-ar").then((ok: boolean) => setSupported(ok)).catch(() => setSupported(false));
-  }, [open]);
+const ARViewer = ({
+  open, onOpenChange, title, chapterId = 1,
+  savedPose, onSavePose, onClearPose,
+}: ARViewerProps) => {
+  const mountRef   = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef    = useRef<THREE.Scene | null>(null);
+  const cameraRef   = useRef<THREE.PerspectiveCamera | null>(null);
+  const modelRef    = useRef<THREE.Group | null>(null);
+  const frameRef    = useRef<number>(0);
+  const cleanupRef  = useRef<() => void>(() => {});
 
+  // Orbit state
+  const drag = useRef({ active: false, x: 0, y: 0, rotX: 0.3, rotY: 0.5, dist: 5 });
+
+  const [xrSupported, setXrSupported] = useState<boolean | null>(null);
+  const [xrRunning,   setXrRunning]   = useState(false);
+  const [autoRotate,  setAutoRotate]  = useState(true);
+
+  // ── Build / tear down the Three.js preview scene ──────────────────────────────
   useEffect(() => {
     if (!open) {
+      cancelAnimationFrame(frameRef.current);
       cleanupRef.current();
       cleanupRef.current = () => {};
-      setRunning(false);
+      rendererRef.current?.dispose();
+      rendererRef.current = null;
+      return;
     }
-  }, [open]);
 
-  const startAR = async () => {
-    if (!containerRef.current) return;
-    try {
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
-      containerRef.current.appendChild(renderer.domElement);
+    const container = mountRef.current;
+    if (!container) return;
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight || 320);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
 
-      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-      scene.add(light);
-      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-      dir.position.set(1, 2, 1);
-      scene.add(dir);
+    // Scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+    sceneRef.current = scene;
 
-      // Build a small BLIX-cart proxy
-      const cart = new THREE.Group();
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.2, 0.05, 0.12),
-        new THREE.MeshStandardMaterial({ color: 0xff6b35 }),
-      );
-      body.position.y = 0.04;
-      cart.add(body);
-      const wheelGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.02, 24);
-      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-      const wheelPositions: [number, number, number][] = [
-        [-0.08, 0.03, 0.06],
-        [0.08, 0.03, 0.06],
-        [-0.08, 0.03, -0.06],
-        [0.08, 0.03, -0.06],
-      ];
-      wheelPositions.forEach(([x, y, z]) => {
-        const w = new THREE.Mesh(wheelGeom, wheelMat);
-        w.rotation.z = Math.PI / 2;
-        w.position.set(x, y, z);
-        cart.add(w);
-      });
-      cart.visible = false;
-      scene.add(cart);
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+    sun.position.set(4, 8, 4);
+    scene.add(sun);
+    const fill = new THREE.DirectionalLight(0x7dd3fc, 0.4);
+    fill.position.set(-4, 2, -4);
+    scene.add(fill);
 
-      // If a saved pose exists, restore the cart to that position from the start.
-      if (savedPose?.matrix && savedPose.matrix.length === 16) {
-        const m = new THREE.Matrix4().fromArray(savedPose.matrix);
-        cart.position.setFromMatrixPosition(m);
-        cart.visible = true;
+    // Grid floor
+    const grid = new THREE.GridHelper(8, 16, 0x334155, 0x1e293b);
+    grid.position.y = -2;
+    scene.add(grid);
+
+    // Chapter model
+    const model = buildFinalAssembly(chapterId);
+    // Centre and scale to fit
+    const box = new THREE.Box3().setFromObject(model);
+    const centre = box.getCenter(new THREE.Vector3());
+    const size   = box.getSize(new THREE.Vector3()).length();
+    model.position.sub(centre);
+    const scale = 3 / Math.max(size, 0.01);
+    model.scale.setScalar(scale);
+    scene.add(model);
+    modelRef.current = model;
+
+    // Camera
+    const w = container.clientWidth;
+    const h = container.clientHeight || 320;
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.01, 100);
+    camera.position.set(0, 1.5, drag.current.dist);
+    camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
+
+    // Animation loop
+    let rotY = drag.current.rotY;
+    const animate = () => {
+      frameRef.current = requestAnimationFrame(animate);
+      if (autoRotate && !drag.current.active) {
+        rotY += 0.004;
+        model.rotation.y = rotY;
+        drag.current.rotY = rotY;
+      } else {
+        model.rotation.x = drag.current.rotX;
+        model.rotation.y = drag.current.rotY;
+        rotY = drag.current.rotY;
       }
+      renderer.render(scene, camera);
+    };
+    animate();
 
-      // Reticle
-      const reticle = new THREE.Mesh(
-        new THREE.RingGeometry(0.08, 0.1, 32).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({ color: 0xff6b35 }),
-      );
-      reticle.matrixAutoUpdate = false;
-      reticle.visible = false;
-      scene.add(reticle);
+    // Handle resize
+    const onResize = () => {
+      if (!container) return;
+      const w2 = container.clientWidth;
+      const h2 = container.clientHeight || 320;
+      camera.aspect = w2 / h2;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w2, h2);
+    };
+    window.addEventListener("resize", onResize);
 
+    cleanupRef.current = () => {
+      cancelAnimationFrame(frameRef.current);
+      window.removeEventListener("resize", onResize);
+      renderer.setAnimationLoop(null);
+      renderer.dispose();
+      if (renderer.domElement.parentNode)
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+    };
+
+    // Check WebXR
+    const nav = navigator as any;
+    if (nav.xr?.isSessionSupported) {
+      nav.xr.isSessionSupported("immersive-ar")
+        .then((ok: boolean) => setXrSupported(ok))
+        .catch(() => setXrSupported(false));
+    } else {
+      setXrSupported(false);
+    }
+
+    return () => {
+      cleanupRef.current();
+      cleanupRef.current = () => {};
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, chapterId]);
+
+  // ── Mouse / touch orbit ───────────────────────────────────────────────────────
+  const onPointerDown = (e: React.PointerEvent) => {
+    drag.current.active = true;
+    drag.current.x = e.clientX;
+    drag.current.y = e.clientY;
+    setAutoRotate(false);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!drag.current.active) return;
+    const dx = e.clientX - drag.current.x;
+    const dy = e.clientY - drag.current.y;
+    drag.current.rotY += dx * 0.008;
+    drag.current.rotX += dy * 0.008;
+    drag.current.rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, drag.current.rotX));
+    drag.current.x = e.clientX;
+    drag.current.y = e.clientY;
+  };
+  const onPointerUp = () => { drag.current.active = false; };
+
+  const onWheel = (e: React.WheelEvent) => {
+    if (!cameraRef.current) return;
+    drag.current.dist = Math.max(2, Math.min(12, drag.current.dist + e.deltaY * 0.01));
+    cameraRef.current.position.setLength(drag.current.dist);
+  };
+
+  // ── WebXR session ─────────────────────────────────────────────────────────────
+  const startXR = async () => {
+    const renderer = rendererRef.current;
+    const scene    = sceneRef.current;
+    const model    = modelRef.current;
+    if (!renderer || !scene || !model) return;
+    try {
+      renderer.xr.enabled = true;
       const session = await (navigator as any).xr.requestSession("immersive-ar", {
         requiredFeatures: ["hit-test"],
       });
       renderer.xr.setReferenceSpaceType("local");
       await renderer.xr.setSession(session);
 
+      const reticle = makeReticle();
+      scene.add(reticle);
+
+      let hitTestSource: any = null;
       const viewerSpace = await session.requestReferenceSpace("viewer");
-      const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
+      hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
       const refSpace = await session.requestReferenceSpace("local");
+
+      model.visible = !!savedPose;
 
       const onSelect = () => {
         if (reticle.visible) {
-          cart.position.setFromMatrixPosition(reticle.matrix);
-          cart.visible = true;
-          // Persist the placement so it resumes next time.
+          model.position.setFromMatrixPosition(reticle.matrix);
+          model.visible = true;
           const arr = Array.from(reticle.matrix.elements) as number[];
           onSavePose?.(arr);
         }
       };
       session.addEventListener("select", onSelect);
 
-      renderer.setAnimationLoop((_t, frame) => {
-        if (frame) {
+      renderer.setAnimationLoop((_t: number, frame: any) => {
+        if (frame && hitTestSource) {
           const hits = frame.getHitTestResults(hitTestSource);
           if (hits.length > 0) {
             const pose = hits[0].getPose(refSpace);
-            if (pose) {
-              reticle.visible = true;
-              reticle.matrix.fromArray(pose.transform.matrix);
-            }
+            if (pose) { reticle.visible = true; reticle.matrix.fromArray(pose.transform.matrix); }
           } else {
             reticle.visible = false;
           }
         }
-        renderer.render(scene, camera);
+        renderer.render(scene, cameraRef.current!);
       });
 
-      setRunning(true);
+      setXrRunning(true);
 
-      const cleanup = () => {
+      const endXR = () => {
         try { session.removeEventListener("select", onSelect); } catch {}
         try { session.end(); } catch {}
         renderer.setAnimationLoop(null);
-        renderer.dispose();
-        if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
-        setRunning(false);
-      };
-      session.addEventListener("end", () => {
-        cleanup();
+        renderer.xr.enabled = false;
+        scene.remove(reticle);
+        model.visible = true;
+        setXrRunning(false);
         onOpenChange(false);
-      });
-      cleanupRef.current = cleanup;
+      };
+      session.addEventListener("end", endXR);
+      cleanupRef.current = endXR;
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Couldn't start AR session");
@@ -163,45 +260,101 @@ const ARViewer = ({ open, onOpenChange, title, savedPose, onSavePose, onClearPos
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>AR View — {title}</DialogTitle>
-          <DialogDescription>
-            Place your build in the real world and walk around it.
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-slate-900 border-slate-700">
+        <DialogHeader className="px-5 pt-4 pb-2">
+          <DialogTitle className="text-white text-base font-bold">
+            3D Preview — {title}
+          </DialogTitle>
+          <DialogDescription className="text-slate-400 text-xs">
+            Drag to rotate · Scroll to zoom · Tap "Enter AR" on a supported device to place in the real world
           </DialogDescription>
         </DialogHeader>
 
-        <div ref={containerRef} />
+        {/* 3D canvas */}
+        <div
+          ref={mountRef}
+          className="w-full bg-slate-950 cursor-grab active:cursor-grabbing select-none"
+          style={{ height: 340 }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerLeave={onPointerUp}
+          onWheel={onWheel}
+        />
 
-        {supported === null && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Checking AR support...
-          </div>
-        )}
-        {supported === false && (
-          <div className="space-y-2 text-sm">
-            <p className="text-destructive font-medium">AR isn't supported on this device/browser.</p>
-            <p className="text-muted-foreground">
-              Try on a recent Android phone in Chrome, or an ARKit-enabled iOS device using a WebXR-compatible browser (e.g. WebXR Viewer).
-            </p>
-          </div>
-        )}
-        {supported && !running && (
-          <div className="space-y-2">
-            {savedPose && (
-              <div className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2 flex items-center justify-between gap-2">
-                <span>Your last placement will be restored when you start.</span>
-                <Button size="sm" variant="ghost" onClick={() => onClearPose?.()}>Reset</Button>
+        {/* Controls bar */}
+        <div className="px-4 py-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3 flex-wrap">
+          {/* Left: AR status */}
+          <div className="flex items-center gap-2">
+            {xrSupported === null && (
+              <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking AR support…
+              </span>
+            )}
+            {xrSupported === false && (
+              <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-full px-3 py-1">
+                <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-400">
+                  Full WebXR AR works on Android Chrome — preview above
+                </span>
               </div>
             )}
-            <Button onClick={startAR} className="w-full">Start AR Session</Button>
+            {xrSupported && !xrRunning && (
+              <Button
+                size="sm"
+                className="bg-orange-500 hover:bg-orange-600 text-white text-xs h-8"
+                onClick={startXR}
+              >
+                <Maximize2 className="w-3.5 h-3.5 mr-1.5" />
+                Enter AR
+              </Button>
+            )}
+            {xrRunning && (
+              <span className="text-xs text-green-400 font-semibold">AR session running — tap a surface to place</span>
+            )}
           </div>
-        )}
-        {running && (
-          <p className="text-sm text-muted-foreground">
-            Point at a flat surface, then tap to place your BLIX cart. Close this dialog to exit.
-          </p>
-        )}
+
+          {/* Right: viewer controls */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm" variant="ghost"
+              className="h-8 text-xs text-slate-400 hover:text-white"
+              onClick={() => {
+                drag.current.rotX = 0.3; drag.current.rotY = 0.5; drag.current.dist = 5;
+                if (cameraRef.current) cameraRef.current.position.setLength(5);
+              }}
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
+            </Button>
+            <Button
+              size="sm" variant="ghost"
+              className={`h-8 text-xs ${autoRotate ? "text-orange-400" : "text-slate-400"} hover:text-white`}
+              onClick={() => setAutoRotate(v => !v)}
+            >
+              {autoRotate ? "Auto-rotate on" : "Auto-rotate off"}
+            </Button>
+            {savedPose && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs text-slate-400 hover:text-red-400"
+                onClick={() => onClearPose?.()}>
+                Clear pose
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Coming-soon banner */}
+        <div className="px-4 pb-3">
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
+            <span className="text-lg">🚀</span>
+            <div>
+              <p className="text-orange-300 text-xs font-bold">Full AR mode — in development</p>
+              <p className="text-slate-400 text-[11px] mt-0.5">
+                Point your camera at a desk and tap to place the exact BLIX model in your real classroom.
+                Works today on Android Chrome with ARCore. iOS WebXR coming soon.
+              </p>
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
