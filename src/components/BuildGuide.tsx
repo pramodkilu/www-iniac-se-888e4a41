@@ -1442,8 +1442,8 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
                   {checking === "model"
                     ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
                     : <Cpu className="w-4 h-4 mb-0.5" />}
-                  <span>{checking === "model" ? "Running…" : "INIAC-ML"}</span>
-                  <span className="text-[9px] font-normal opacity-75">COCO-SSD Demo</span>
+                  <span>{checking === "model" ? "Running…" : "COCO-SSD"}</span>
+                  <span className="text-[9px] font-normal opacity-75">Demo Model</span>
                 </button>
               </div>
               <button onClick={() => { setCapturedImage(null); setApiResult(null); setModelResult(null); startCamera(); }}
@@ -1457,7 +1457,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
             {modelResult && (
               <ResultCard
                 result={modelResult}
-                label="🤖 INIAC-ML (Demo)"
+                label="🤖 COCO-SSD Demo"
                 accent="orange"
               />
             )}
@@ -1475,9 +1475,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
                     <p className="text-[10px] text-gray-400">{Math.round(apiResult.confidence * 100)}% conf.</p>
                   </div>
                   <div className="bg-white rounded-lg p-2 border border-orange-100 text-center">
-                    <p className="text-[10px] text-orange-600 font-bold mb-0.5">
-                      INIAC-ML
-                    </p>
+                    <p className="text-[10px] text-orange-600 font-bold mb-0.5">COCO-SSD Demo</p>
                     <p className={`text-[13px] font-bold ${modelResult.correct ? "text-green-600" : "text-red-500"}`}>
                       {modelResult.correct ? "✓ Pass" : "✗ Fail"}
                     </p>
