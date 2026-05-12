@@ -17,6 +17,7 @@ import Curriculum from "./pages/Curriculum";
 import KitPlanning from "./pages/KitPlanning";
 import AIResearch from "./pages/AIResearch";
 import NotFound from "./pages/NotFound";
+import ComingSoon from "./pages/ComingSoon";
 import SuperAdminDashboard from "./pages/dashboards/SuperAdminDashboard";
 import AdminDashboard from "./pages/dashboards/AdminDashboard";
 import TeacherDashboard from "./pages/dashboards/TeacherDashboard";
@@ -54,6 +55,11 @@ const App = () => (
               <Route path="/teacher/progress" element={<TeacherProgress />} />
               <Route path="/teacher/*" element={<TeacherDashboard />} />
               <Route path="/student/*" element={<StudentDashboard />} />
+              {/* Placeholder pages for header nav links */}
+              <Route path="/innovation" element={<ComingSoon />} />
+              <Route path="/partners"   element={<ComingSoon />} />
+              <Route path="/about"      element={<ComingSoon />} />
+              <Route path="/contact"    element={<ComingSoon />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

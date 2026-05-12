@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Rocket, Wrench, Brain, Sparkles, Cog, GraduationCap } from "lucide-react";
 import characterLaya from "@/assets/character-laya.png";
@@ -75,13 +76,17 @@ const Hero = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-105 font-semibold">
-              <Rocket className="mr-2 h-5 w-5" />
-              Start Learning
+            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-105 font-semibold">
+              <Link to="/programs">
+                <Rocket className="mr-2 h-5 w-5" />
+                Start Learning
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/40 hover:bg-white/20 hover:border-white/60 text-lg px-8 py-6 rounded-full font-semibold">
-              <GraduationCap className="mr-2 h-5 w-5" />
-              For Schools
+            <Button asChild size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/40 hover:bg-white/20 hover:border-white/60 text-lg px-8 py-6 rounded-full font-semibold">
+              <Link to="/education">
+                <GraduationCap className="mr-2 h-5 w-5" />
+                For Schools
+              </Link>
             </Button>
           </div>
 

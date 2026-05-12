@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import LandingSections from "@/components/LandingSections";
 import SDGSection from "@/components/SDGSection";
 import PlatformFeatures from "@/components/PlatformFeatures";
@@ -16,6 +17,7 @@ const Index = () => {
         <StatsSection />
         <Characters />
       </div>
+      <Footer />
     </div>
   );
 };
