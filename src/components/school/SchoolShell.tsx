@@ -15,7 +15,7 @@ export function SchoolShell({ title, description, children }: SchoolShellProps) 
   const mobileItems: (SchoolNavItem & { activePaths: string[] })[] = [
     { label: "Home", href: "/school", icon: LayoutDashboard, activePaths: ["/school"] },
     { label: "Roles", href: "/school/roles", icon: UserRound, activePaths: ["/school/roles", "/school/dashboard"] },
-    { label: "Courses", href: "/school/modules/courses", icon: BookOpenCheck, activePaths: ["/school/modules/courses", "/school/robotics"] },
+    { label: "Programs", href: "/school/programs", icon: BookOpenCheck, activePaths: ["/school/programs", "/school/enrollments", "/school/modules/courses", "/school/robotics"] },
     { label: "Messages", href: "/school/modules/messages", icon: MessageSquareText, activePaths: ["/school/modules/messages"] },
     { label: "Mobile", href: "/school/mobile", icon: UserRound, activePaths: ["/school/mobile"] },
   ];

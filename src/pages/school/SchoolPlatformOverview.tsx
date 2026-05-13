@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SchoolShell } from "@/components/school/SchoolShell";
 import { FeatureCard } from "@/components/school/SchoolCards";
+import { VisualFlowBoard } from "@/components/school/VisualFlowBoard";
 import { roles } from "@/data/mockSchoolData";
 
 const features = [
@@ -28,6 +29,8 @@ export default function SchoolPlatformOverview() {
       title="School Management Platform"
       description="A responsive web dashboard and mobile/PWA experience for INIAC school programs."
     >
+      <VisualFlowBoard />
+
       <section className="grid gap-6 xl:grid-cols-[1fr_420px] xl:items-center">
         <div className="rounded-[28px] bg-white p-6 shadow-sm">
           <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-2 text-sm font-black text-violet-700">

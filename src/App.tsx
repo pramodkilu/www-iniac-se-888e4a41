@@ -28,6 +28,9 @@ import SchoolPlatformOverview from "./pages/school/SchoolPlatformOverview";
 import SignUp from "./pages/school/SignUp";
 import RoleSelection from "./pages/school/RoleSelection";
 import DashboardRolePage from "./pages/school/DashboardRolePage";
+import Students from "./pages/school/Students";
+import ProgramsBatches from "./pages/school/ProgramsBatches";
+import EnrollmentsSessions from "./pages/school/EnrollmentsSessions";
 import Attendance from "./pages/school/modules/Attendance";
 import Payments from "./pages/school/modules/Payments";
 import Courses from "./pages/school/modules/Courses";
@@ -37,6 +40,7 @@ import Timetable from "./pages/school/modules/Timetable";
 import Library from "./pages/school/modules/Library";
 import RoboticsLearning from "./pages/school/robotics/RoboticsLearning";
 import MobileAppPreview from "./pages/school/mobile/MobileAppPreview";
+import MobileRolePreview from "./pages/school/mobile/MobileRolePreview";
 import AnalyticsReports from "./pages/school/reports/AnalyticsReports";
 import SystemArchitecture from "./pages/school/SystemArchitecture";
 
@@ -67,6 +71,9 @@ const App = () => (
               <Route path="/school/signup" element={<SignUp />} />
               <Route path="/school/roles" element={<RoleSelection />} />
               <Route path="/school/dashboard/:role" element={<DashboardRolePage />} />
+              <Route path="/school/students" element={<Students />} />
+              <Route path="/school/programs" element={<ProgramsBatches />} />
+              <Route path="/school/enrollments" element={<EnrollmentsSessions />} />
               <Route path="/school/modules/attendance" element={<Attendance />} />
               <Route path="/school/modules/payments" element={<Payments />} />
               <Route path="/school/modules/courses" element={<Courses />} />
@@ -76,6 +83,7 @@ const App = () => (
               <Route path="/school/modules/library" element={<Library />} />
               <Route path="/school/robotics" element={<RoboticsLearning />} />
               <Route path="/school/mobile" element={<MobileAppPreview />} />
+              <Route path="/school/mobile/:flow" element={<MobileRolePreview />} />
               <Route path="/school/reports" element={<AnalyticsReports />} />
               <Route path="/school/architecture" element={<SystemArchitecture />} />
               {/* Dashboard routes */}
