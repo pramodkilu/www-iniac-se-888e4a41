@@ -63,6 +63,7 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
   // Track which step's camera view is currently shown so we can save it before switching
   const persistedStepRef = useRef<number | null>(null);
   const isRotatingRef = useRef(isRotating);
+  const isDraggingRef = useRef(false);
   useEffect(() => { isRotatingRef.current = isRotating; }, [isRotating]);
 
   const viewStorageKey = (step: number) =>
@@ -397,7 +398,7 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      if (isRotating && !isDragging && cartGroupRef.current) {
+      if (isRotatingRef.current && !isDraggingRef.current && cartGroupRef.current) {
         cartGroupRef.current.rotation.y += 0.005;
       }
 
@@ -424,7 +425,8 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
       renderer.dispose();
       mountRef.current?.removeChild(renderer.domElement);
     };
-  }, [isRotating, isDragging]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Create measurement lines
   useEffect(() => {
@@ -568,6 +570,7 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
 
   // Mouse controls
   const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
     setIsDragging(true);
     setIsRotating(false);
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
@@ -586,6 +589,7 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
   };
 
   const handleMouseUp = () => {
+    isDraggingRef.current = false;
     setIsDragging(false);
   };
 
