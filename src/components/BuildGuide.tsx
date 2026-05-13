@@ -867,6 +867,7 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
     const mount = mountRef.current; if (!mount) return;
     const W = mount.clientWidth || 360; const H = 280;
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf8f8f8);
     scene.add(groupRef.current);
     const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
     camera.position.set(5, 3.5, 5); camera.lookAt(0, 0, 0);

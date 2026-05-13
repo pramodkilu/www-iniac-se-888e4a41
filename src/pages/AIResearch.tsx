@@ -2,12 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  LineChart, Line,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { useComponentDetector, verifyComponents, type VerifyResult } from "@/hooks/useComponentDetector";
+import { type VerifyResult } from "@/hooks/useComponentDetector";
 import { getCheckHistory, saveCheckRecord, clearCheckHistory, computeStats, type CheckRecord } from "@/hooks/useCheckHistory";
-import { CheckCircle2, XCircle, ChevronLeft, Trash2, Cpu, Sparkles } from "lucide-react";
+import { CheckCircle2, XCircle, ChevronLeft, Trash2, Sparkles } from "lucide-react";
 import { useSafeBack } from "@/lib/safeBack";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -94,15 +94,11 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
 
   const { method, step, stepIdx, chapterId, chapterTitle } = state;
 
-  const [apiResult,   setApiResult]   = useState<VerifyResult | null>(null);
-  const [modelResult, setModelResult] = useState<VerifyResult | null>(null);
-  const [loadingApi,  setLoadingApi]  = useState(false);
-  const [loadingModel,setLoadingModel]= useState(false);
-  const [history,     setHistory]     = useState<CheckRecord[]>(() => getCheckHistory());
-  const [capturedImage]   = useState<string | null>(() => sessionStorage.getItem("blix_captured_image"));
-  const [referenceImage]  = useState<string | null>(() => sessionStorage.getItem("blix_reference_image"));
-
-  const { status: modelStatus, mode: modelMode, detect } = useComponentDetector();
+  const [apiResult,  setApiResult]  = useState<VerifyResult | null>(null);
+  const [loadingApi, setLoadingApi] = useState(false);
+  const [history,    setHistory]    = useState<CheckRecord[]>(() => getCheckHistory());
+  const [capturedImage]  = useState<string | null>(() => sessionStorage.getItem("blix_captured_image"));
+  const [referenceImage] = useState<string | null>(() => sessionStorage.getItem("blix_reference_image"));
 
   const comps = step ? step.components.flatMap(s => {
     const m = s.match(/^(.+?)\s*[xX×](\d+)$/);
@@ -155,81 +151,35 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
     refreshHistory();
   }, [capturedImage, step, stepIdx, chapterId, chapterTitle]);
 
-  // ── Run Demo COCO-SSD model ─────────────────────────────────────────────────────
-  const runMLModel = useCallback(async () => {
-    if (!capturedImage || !step || modelStatus !== "ready") return;
-    setLoadingModel(true);
-    const t0 = Date.now();
-    try {
-      const img = new Image(); img.src = capturedImage; await img.decode();
-      const detected = await detect(img);
-      const result = verifyComponents(detected, comps, modelMode);
-      setModelResult(result);
-      saveCheckRecord({
-        chapterId: chapterId ?? "unknown", chapterTitle: chapterTitle ?? "",
-        stepIdx: stepIdx ?? 0, stepTitle: step.title.en,
-        method: "model", correct: result.correct, confidence: result.confidence,
-        found: result.found, missing: result.missing, source: result.source,
-        responseMs: Date.now() - t0,
-      });
-    } catch {
-      setModelResult({ correct: false, found: [], missing: comps.map(c => c.code), feedback: "Model error.", tip: "", confidence: 0, source: "demo-model" });
-    }
-    setLoadingModel(false);
-    refreshHistory();
-  }, [capturedImage, step, stepIdx, chapterId, chapterTitle, modelStatus, modelMode]);
-
-  // Auto-run on mount based on which method was requested
+  // Auto-run Claude Vision on mount
   useEffect(() => {
     if (!capturedImage || !step) return;
-    if (method === "api" || method === "both") runVisionAPI();
-    if ((method === "model" || method === "both") && modelStatus === "ready") runMLModel();
-  }, [method, modelStatus]);
-
-  // Re-run model once it's ready if method includes model
-  useEffect(() => {
-    if (modelStatus === "ready" && (method === "model" || method === "both") && !modelResult && !loadingModel) {
-      runMLModel();
-    }
-  }, [modelStatus]);
+    runVisionAPI();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stats = computeStats(history);
+  const apiHistory = history.filter(r => r.method === "api");
 
-  // ── Chart data ─────────────────────────────────────────────────────────────
-  const accuracyData = [
-    { name: "Claude Vision", accuracy: stats.apiAcc ?? 0, fill: "#3b82f6" },
-    { name: "COCO-SSD",      accuracy: stats.modelAcc ?? 0, fill: "#f97316" },
-  ];
-
-  const confidenceData = [...history].reverse().slice(-20).map((r, i) => ({
+  // ── Chart data (Claude Vision only) ────────────────────────────────────────
+  const confidenceData = [...apiHistory].reverse().slice(-20).map((r, i) => ({
     check: i + 1,
-    [r.method === "api" ? "Claude Vision" : "COCO-SSD"]: Math.round(r.confidence * 100),
+    "Confidence %": Math.round(r.confidence * 100),
   }));
 
-  const radarData = [
-    { metric: "Accuracy",   "Claude Vision": stats.apiAcc ?? 0,   "COCO-SSD": stats.modelAcc ?? 0   },
-    { metric: "Confidence", "Claude Vision": stats.apiConf ?? 0,  "COCO-SSD": stats.modelConf ?? 0  },
-    { metric: "Agreement",  "Claude Vision": stats.agreementRate ?? 0, "COCO-SSD": stats.agreementRate ?? 0 },
-    { metric: "Speed",
-      "Claude Vision": stats.apiMs ? Math.max(0, 100 - Math.round(stats.apiMs / 100)) : 0,
-      "COCO-SSD":      stats.modelMs ? Math.max(0, 100 - Math.round(stats.modelMs / 50)) : 0,
-    },
-  ];
-
   const perStepData = Object.entries(
-    history.reduce<Record<string, { api: number; apiOk: number; model: number; modelOk: number }>>(
+    apiHistory.reduce<Record<string, { total: number; ok: number }>>(
       (acc, r) => {
         const k = `Step ${r.stepIdx + 1}`;
-        if (!acc[k]) acc[k] = { api: 0, apiOk: 0, model: 0, modelOk: 0 };
-        if (r.method === "api")   { acc[k].api++;   if (r.correct) acc[k].apiOk++; }
-        if (r.method === "model") { acc[k].model++; if (r.correct) acc[k].modelOk++; }
+        if (!acc[k]) acc[k] = { total: 0, ok: 0 };
+        acc[k].total++;
+        if (r.correct) acc[k].ok++;
         return acc;
       }, {}
     )
   ).map(([step, v]) => ({
     step,
-    "Claude Vision": v.api   ? Math.round(v.apiOk   / v.api   * 100) : 0,
-    "COCO-SSD":      v.model ? Math.round(v.modelOk / v.model * 100) : 0,
+    "Accuracy %": Math.round(v.ok / v.total * 100),
   }));
 
   return (
@@ -299,119 +249,41 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <ResultPanel result={apiResult} label="☁️ Claude Vision API" accent="blue" loading={loadingApi} />
-                {!apiResult && !loadingApi && (
-                  <button onClick={runVisionAPI}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
-                    <Sparkles className="w-3.5 h-3.5" /> Run Claude Vision
-                  </button>
-                )}
-              </div>
-              <div className="space-y-2">
-                <ResultPanel result={modelResult} label="🤖 Demo COCO-SSD / Local Model" accent="orange" loading={loadingModel} />
-                {!modelResult && !loadingModel && modelStatus !== "unavailable" && (
-                  <button onClick={runMLModel} disabled={modelStatus !== "ready"}
-                    className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
-                    <Cpu className="w-3.5 h-3.5" />
-                    {modelStatus === "loading" ? "Loading COCO-SSD model…" : "Run Demo COCO-SSD"}
-                  </button>
-                )}
-                {modelStatus === "loading" && (
-                  <p className="text-[10px] text-gray-400 text-center animate-pulse">
-                    Downloading model (~8 MB)…
-                  </p>
-                )}
-                {modelStatus === "unavailable" && !modelResult && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-[11px] text-red-600">
-                    ⚠ Demo COCO-SSD model failed to load. Check your connection and refresh.
-                  </div>
-                )}
-                <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 text-[11px] text-orange-700 mt-1">
-                  ⚠ Demo mode is not trained on BLIX parts. For production, connect a Roboflow custom BLIX model via <code className="font-mono">VITE_ROBOFLOW_MODEL_ID</code>.
-                </div>
-              </div>
+            <div className="space-y-2">
+              <ResultPanel result={apiResult} label="☁️ Claude Vision API" accent="blue" loading={loadingApi} />
+              {!apiResult && !loadingApi && (
+                <button onClick={runVisionAPI}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                  <Sparkles className="w-3.5 h-3.5" /> Run Claude Vision
+                </button>
+              )}
             </div>
-
-            {/* Agreement */}
-            {apiResult && modelResult && (
-              <div className={`mt-3 rounded-2xl px-4 py-3 text-center text-[12px] font-bold ${
-                apiResult.correct === modelResult.correct
-                  ? "bg-green-100 text-green-700 border border-green-200"
-                  : "bg-amber-100 text-amber-700 border border-amber-200"
-              }`}>
-                {apiResult.correct === modelResult.correct
-                  ? "✓ Both models agree on this step"
-                  : "⚠ Models disagree — human review recommended"}
-              </div>
-            )}
           </section>
         )}
 
         {/* ── Stat cards ── */}
         <section>
           <h2 className="text-[13px] font-bold text-gray-700 mb-3 uppercase tracking-wide">Performance Summary</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard label="Total Checks" value={history.length} sub={`${stats.api.length} API · ${stats.model.length} ML`} color="text-gray-800" isCount />
-            <StatCard label="Claude Vision Accuracy" value={stats.apiAcc} sub={`${stats.api.length} checks`} color="text-blue-600" />
-            <StatCard label="Demo COCO-SSD Accuracy" value={stats.modelAcc} sub={`${stats.model.length} checks`} color="text-orange-500" />
-            <StatCard label="Agreement Rate" value={stats.agreementRate} sub={`${stats.bothRun} paired steps`} color="text-purple-600" />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <StatCard label="Total Checks" value={apiHistory.length} sub="Claude Vision API" color="text-gray-800" isCount />
+            <StatCard label="Accuracy" value={stats.apiAcc} sub={`${apiHistory.length} checks`} color="text-blue-600" />
+            <StatCard label="Avg Confidence" value={stats.apiConf} sub="Claude Vision" color="text-purple-600" />
           </div>
         </section>
 
         {/* ── Charts ── */}
-        {history.length >= 2 && (
+        {apiHistory.length >= 2 && (
           <>
-            {/* Accuracy + Radar side by side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Accuracy bar */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4">
-                <h3 className="text-[12px] font-bold text-gray-700 mb-3">Accuracy Comparison</h3>
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={accuracyData} barSize={40}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-                    <Tooltip formatter={(v: number) => `${v}%`} />
-                    <Bar dataKey="accuracy" label={{ position: "top", fontSize: 11, formatter: (v: number) => `${v}%` }}>
-                      {accuracyData.map((entry, i) => (
-                        <rect key={i} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Radar */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4">
-                <h3 className="text-[12px] font-bold text-gray-700 mb-3">Model Capabilities Radar</h3>
-                <ResponsiveContainer width="100%" height={180}>
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="#e5e7eb" />
-                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
-                    <Radar name="Claude Vision" dataKey="Claude Vision" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
-                    <Radar name="COCO-SSD"      dataKey="COCO-SSD"      stroke="#f97316" fill="#f97316" fillOpacity={0.2} />
-                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                    <Tooltip formatter={(v: number) => `${v}%`} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
             {/* Confidence over time */}
             <div className="bg-white border border-gray-200 rounded-2xl p-4">
-              <h3 className="text-[12px] font-bold text-gray-700 mb-3">Confidence Over Checks (last 20)</h3>
+              <h3 className="text-[12px] font-bold text-gray-700 mb-3">Claude Vision Confidence Over Checks (last 20)</h3>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={confidenceData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                   <XAxis dataKey="check" tick={{ fontSize: 10 }} label={{ value: "Check #", position: "insideBottom", offset: -2, fontSize: 10 }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
                   <Tooltip formatter={(v: number) => `${v}%`} />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="Claude Vision" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                  <Line type="monotone" dataKey="COCO-SSD"      stroke="#f97316" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey="Confidence %" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -421,14 +293,12 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
               <div className="bg-white border border-gray-200 rounded-2xl p-4">
                 <h3 className="text-[12px] font-bold text-gray-700 mb-3">Accuracy by Build Step</h3>
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={perStepData} barSize={16}>
+                  <BarChart data={perStepData} barSize={24}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                     <XAxis dataKey="step" tick={{ fontSize: 10 }} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
                     <Tooltip formatter={(v: number) => `${v}%`} />
-                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="Claude Vision" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="COCO-SSD"      fill="#f97316" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Accuracy %" fill="#3b82f6" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
