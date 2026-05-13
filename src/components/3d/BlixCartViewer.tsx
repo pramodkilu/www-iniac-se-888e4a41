@@ -572,7 +572,8 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     setIsDragging(true);
-    setIsRotating(false);
+    // Do NOT call setIsRotating(false) here — isDraggingRef already pauses
+    // the animation loop during drag, and auto-rotate resumes on mouse-up.
     previousMousePosition.current = { x: e.clientX, y: e.clientY };
   };
 
