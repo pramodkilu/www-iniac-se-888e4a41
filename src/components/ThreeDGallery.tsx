@@ -774,21 +774,27 @@ function getSharedRenderer(): { renderer: THREE.WebGLRenderer; scene: THREE.Scen
   return { renderer: sharedRenderer, scene: sharedScene, camera: sharedCamera };
 }
 
-const thumbCache = new Map<string, string>();
+// ── Rotation frames: 24 angles pre-rendered via the shared renderer ──────────
+const TOTAL_FRAMES = 24;
+const frameCache  = new Map<string, string[]>(); // item.id → array of PNG data-URLs
 
-function renderThumbnail(item: KitComponent): string | null {
-  if (thumbCache.has(item.id)) return thumbCache.get(item.id)!;
+function renderFrames(item: KitComponent): string[] | null {
+  if (frameCache.has(item.id)) return frameCache.get(item.id)!;
   const ctx = getSharedRenderer();
   if (!ctx) return null;
   const { renderer, scene, camera } = ctx;
   const obj = buildObject(item);
   scene.add(obj);
-  renderer.render(scene, camera);
-  const url = renderer.domElement.toDataURL("image/png");
+  const frames: string[] = [];
+  for (let i = 0; i < TOTAL_FRAMES; i++) {
+    obj.rotation.y = (i / TOTAL_FRAMES) * Math.PI * 2;
+    renderer.render(scene, camera);
+    frames.push(renderer.domElement.toDataURL("image/png"));
+  }
   scene.remove(obj);
   disposeObject(obj);
-  thumbCache.set(item.id, url);
-  return url;
+  frameCache.set(item.id, frames);
+  return frames;
 }
 
 interface CardProps {
@@ -796,23 +802,26 @@ interface CardProps {
   autoRotate: boolean;
 }
 
-const ModelCard = ({ item }: CardProps) => {
+const ModelCard = ({ item, autoRotate }: CardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef       = useRef<HTMLImageElement>(null);
+  const framesRef    = useRef<string[] | null>(null);
+  const frameIdxRef  = useRef(0);
+  const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Load frames lazily on scroll into view ────────────────────────────────
   useEffect(() => {
     const container = containerRef.current;
-    const img = imgRef.current;
+    const img       = imgRef.current;
     if (!container || !img) return;
 
-    let rendered = false;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !rendered) {
-          const url = renderThumbnail(item);
-          if (url) {
-            img.src = url;
-            rendered = true;
+        if (entry.isIntersecting && !framesRef.current) {
+          const frames = renderFrames(item);
+          if (frames) {
+            framesRef.current = frames;
+            img.src = frames[0];
           }
         }
       },
@@ -821,6 +830,22 @@ const ModelCard = ({ item }: CardProps) => {
     observer.observe(container);
     return () => observer.disconnect();
   }, [item]);
+
+  // ── Start / stop rotation animation ───────────────────────────────────────
+  useEffect(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (!autoRotate) return;
+
+    timerRef.current = setInterval(() => {
+      const frames = framesRef.current;
+      const img    = imgRef.current;
+      if (!frames || !img) return;
+      frameIdxRef.current = (frameIdxRef.current + 1) % frames.length;
+      img.src = frames[frameIdxRef.current];
+    }, 1000 / 20); // 20 fps
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [autoRotate]);
 
   return (
     <div className="rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all p-3">
