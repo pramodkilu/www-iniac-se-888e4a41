@@ -77,7 +77,7 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
       rotX: cart.rotation.x,
       rotY: cart.rotation.y,
       camDist: cam.position.length(),
-      autoRotate: isRotatingRef.current,
+      autoRotate: true,
     };
     try {
       localStorage.setItem(viewStorageKey(step), JSON.stringify(view));
@@ -98,8 +98,9 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
       const dir = cam.position.clone().normalize();
       cam.position.copy(dir.multiplyScalar(view.camDist));
       cam.lookAt(0, 0, 0);
-      // If user had paused rotation when they verified, keep it paused on return
-      setIsRotating(view.autoRotate);
+      // Do NOT restore autoRotate — old saved views have it as false (from
+      // a previous bug). Auto-rotate always stays on unless the user
+      // explicitly toggles the button.
       return true;
     } catch {
       return false;
