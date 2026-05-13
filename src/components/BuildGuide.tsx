@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
-import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2, Cpu } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, Maximize2, Ruler, Sparkles, CheckCircle2, RefreshCw, Box, Link2 } from "lucide-react";
 import { type Chapter, tr } from "@/data/chapters";
 import { useNavigate } from "react-router-dom";
 import type { VerifyResult } from "@/hooks/useComponentDetector";
@@ -1309,8 +1309,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
     navigate("/ai-research", { state });
   }, [capturedImage, referenceImage, step, stepIdx, chapterId, chapterTitle, navigate]);
 
-  const checkVisionAPI = useCallback(() => goToResearch("api"),  [goToResearch]);
-  const checkMLModel   = useCallback(() => goToResearch("model"), [goToResearch]);
+  const checkVisionAPI = useCallback(() => goToResearch("api"), [goToResearch]);
 
   const reset = useCallback(() => {
     setCapturedImage(null);
@@ -1413,7 +1412,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
                       <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
-                  {(apiResult?.correct || modelResult?.correct) && !checking && (
+                  {apiResult?.correct && !checking && (
                     <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8 text-green-600 drop-shadow" />
                     </div>
@@ -1425,77 +1424,26 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
               </div>
             </div>
 
-            {/* ── Two check buttons ── */}
+            {/* ── Verify button ── */}
             <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Choose verification method</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={checkVisionAPI} disabled={checking !== null}
-                  className="flex flex-col items-center gap-0.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-[11px] font-bold py-2.5 px-2 rounded-xl transition-colors">
-                  {checking === "api"
-                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
-                    : <Sparkles className="w-4 h-4 mb-0.5" />}
-                  <span>{checking === "api" ? "Checking…" : "Claude Vision"}</span>
-                  <span className="text-[9px] font-normal opacity-75">AI Vision API</span>
-                </button>
-                <button onClick={checkMLModel} disabled={checking !== null}
-                  className="flex flex-col items-center gap-0.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-[11px] font-bold py-2.5 px-2 rounded-xl transition-colors">
-                  {checking === "model"
-                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mb-0.5" />
-                    : <Cpu className="w-4 h-4 mb-0.5" />}
-                  <span>{checking === "model" ? "Running…" : "COCO-SSD"}</span>
-                  <span className="text-[9px] font-normal opacity-75">Demo Model</span>
-                </button>
-              </div>
+              <button onClick={checkVisionAPI} disabled={checking !== null}
+                className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-[12px] font-bold py-2.5 rounded-xl transition-colors">
+                {checking === "api"
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <Sparkles className="w-4 h-4" />}
+                {checking === "api" ? "Checking with Claude Vision…" : "Verify with Claude Vision AI"}
+              </button>
               <button onClick={() => { setCapturedImage(null); setApiResult(null); setModelResult(null); startCamera(); }}
                 className="w-full mt-1.5 text-[10px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 py-0.5 transition-colors">
                 <RefreshCw className="w-3 h-3" /> Retake photo
               </button>
             </div>
 
-            {/* ── Individual results ── */}
+            {/* ── Result ── */}
             {apiResult && <ResultCard result={apiResult} label="☁️ Claude Vision API" accent="blue" />}
-            {modelResult && (
-              <ResultCard
-                result={modelResult}
-                label="🤖 COCO-SSD Demo"
-                accent="orange"
-              />
-            )}
-
-            {/* ── Comparison card — thesis highlight ── */}
-            {apiResult && modelResult && (
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
-                <p className="text-[11px] font-bold text-purple-700 mb-2">📊 Model Comparison</p>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="bg-white rounded-lg p-2 border border-blue-100 text-center">
-                    <p className="text-[10px] text-blue-600 font-bold mb-0.5">Claude Vision</p>
-                    <p className={`text-[13px] font-bold ${apiResult.correct ? "text-green-600" : "text-red-500"}`}>
-                      {apiResult.correct ? "✓ Pass" : "✗ Fail"}
-                    </p>
-                    <p className="text-[10px] text-gray-400">{Math.round(apiResult.confidence * 100)}% conf.</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-2 border border-orange-100 text-center">
-                    <p className="text-[10px] text-orange-600 font-bold mb-0.5">COCO-SSD Demo</p>
-                    <p className={`text-[13px] font-bold ${modelResult.correct ? "text-green-600" : "text-red-500"}`}>
-                      {modelResult.correct ? "✓ Pass" : "✗ Fail"}
-                    </p>
-                    <p className="text-[10px] text-gray-400">{Math.round(modelResult.confidence * 100)}% conf.</p>
-                  </div>
-                </div>
-                <div className={`text-[11px] font-semibold rounded-lg px-2.5 py-1.5 text-center ${
-                  apiResult.correct === modelResult.correct
-                    ? "bg-green-100 text-green-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}>
-                  {apiResult.correct === modelResult.correct
-                    ? "✓ Both models agree"
-                    : "⚠ Models disagree — human review recommended"}
-                </div>
-              </div>
-            )}
 
             {/* ── Step done banner ── */}
-            {(apiResult?.correct || modelResult?.correct) && !checking && (
+            {apiResult?.correct && !checking && (
               <div className="bg-orange-500 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Step {stepIdx + 1} verified ✓
               </div>
