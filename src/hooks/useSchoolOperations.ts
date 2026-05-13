@@ -105,7 +105,8 @@ const mockSessions: Session[] = [
   },
 ];
 
-export function useSchoolOperations() {
+export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
+  const previewOnly = options.previewOnly ?? false;
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [schools, setSchools] = useState<School[]>([]);
@@ -119,6 +120,19 @@ export function useSchoolOperations() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    if (previewOnly) {
+      setUsingMockFallback(true);
+      setSchools([mockSchool]);
+      setPrograms(mockPrograms);
+      setBatches(mockBatches);
+      setStudents(mockStudents);
+      setEnrollments([]);
+      setSessions(mockSessions);
+      setAttendance([]);
+      setLoading(false);
+      return;
+    }
+
     const [schoolRes, programRes, batchRes, studentRes, enrollmentRes, sessionRes, attendanceRes] =
       await Promise.all([
         supabase.from("schools").select("*").order("created_at", { ascending: true }),
@@ -172,7 +186,7 @@ export function useSchoolOperations() {
     setSessions(nextSessions.length > 0 ? nextSessions : mockSessions);
     setAttendance(attendanceRes.data ?? []);
     setLoading(false);
-  }, []);
+  }, [previewOnly]);
 
   useEffect(() => {
     load();

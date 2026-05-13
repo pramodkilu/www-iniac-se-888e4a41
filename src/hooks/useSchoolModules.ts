@@ -124,7 +124,11 @@ const mockResources: LibraryResource[] = [
   },
 ];
 
-export function useSchoolModules(defaultSchoolId?: string | null) {
+export function useSchoolModules(
+  defaultSchoolId?: string | null,
+  options: { previewOnly?: boolean } = {},
+) {
+  const previewOnly = options.previewOnly ?? false;
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [usingMockFallback, setUsingMockFallback] = useState(false);
@@ -136,6 +140,17 @@ export function useSchoolModules(defaultSchoolId?: string | null) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    if (previewOnly) {
+      setUsingMockFallback(true);
+      setInvoices(mockInvoices);
+      setMessages(mockMessages);
+      setCourses(mockCourses);
+      setEvents(mockEvents);
+      setResources(mockResources);
+      setLoading(false);
+      return;
+    }
+
     const [invoiceRes, messageRes, courseRes, eventRes, resourceRes] = await Promise.all([
       supabase.from("invoices").select("*").order("created_at", { ascending: false }),
       supabase.from("parent_messages").select("*").order("created_at", { ascending: false }),
@@ -169,7 +184,7 @@ export function useSchoolModules(defaultSchoolId?: string | null) {
     setEvents(eventRes.data?.length ? eventRes.data : mockEvents);
     setResources(resourceRes.data?.length ? resourceRes.data : mockResources);
     setLoading(false);
-  }, []);
+  }, [previewOnly]);
 
   useEffect(() => {
     load();

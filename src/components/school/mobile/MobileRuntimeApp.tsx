@@ -196,7 +196,7 @@ function ParentApp({
   const [paidInvoiceIds, setPaidInvoiceIds] = useState<string[]>([]);
   const [readMessageIds, setReadMessageIds] = useState<string[]>([]);
   const [notificationsOn, setNotificationsOn] = useState(true);
-  const { invoices, messages, events, addMessage } = useSchoolModules(defaultSchoolId);
+  const { invoices, messages, events, addMessage } = useSchoolModules(defaultSchoolId, { previewOnly: true });
   const studentInvoices = invoices.filter((invoice) => !invoice.student_id || invoice.student_id === student.id);
   const outstanding = studentInvoices
     .filter((invoice) => invoice.status !== "paid" && !paidInvoiceIds.includes(invoice.id))
@@ -346,7 +346,7 @@ function StudentApp({ student, defaultSchoolId }: { student: Student; defaultSch
   const [progressBoost, setProgressBoost] = useState(0);
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
   const [earnedBadges, setEarnedBadges] = useState(["AI Explorer", "Fast Builder", "Problem Solver"]);
-  const { courses } = useSchoolModules(defaultSchoolId);
+  const { courses } = useSchoolModules(defaultSchoolId, { previewOnly: true });
   const progress = Math.min(100, 72 + progressBoost);
   const activeCourse = courses.find((course) => course.id === activeCourseId) ?? courses[0];
 
@@ -477,8 +477,8 @@ function StudentApp({ student, defaultSchoolId }: { student: Student; defaultSch
 function StaffApp({ defaultSchoolId }: { defaultSchoolId?: string | null }) {
   const [tab, setTab] = useState("today");
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
-  const { students, sessions, markAttendance } = useSchoolOperations();
-  const { invoices, messages, events } = useSchoolModules(defaultSchoolId);
+  const { students, sessions, markAttendance } = useSchoolOperations({ previewOnly: true });
+  const { invoices, messages, events } = useSchoolModules(defaultSchoolId, { previewOnly: true });
   const activeSession = sessions[0];
 
   const tabs: MobileTab[] = [
@@ -623,7 +623,7 @@ function RoboticsApp() {
 }
 
 export function MobileRuntimeApp({ flow }: { flow: MobileFlowKey }) {
-  const { students, defaultSchoolId } = useSchoolOperations();
+  const { students, defaultSchoolId } = useSchoolOperations({ previewOnly: true });
   const student = useMemo(() => students[0], [students]);
 
   if (flow === "robotics") return <RoboticsApp />;
