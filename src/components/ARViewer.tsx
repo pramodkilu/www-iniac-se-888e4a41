@@ -74,106 +74,107 @@ const ARViewer = ({
       rendererRef.current = null;
       return;
     }
+
     loadModelViewer();
 
-    const container = mountRef.current;
-    if (!container) return;
-
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight || 320);
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
-
-    // Scene
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a);
-    sceneRef.current = scene;
-
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-    sun.position.set(4, 8, 4);
-    scene.add(sun);
-    const fill = new THREE.DirectionalLight(0x7dd3fc, 0.4);
-    fill.position.set(-4, 2, -4);
-    scene.add(fill);
-
-    // Grid floor
-    const grid = new THREE.GridHelper(8, 16, 0x334155, 0x1e293b);
-    grid.position.y = -2;
-    scene.add(grid);
-
-    // Chapter model
-    const model = buildFinalAssembly(chapterId);
-    // Centre and scale to fit
-    const box = new THREE.Box3().setFromObject(model);
-    const centre = box.getCenter(new THREE.Vector3());
-    const size   = box.getSize(new THREE.Vector3()).length();
-    model.position.sub(centre);
-    const scale = 3 / Math.max(size, 0.01);
-    model.scale.setScalar(scale);
-    scene.add(model);
-    modelRef.current = model;
-
-    // Camera
-    const w = container.clientWidth;
-    const h = container.clientHeight || 320;
-    const camera = new THREE.PerspectiveCamera(50, w / h, 0.01, 100);
-    camera.position.set(0, 1.5, drag.current.dist);
-    camera.lookAt(0, 0, 0);
-    cameraRef.current = camera;
-
-    // Animation loop
-    let rotY = drag.current.rotY;
-    const animate = () => {
-      frameRef.current = requestAnimationFrame(animate);
-      if (autoRotate && !drag.current.active) {
-        rotY += 0.004;
-        model.rotation.y = rotY;
-        drag.current.rotY = rotY;
-      } else {
-        model.rotation.x = drag.current.rotX;
-        model.rotation.y = drag.current.rotY;
-        rotY = drag.current.rotY;
-      }
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    // Handle resize
-    const onResize = () => {
+    // Defer one tick so the Dialog finishes painting — without this,
+    // mountRef.current.clientWidth is 0 and the canvas renders invisible.
+    let cancelled = false;
+    const timerId = setTimeout(() => {
+      if (cancelled) return;
+      const container = mountRef.current;
       if (!container) return;
-      const w2 = container.clientWidth;
-      const h2 = container.clientHeight || 320;
-      camera.aspect = w2 / h2;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w2, h2);
-    };
-    window.addEventListener("resize", onResize);
 
-    cleanupRef.current = () => {
-      cancelAnimationFrame(frameRef.current);
-      window.removeEventListener("resize", onResize);
-      renderer.setAnimationLoop(null);
-      renderer.dispose();
-      if (renderer.domElement.parentNode)
-        renderer.domElement.parentNode.removeChild(renderer.domElement);
-    };
+      const W = container.clientWidth  || 560;
+      const H = container.clientHeight || 340;
 
-    // Check WebXR
-    const nav = navigator as any;
-    if (nav.xr?.isSessionSupported) {
-      nav.xr.isSessionSupported("immersive-ar")
-        .then((ok: boolean) => setXrSupported(ok))
-        .catch(() => setXrSupported(false));
-    } else {
-      setXrSupported(false);
-    }
+      // Renderer
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(W, H);
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
+
+      // Scene
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f172a);
+      sceneRef.current = scene;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+      sun.position.set(4, 8, 4); scene.add(sun);
+      const fill = new THREE.DirectionalLight(0x7dd3fc, 0.4);
+      fill.position.set(-4, 2, -4); scene.add(fill);
+
+      const grid = new THREE.GridHelper(8, 16, 0x334155, 0x1e293b);
+      grid.position.y = -2; scene.add(grid);
+
+      // Chapter model — centred and scaled to fit viewport
+      const model = buildFinalAssembly(chapterId);
+      const bbox  = new THREE.Box3().setFromObject(model);
+      const centre = bbox.getCenter(new THREE.Vector3());
+      const size   = bbox.getSize(new THREE.Vector3()).length();
+      model.position.sub(centre);
+      model.scale.setScalar(3 / Math.max(size, 0.01));
+      scene.add(model);
+      modelRef.current = model;
+
+      // Camera
+      const camera = new THREE.PerspectiveCamera(50, W / H, 0.01, 100);
+      camera.position.set(0, 1.5, drag.current.dist);
+      camera.lookAt(0, 0, 0);
+      cameraRef.current = camera;
+
+      // Animation loop
+      let rotY = drag.current.rotY;
+      const animate = () => {
+        frameRef.current = requestAnimationFrame(animate);
+        if (autoRotate && !drag.current.active) {
+          rotY += 0.004;
+          model.rotation.y = rotY;
+          drag.current.rotY = rotY;
+        } else {
+          model.rotation.x = drag.current.rotX;
+          model.rotation.y = drag.current.rotY;
+          rotY = drag.current.rotY;
+        }
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      const onResize = () => {
+        const w2 = container.clientWidth;
+        const h2 = container.clientHeight || 340;
+        camera.aspect = w2 / h2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w2, h2);
+      };
+      window.addEventListener("resize", onResize);
+
+      cleanupRef.current = () => {
+        cancelAnimationFrame(frameRef.current);
+        window.removeEventListener("resize", onResize);
+        renderer.setAnimationLoop(null);
+        renderer.dispose();
+        if (renderer.domElement.parentNode)
+          renderer.domElement.parentNode.removeChild(renderer.domElement);
+      };
+
+      // Check WebXR
+      const nav = navigator as any;
+      if (nav.xr?.isSessionSupported) {
+        nav.xr.isSessionSupported("immersive-ar")
+          .then((ok: boolean) => setXrSupported(ok))
+          .catch(() => setXrSupported(false));
+      } else {
+        setXrSupported(false);
+      }
+    }, 50);
 
     return () => {
+      cancelled = true;
+      clearTimeout(timerId);
       cleanupRef.current();
       cleanupRef.current = () => {};
     };

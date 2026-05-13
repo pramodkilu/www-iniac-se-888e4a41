@@ -1457,9 +1457,9 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
 }
 
 // ─── AR Module ────────────────────────────────────────────────────────────────
-// aframe.io CDN is authoritative — jsDelivr 1.4.0 returns 404
-const AFRAME_SRC = "https://aframe.io/releases/1.4.0/aframe.min.js";
-const ARJS_SRC   = "https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.5/aframe/build/aframe-ar.js";
+// A-Frame 1.5.0 + AR.js pinned via rawgit CDN (jsDelivr path for AR.js returns 404)
+const AFRAME_SRC = "https://aframe.io/releases/1.5.0/aframe.min.js";
+const ARJS_SRC   = "https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js";
 const HIRO_IMG   = "https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png";
 
 function loadScript(src: string, id: string): Promise<void> {
