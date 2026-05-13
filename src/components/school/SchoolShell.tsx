@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, Sparkles } from "lucide-react";
-import { schoolNavItems } from "@/data/mockSchoolData";
+import { BookOpenCheck, LayoutDashboard, Menu, MessageSquareText, Sparkles, UserRound } from "lucide-react";
+import { schoolNavItems, type SchoolNavItem } from "@/data/mockSchoolData";
 import { Button } from "@/components/ui/button";
 
 type SchoolShellProps = {
@@ -12,7 +12,22 @@ type SchoolShellProps = {
 
 export function SchoolShell({ title, description, children }: SchoolShellProps) {
   const location = useLocation();
-  const mobileItems = schoolNavItems.slice(0, 5);
+  const mobileItems: (SchoolNavItem & { activePaths: string[] })[] = [
+    { label: "Home", href: "/school", icon: LayoutDashboard, activePaths: ["/school"] },
+    { label: "Roles", href: "/school/roles", icon: UserRound, activePaths: ["/school/roles", "/school/dashboard"] },
+    { label: "Courses", href: "/school/modules/courses", icon: BookOpenCheck, activePaths: ["/school/modules/courses", "/school/robotics"] },
+    { label: "Messages", href: "/school/modules/messages", icon: MessageSquareText, activePaths: ["/school/modules/messages"] },
+    { label: "Mobile", href: "/school/mobile", icon: UserRound, activePaths: ["/school/mobile"] },
+  ];
+
+  const isActivePath = (href: string, activePaths?: string[]) => {
+    const paths = activePaths ?? [href];
+    return paths.some((path) =>
+      path === "/school"
+        ? location.pathname === path
+        : location.pathname === path || location.pathname.startsWith(`${path}/`) || location.pathname.startsWith(path),
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] text-slate-950">
@@ -42,9 +57,7 @@ export function SchoolShell({ title, description, children }: SchoolShellProps) 
         <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white p-4 lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:overflow-y-auto">
           <nav className="space-y-1">
             {schoolNavItems.map((item) => {
-              const active =
-                location.pathname === item.href ||
-                (item.href !== "/school" && location.pathname.startsWith(item.href));
+              const active = isActivePath(item.href);
               return (
                 <Link
                   key={item.href}
@@ -79,7 +92,7 @@ export function SchoolShell({ title, description, children }: SchoolShellProps) 
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-2 pt-2 backdrop-blur lg:hidden">
         {mobileItems.map((item) => {
-          const active = location.pathname === item.href;
+          const active = isActivePath(item.href, item.activePaths);
           return (
             <Link
               key={item.href}
