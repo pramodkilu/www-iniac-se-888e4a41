@@ -248,43 +248,76 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
 
       <div className={inline ? "px-4 py-3 space-y-4 max-w-5xl" : "container mx-auto px-4 py-6 space-y-6 max-w-5xl"}>
 
-        {/* ── Current check results ── */}
-        {capturedImage && step && (
+        {/* ── Image comparison — always shown when a photo exists ── */}
+        {capturedImage && (
           <section>
-            <h2 className="text-[13px] font-bold text-gray-700 mb-3 uppercase tracking-wide">Current Check</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Current Check</h2>
+              {step && (
+                <span className="text-[11px] text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                  Step {(stepIdx ?? 0) + 1}: {step.title.en}
+                </span>
+              )}
+            </div>
 
-            {/* Side-by-side image comparison */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1.5">
-                  3D Reference (from Build Guide)
+            {/* Side-by-side image comparison — large */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* Reference */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold text-teal-600 uppercase tracking-wide text-center flex items-center justify-center gap-1">
+                  📐 3D Reference
                 </p>
-                <div className="rounded-xl overflow-hidden border-2 border-teal-400 bg-gray-50 relative" style={{ aspectRatio: "4/3" }}>
-                  {referenceImage
-                    ? <img src={referenceImage} alt="3D reference" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">Viewing 3D model…</div>
-                  }
-                  <div className="absolute top-1.5 left-1.5 bg-teal-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">REFERENCE</div>
+                <div className="relative rounded-2xl overflow-hidden border-2 border-teal-400 bg-gray-100 shadow-sm" style={{ height: 280 }}>
+                  {referenceImage ? (
+                    <img
+                      src={referenceImage}
+                      alt="3D reference model"
+                      className="w-full h-full object-contain bg-white"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-400">
+                      <span className="text-3xl">📐</span>
+                      <span className="text-[11px]">No reference captured yet</span>
+                      <span className="text-[10px] text-gray-300">Open Build Guide to generate one</span>
+                    </div>
+                  )}
+                  <div className="absolute top-2 left-2 bg-teal-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
+                    REFERENCE
+                  </div>
                 </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide text-center mb-1.5">
-                  Your Build (captured photo)
+
+              {/* Captured photo */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold text-orange-500 uppercase tracking-wide text-center flex items-center justify-center gap-1">
+                  📷 Your Build
                 </p>
-                <div className="rounded-xl overflow-hidden border-2 border-orange-400 relative" style={{ aspectRatio: "4/3" }}>
-                  <img src={capturedImage} alt="Your build" className="w-full h-full object-cover" />
-                  <div className="absolute top-1.5 left-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">YOUR BUILD</div>
+                <div className="relative rounded-2xl overflow-hidden border-2 border-orange-400 shadow-sm" style={{ height: 280 }}>
+                  <img
+                    src={capturedImage}
+                    alt="Your captured build"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
+                    YOUR BUILD
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* Claude Vision result + action */}
             <div className="space-y-2">
               <ResultPanel result={apiResult} label="☁️ Claude Vision API" accent="blue" loading={loadingApi} />
-              {!apiResult && !loadingApi && (
+              {!apiResult && !loadingApi && step && (
                 <button onClick={runVisionAPI}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[11px] font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
-                  <Sparkles className="w-3.5 h-3.5" /> Run Claude Vision
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm">
+                  <Sparkles className="w-4 h-4" /> Verify with Claude Vision AI
                 </button>
+              )}
+              {!step && (
+                <div className="text-center text-[11px] text-gray-400 py-2">
+                  Navigate from the Build Guide to verify this photo against a step.
+                </div>
               )}
             </div>
           </section>
