@@ -75,7 +75,13 @@ ALTER TABLE public.library_resources ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Authenticated users can view invoices"
   ON public.invoices FOR SELECT TO authenticated
-  USING (true);
+  USING (
+    public.is_school_member(school_id, auth.uid())
+    OR (
+      student_id IS NOT NULL
+      AND public.is_parent_for_student(student_id, auth.jwt() ->> 'email')
+    )
+  );
 
 CREATE POLICY "Admins can manage invoices"
   ON public.invoices FOR ALL TO authenticated
@@ -84,7 +90,15 @@ CREATE POLICY "Admins can manage invoices"
 
 CREATE POLICY "Authenticated users can view parent messages"
   ON public.parent_messages FOR SELECT TO authenticated
-  USING (true);
+  USING (
+    public.is_school_member(school_id, auth.uid())
+    OR sender_id = auth.uid()
+    OR lower(recipient_email) = lower(auth.jwt() ->> 'email')
+    OR (
+      student_id IS NOT NULL
+      AND public.is_parent_for_student(student_id, auth.jwt() ->> 'email')
+    )
+  );
 
 CREATE POLICY "Teachers and admins can manage parent messages"
   ON public.parent_messages FOR ALL TO authenticated
@@ -93,7 +107,23 @@ CREATE POLICY "Teachers and admins can manage parent messages"
 
 CREATE POLICY "Authenticated users can view course modules"
   ON public.course_modules FOR SELECT TO authenticated
-  USING (true);
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.programs p
+      WHERE p.id = course_modules.program_id
+        AND public.is_school_member(p.school_id, auth.uid())
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.programs p
+      JOIN public.batches b ON b.program_id = p.id
+      JOIN public.enrollments e ON e.batch_id = b.id
+      JOIN public.students s ON s.id = e.student_id
+      WHERE p.id = course_modules.program_id
+        AND public.is_parent_for_student(s.id, auth.jwt() ->> 'email')
+    )
+  );
 
 CREATE POLICY "Admins can manage course modules"
   ON public.course_modules FOR ALL TO authenticated
@@ -102,7 +132,7 @@ CREATE POLICY "Admins can manage course modules"
 
 CREATE POLICY "Authenticated users can view school events"
   ON public.school_events FOR SELECT TO authenticated
-  USING (true);
+  USING (public.is_school_member(school_id, auth.uid()));
 
 CREATE POLICY "Admins can manage school events"
   ON public.school_events FOR ALL TO authenticated
@@ -111,7 +141,21 @@ CREATE POLICY "Admins can manage school events"
 
 CREATE POLICY "Authenticated users can view library resources"
   ON public.library_resources FOR SELECT TO authenticated
-  USING (true);
+  USING (
+    public.is_school_member(school_id, auth.uid())
+    OR (
+      program_id IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM public.programs p
+        JOIN public.batches b ON b.program_id = p.id
+        JOIN public.enrollments e ON e.batch_id = b.id
+        JOIN public.students s ON s.id = e.student_id
+        WHERE p.id = library_resources.program_id
+          AND public.is_parent_for_student(s.id, auth.jwt() ->> 'email')
+      )
+    )
+  );
 
 CREATE POLICY "Admins can manage library resources"
   ON public.library_resources FOR ALL TO authenticated

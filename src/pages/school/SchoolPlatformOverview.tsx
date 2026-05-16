@@ -4,6 +4,7 @@ import {
   BookOpenCheck,
   Bot,
   CalendarDays,
+  CheckCircle2,
   Library,
   MessageSquareText,
   ShieldCheck,
@@ -26,47 +27,53 @@ const features = [
 export default function SchoolPlatformOverview() {
   return (
     <SchoolShell
-      title="School Management Platform"
-      description="A responsive web dashboard and mobile/PWA experience for INIAC school programs."
+      title="A calmer way to run after-school learning"
+      description="A modern school SaaS workspace for programs, families, attendance, payments, communication, and robotics learning."
     >
-      <VisualFlowBoard />
-
-      <section className="grid gap-6 xl:grid-cols-[1fr_420px] xl:items-center">
-        <div className="rounded-[28px] bg-white p-6 shadow-sm">
-          <div className="inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-2 text-sm font-black text-violet-700">
+      <section className="grid gap-6 xl:grid-cols-[1fr_430px] xl:items-stretch">
+        <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70 sm:p-8">
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
             <ShieldCheck className="size-4" />
-            Onboarding and authentication
+            Parent-friendly operations
           </div>
-          <h2 className="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-            One platform for admins, teachers, parents, and students.
+          <h2 className="mt-6 max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+            One quiet workspace for admins, teachers, parents, and students.
           </h2>
-          <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">
-            Start with login, select a role, then enter a focused dashboard with attendance,
-            payments, LMS courses, messages, events, reports, and robotics AI learning.
+          <p className="mt-5 max-w-2xl text-base leading-8 text-slate-500">
+            Start with a guided role flow, then enter a focused dashboard for attendance, payments,
+            courses, parent messages, events, reports, and robotics AI learning.
           </p>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            {["Fast attendance", "Clear invoices", "Warm parent updates"].map((item) => (
+              <div key={item} className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                <CheckCircle2 className="size-4 text-emerald-600" />
+                {item}
+              </div>
+            ))}
+          </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button asChild className="bg-violet-700 hover:bg-violet-800">
+            <Button asChild className="h-11 rounded-full bg-slate-950 px-6 font-semibold hover:bg-slate-800">
               <Link to="/school/signup">Create account</Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="h-11 rounded-full border-slate-200 bg-white px-6 font-semibold">
               <Link to="/school/roles">Select role</Link>
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid gap-3 rounded-[32px] border border-slate-200 bg-white/75 p-4 shadow-sm shadow-slate-200/70">
           {roles.map((role) => (
             <Link
               key={role.id}
               to={`/school/dashboard/${role.id}`}
-              className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="flex items-center gap-4 rounded-[22px] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
             >
-              <div className={`flex size-11 items-center justify-center rounded-2xl ${role.tone}`}>
+              <div className={`flex size-11 items-center justify-center rounded-[16px] ${role.tone}`}>
                 <role.icon className="size-5" />
               </div>
               <div>
-                <p className="font-black">{role.title}</p>
-                <p className="text-sm text-slate-500">{role.description}</p>
+                <p className="font-semibold tracking-tight">{role.title}</p>
+                <p className="text-sm leading-5 text-slate-500">{role.description}</p>
               </div>
             </Link>
           ))}
@@ -78,6 +85,10 @@ export default function SchoolPlatformOverview() {
           <FeatureCard key={feature.title} {...feature} />
         ))}
       </section>
+
+      <div className="mt-8">
+        <VisualFlowBoard />
+      </div>
     </SchoolShell>
   );
 }

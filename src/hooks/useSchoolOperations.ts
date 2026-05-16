@@ -117,9 +117,11 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [usingMockFallback, setUsingMockFallback] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     if (previewOnly) {
       setUsingMockFallback(true);
       setSchools([mockSchool]);
@@ -154,6 +156,16 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       attendanceRes.error;
 
     if (hasSchemaError) {
+      const message =
+        schoolRes.error?.message ||
+        programRes.error?.message ||
+        batchRes.error?.message ||
+        studentRes.error?.message ||
+        enrollmentRes.error?.message ||
+        sessionRes.error?.message ||
+        attendanceRes.error?.message ||
+        "Unable to load school operations data.";
+      setError(message);
       setUsingMockFallback(true);
       setSchools([mockSchool]);
       setPrograms(mockPrograms);
@@ -210,7 +222,10 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       return;
     }
     const { error } = await supabase.from("students").insert(student);
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success("Student added");
       load();
@@ -223,7 +238,10 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       return;
     }
     const { error } = await supabase.from("programs").insert(program);
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success("Program added");
       load();
@@ -236,7 +254,10 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       return;
     }
     const { error } = await supabase.from("batches").insert(batch);
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success("Batch added");
       load();
@@ -249,7 +270,10 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       return;
     }
     const { error } = await supabase.from("enrollments").insert(enrollment);
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success("Student enrolled");
       load();
@@ -262,7 +286,10 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       return;
     }
     const { error } = await supabase.from("sessions").insert(session);
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success("Session created");
       load();
@@ -283,7 +310,10 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
       },
       { onConflict: "session_id,student_id" },
     );
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success("Attendance updated");
       load();
@@ -292,6 +322,7 @@ export function useSchoolOperations(options: { previewOnly?: boolean } = {}) {
 
   return {
     loading,
+    error,
     usingMockFallback,
     schools,
     programs,

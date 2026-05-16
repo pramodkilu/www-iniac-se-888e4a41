@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Bell, ChevronLeft, MoreHorizontal, Wifi } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { type MobileScreenSpec } from "@/data/mobileSchoolData";
@@ -8,7 +9,7 @@ const statusTone: Record<string, string> = {
   orange: "bg-orange-50 text-orange-700 ring-orange-100",
 };
 
-export function MobileScreenFrame({ screen }: { screen: MobileScreenSpec }) {
+export function MobileScreenFrame({ screen, flowRoute }: { screen: MobileScreenSpec; flowRoute: string }) {
   return (
     <article className="mx-auto w-full max-w-[330px] rounded-[34px] border border-slate-200 bg-white p-3 shadow-2xl shadow-slate-200/80">
       <div className="flex min-h-[610px] flex-col overflow-hidden rounded-[27px] bg-[#f7f8fc]">
@@ -85,16 +86,16 @@ export function MobileScreenFrame({ screen }: { screen: MobileScreenSpec }) {
 
         <div className="mt-auto grid grid-cols-4 border-t border-slate-200 bg-white px-2 py-2 text-center">
           {screen.actions.map((action, index) => (
-            <button
+            <Link
               key={`${screen.id}-${action.label}`}
+              to={`${flowRoute}?tab=${action.tab}`}
               className={`rounded-2xl px-1 py-2 text-[10px] font-black ${
                 index === 0 ? "bg-violet-50 text-violet-700" : "text-slate-500"
               }`}
-              type="button"
             >
               <action.icon className="mx-auto mb-1 size-4" />
               {action.label}
-            </button>
+            </Link>
           ))}
         </div>
       </div>

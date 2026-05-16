@@ -103,10 +103,10 @@ const roboticsCards: StageCard[] = [
 ];
 
 const mobileCards: StageCard[] = [
-  { title: "Parent Home", route: "/school/mobile", icon: Smartphone, metric: "88%", detail: "Attendance and updates", tone: "from-blue-50 to-white" },
-  { title: "Parent Payments", route: "/school/mobile", icon: Banknote, metric: "Paid", detail: "Invoices and balance", tone: "from-orange-50 to-white" },
-  { title: "Student Courses", route: "/school/mobile", icon: BookOpenCheck, metric: "3", detail: "Active learning paths", tone: "from-violet-50 to-white" },
-  { title: "Achievements", route: "/school/mobile", image: characterLaya, metric: "9", detail: "Badges and rank", tone: "from-pink-50 to-white" },
+  { title: "Parent Home", route: "/school/mobile/parent?tab=home", icon: Smartphone, metric: "88%", detail: "Attendance and updates", tone: "from-blue-50 to-white" },
+  { title: "Parent Payments", route: "/school/mobile/parent?tab=payments", icon: Banknote, metric: "Paid", detail: "Invoices and balance", tone: "from-orange-50 to-white" },
+  { title: "Student Courses", route: "/school/mobile/student?tab=courses", icon: BookOpenCheck, metric: "3", detail: "Active learning paths", tone: "from-violet-50 to-white" },
+  { title: "Achievements", route: "/school/mobile/student?tab=badges", image: characterLaya, metric: "9", detail: "Badges and rank", tone: "from-pink-50 to-white" },
 ];
 
 const componentCards = [

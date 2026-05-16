@@ -31,7 +31,7 @@ export function MobileFlowSection({
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {screens.map((screen) => (
-          <MobileScreenFrame key={screen.id} screen={screen} />
+          <MobileScreenFrame key={screen.id} screen={screen} flowRoute={flow.route} />
         ))}
       </div>
     </section>

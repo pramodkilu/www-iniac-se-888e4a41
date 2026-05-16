@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { MobileFlowSection } from "@/components/school/mobile/MobileFlowSection";
 import { MobileRuntimeApp } from "@/components/school/mobile/MobileRuntimeApp";
@@ -8,7 +8,9 @@ import { getMobileFlow, mobileFlows } from "@/data/mobileSchoolData";
 
 export default function MobileRolePreview() {
   const { flow } = useParams();
+  const [searchParams] = useSearchParams();
   const activeFlow = getMobileFlow(flow);
+  const activeTab = searchParams.get("tab") ?? "home";
 
   return (
     <SchoolShell title={activeFlow.title} description={activeFlow.description}>
@@ -35,7 +37,7 @@ export default function MobileRolePreview() {
         </div>
 
         <section className="grid gap-6 xl:grid-cols-[430px_1fr]">
-          <MobileRuntimeApp flow={activeFlow.key} />
+          <MobileRuntimeApp key={`${activeFlow.key}-${activeTab}`} flow={activeFlow.key} />
           <div className="space-y-4">
             <div className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-700">

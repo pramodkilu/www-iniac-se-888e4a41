@@ -31,6 +31,7 @@ export type MobileListItem = {
 export type MobileAction = {
   label: string;
   icon: LucideIcon;
+  tab: string;
 };
 
 export type MobileScreenSpec = {
@@ -56,24 +57,31 @@ export type MobileFlowSpec = {
 };
 
 const parentActions: MobileAction[] = [
-  { label: "Home", icon: Home },
-  { label: "Pay", icon: Banknote },
-  { label: "Chat", icon: MessageSquareText },
-  { label: "Profile", icon: UserRound },
+  { label: "Home", icon: Home, tab: "home" },
+  { label: "Pay", icon: Banknote, tab: "payments" },
+  { label: "Chat", icon: MessageSquareText, tab: "messages" },
+  { label: "Profile", icon: UserRound, tab: "profile" },
 ];
 
 const studentActions: MobileAction[] = [
-  { label: "Home", icon: Home },
-  { label: "Courses", icon: Bot },
-  { label: "Badges", icon: Award },
-  { label: "Rank", icon: Trophy },
+  { label: "Home", icon: Home, tab: "home" },
+  { label: "Courses", icon: Bot, tab: "courses" },
+  { label: "Badges", icon: Award, tab: "badges" },
+  { label: "Rank", icon: Trophy, tab: "rank" },
 ];
 
 const staffActions: MobileAction[] = [
-  { label: "Today", icon: CalendarDays },
-  { label: "Attend", icon: CheckCircle2 },
-  { label: "Alerts", icon: Bell },
-  { label: "Admin", icon: ShieldCheck },
+  { label: "Today", icon: CalendarDays, tab: "today" },
+  { label: "Attend", icon: CheckCircle2, tab: "attend" },
+  { label: "Alerts", icon: Bell, tab: "alerts" },
+  { label: "Admin", icon: ShieldCheck, tab: "admin" },
+];
+
+const roboticsActions: MobileAction[] = [
+  { label: "Story", icon: Home, tab: "story" },
+  { label: "Build", icon: Bot, tab: "build" },
+  { label: "AI Check", icon: CheckCircle2, tab: "verify" },
+  { label: "Challenge", icon: Trophy, tab: "challenge" },
 ];
 
 export const mobileFlows: MobileFlowSpec[] = [
@@ -189,7 +197,7 @@ export const mobileFlows: MobileFlowSpec[] = [
           { title: "AI Basics", meta: "Module 3 of 4", status: "Resume", tone: "blue" },
           { title: "Smart Cricket", meta: "Project due Friday", status: "Draft", tone: "orange" },
         ],
-        actions: studentActions,
+        actions: roboticsActions,
       },
       {
         id: "student-progress",
@@ -209,7 +217,7 @@ export const mobileFlows: MobileFlowSpec[] = [
           { title: "Problem solving", meta: "Skill unlocked", status: "Gold", tone: "orange" },
           { title: "Team work", meta: "Peer lab activity", status: "Strong", tone: "green" },
         ],
-        actions: studentActions,
+        actions: roboticsActions,
       },
       {
         id: "student-leaderboard",
@@ -230,7 +238,7 @@ export const mobileFlows: MobileFlowSpec[] = [
           { title: "Oskar", meta: "850 pts", status: "#2", tone: "blue" },
           { title: "Aarav", meta: "790 pts", status: "#4", tone: "green" },
         ],
-        actions: studentActions,
+        actions: roboticsActions,
       },
       {
         id: "student-achievements",
@@ -250,7 +258,7 @@ export const mobileFlows: MobileFlowSpec[] = [
           { title: "Fast Builder", meta: "Robot kit assembly", status: "Gold", tone: "orange" },
           { title: "Problem Solver", meta: "Debugged AI model", status: "Silver", tone: "blue" },
         ],
-        actions: studentActions,
+        actions: roboticsActions,
       },
     ],
   },

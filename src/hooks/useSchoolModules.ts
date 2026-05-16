@@ -137,9 +137,11 @@ export function useSchoolModules(
   const [courses, setCourses] = useState<CourseModule[]>([]);
   const [events, setEvents] = useState<SchoolEvent[]>([]);
   const [resources, setResources] = useState<LibraryResource[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     if (previewOnly) {
       setUsingMockFallback(true);
       setInvoices(mockInvoices);
@@ -160,6 +162,14 @@ export function useSchoolModules(
     ]);
 
     if (invoiceRes.error || messageRes.error || courseRes.error || eventRes.error || resourceRes.error) {
+      setError(
+        invoiceRes.error?.message ||
+          messageRes.error?.message ||
+          courseRes.error?.message ||
+          eventRes.error?.message ||
+          resourceRes.error?.message ||
+          "Unable to load school module data.",
+      );
       setUsingMockFallback(true);
       setInvoices(mockInvoices);
       setMessages(mockMessages);
@@ -196,7 +206,10 @@ export function useSchoolModules(
       return;
     }
     const { error } = await action();
-    if (error) toast.error(error.message);
+    if (error) {
+      setError(error.message);
+      toast.error(error.message);
+    }
     else {
       toast.success(`${label} saved`);
       load();
@@ -226,6 +239,7 @@ export function useSchoolModules(
 
   return {
     loading,
+    error,
     usingMockFallback,
     invoices,
     messages,
