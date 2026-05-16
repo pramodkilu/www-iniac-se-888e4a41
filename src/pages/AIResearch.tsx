@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,43 +85,14 @@ function ResultPanel({ result, label, accent, loading }: {
   );
 }
 
-// ── Flowchart sub-components ───────────────────────────────────────────────────
-const NODE_COLORS: Record<string, string> = {
-  orange: "bg-orange-500 text-white",
-  blue:   "bg-blue-500 text-white",
-  purple: "bg-purple-500 text-white",
-  green:  "bg-green-500 text-white",
-  red:    "bg-red-500 text-white",
-};
-
-function FlowNode({ color, emoji, label, sub, wide }: {
-  color: string; emoji: string; label: string; sub?: string; wide?: boolean;
-}) {
-  return (
-    <div className={`flex flex-col items-center justify-center text-center rounded-xl px-3 py-2 shadow-sm gap-0.5
-      ${NODE_COLORS[color] ?? "bg-gray-400 text-white"}
-      ${wide ? "w-full max-w-xs" : "w-32"}
-    `}>
-      <span className="text-lg leading-none">{emoji}</span>
-      <span className="text-[11px] font-bold leading-tight">{label}</span>
-      {sub && <span className="text-[9px] opacity-80 leading-tight">{sub}</span>}
-    </div>
-  );
-}
-
-function FlowArrow({ dir }: { dir: "down" | "right" }) {
-  return dir === "down"
-    ? <div className="flex justify-center text-gray-300 text-lg leading-none select-none py-0.5">↓</div>
-    : <div className="flex items-center text-gray-300 text-lg leading-none select-none px-0.5">→</div>;
-}
-
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function AIResearch({ inline }: { inline?: boolean } = {}) {
+  const navigate  = useNavigate();
   const goBack = useSafeBack("/");
   const location  = useLocation();
   const state     = (location.state ?? {}) as ResearchNavState;
 
-  const { step, stepIdx, chapterId, chapterTitle } = state;
+  const { method, step, stepIdx, chapterId, chapterTitle } = state;
 
   const [apiResult,  setApiResult]  = useState<VerifyResult | null>(null);
   const [loadingApi, setLoadingApi] = useState(false);
@@ -397,88 +368,12 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
 
         {/* Empty state */}
         {history.length === 0 && !capturedImage && (
-          <div className="text-center py-10 text-gray-400">
+          <div className="text-center py-16 text-gray-400">
             <p className="text-4xl mb-3">🔬</p>
             <p className="font-semibold text-gray-500 mb-1">No check history yet</p>
             <p className="text-[12px]">Take a photo in the Build Guide and run an AI check to see results here.</p>
           </div>
         )}
-
-        {/* ── How It Works flowchart ── */}
-        <section>
-          <h2 className="text-[13px] font-bold text-gray-700 mb-4 uppercase tracking-wide">How AI Step Check Works</h2>
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
-
-            {/* Top row: 3 input nodes */}
-            <div className="flex items-stretch justify-center gap-2 mb-1">
-              <FlowNode color="orange" emoji="🧑‍🎓" label="Student Completes Build Step" />
-              <FlowArrow dir="right" />
-              <FlowNode color="blue" emoji="📐" label="3D Reference Snapshot Captured" sub="from StepViewer3D" />
-              <FlowArrow dir="right" />
-              <FlowNode color="orange" emoji="📷" label="Student Takes Photo of Build" sub="via camera" />
-            </div>
-
-            {/* Down arrow */}
-            <div className="flex justify-center"><FlowArrow dir="down" /></div>
-
-            {/* AI node — full width */}
-            <div className="flex justify-center mb-1">
-              <FlowNode color="purple" emoji="☁️" label="Claude Vision AI Compares Both Images" sub="via Supabase Edge Function · verify-build-step" wide />
-            </div>
-
-            {/* Down arrow */}
-            <div className="flex justify-center"><FlowArrow dir="down" /></div>
-
-            {/* Decision diamond */}
-            <div className="flex justify-center mb-1">
-              <div className="flex flex-col items-center">
-                <div className="w-28 h-12 bg-amber-400 text-gray-900 text-[11px] font-bold flex items-center justify-center text-center rounded-lg rotate-0 shadow-sm px-2">
-                  ✅ Correct Build?
-                </div>
-              </div>
-            </div>
-
-            {/* Two outcome branches */}
-            <div className="flex items-start justify-center gap-6 mt-1">
-              {/* Pass branch */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-[10px] font-bold text-green-600 uppercase tracking-wide">Yes</div>
-                <FlowArrow dir="down" />
-                <FlowNode color="green" emoji="🎉" label="Step Verified" sub="Next Step Unlocked" />
-                <div className="mt-2 bg-green-50 border border-green-200 rounded-xl px-3 py-1.5 text-[10px] text-green-700 font-semibold text-center">
-                  Saved to Supabase<br/>chapter_progress
-                </div>
-              </div>
-
-              {/* Fail branch */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-[10px] font-bold text-red-500 uppercase tracking-wide">No</div>
-                <FlowArrow dir="down" />
-                <FlowNode color="red" emoji="🔧" label="Feedback Given" sub="Student fixes build" />
-                <div className="mt-2 bg-red-50 border border-red-200 rounded-xl px-3 py-1.5 text-[10px] text-red-600 font-semibold text-center">
-                  Missing components<br/>listed with tips
-                </div>
-                <div className="text-[10px] text-gray-400 mt-1">↩ loops back to photo</div>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="flex flex-wrap justify-center gap-3 mt-5 pt-4 border-t border-gray-100">
-              {[
-                { color: "bg-orange-500", label: "Student action" },
-                { color: "bg-blue-500",   label: "System capture" },
-                { color: "bg-purple-500", label: "Claude Vision AI" },
-                { color: "bg-green-500",  label: "Pass" },
-                { color: "bg-red-500",    label: "Fail / retry" },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
-                  <span className="text-[10px] text-gray-500">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

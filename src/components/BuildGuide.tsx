@@ -470,7 +470,6 @@ function parseComps(list: string[]): { code: string; qty: number }[] {
     return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: s.trim(), qty: 1 }];
   });
 }
-const EMPTY_COMPONENTS: string[] = [];
 function disposeGroup(g: THREE.Group) {
   g.traverse(c => {
     if (c instanceof THREE.Mesh) { c.geometry.dispose(); (c.material as THREE.Material).dispose(); }
@@ -882,21 +881,20 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
     const fill = new THREE.DirectionalLight(0xffe4c0, 0.4); fill.position.set(-4, 3, -4); scene.add(fill);
     const grid = new THREE.GridHelper(10, 20, 0xe5e7eb, 0xf3f4f6); grid.position.y = -1.5; scene.add(grid);
     const cvs = renderer.domElement; cvs.style.cursor = "grab";
-    const group = groupRef.current;
     const onDown = (e: PointerEvent) => { dragging.current = true; lastPos.current = { x: e.clientX, y: e.clientY }; cvs.setPointerCapture(e.pointerId); };
-    const onMove = (e: PointerEvent) => { if (!dragging.current) return; group.rotation.y += (e.clientX - lastPos.current.x) * 0.01; group.rotation.x += (e.clientY - lastPos.current.y) * 0.005; lastPos.current = { x: e.clientX, y: e.clientY }; };
+    const onMove = (e: PointerEvent) => { if (!dragging.current) return; groupRef.current.rotation.y += (e.clientX - lastPos.current.x) * 0.01; groupRef.current.rotation.x += (e.clientY - lastPos.current.y) * 0.005; lastPos.current = { x: e.clientX, y: e.clientY }; };
     const onUp = () => { dragging.current = false; };
     cvs.addEventListener("pointerdown", onDown); cvs.addEventListener("pointermove", onMove);
     cvs.addEventListener("pointerup", onUp); cvs.addEventListener("pointercancel", onUp);
     const onResize = () => { if (!mount || !renderer) return; const w = mount.clientWidth; camera.aspect = w / H; camera.updateProjectionMatrix(); renderer.setSize(w, H); };
     window.addEventListener("resize", onResize);
-    const animate = () => { frameRef.current = requestAnimationFrame(animate); if (!dragging.current) group.rotation.y += 0.004; renderer.render(scene, camera); };
+    const animate = () => { frameRef.current = requestAnimationFrame(animate); if (!dragging.current) groupRef.current.rotation.y += 0.004; renderer.render(scene, camera); };
     animate();
     return () => {
       cancelAnimationFrame(frameRef.current); window.removeEventListener("resize", onResize);
       cvs.removeEventListener("pointerdown", onDown); cvs.removeEventListener("pointermove", onMove);
       cvs.removeEventListener("pointerup", onUp); cvs.removeEventListener("pointercancel", onUp);
-      disposeGroup(group); renderer.dispose(); mount.removeChild(renderer.domElement);
+      disposeGroup(groupRef.current); renderer.dispose(); mount.removeChild(renderer.domElement);
     };
   }, []);
 
@@ -914,7 +912,7 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
       const timer = setTimeout(() => { if (rendererRef.current) onSnapshot(rendererRef.current.domElement.toDataURL("image/jpeg", 0.9)); }, 500);
       return () => clearTimeout(timer);
     }
-  }, [showFinal, chapterId, onSnapshot]);
+  }, [showFinal, chapterId]);
 
   // Load step components
   useEffect(() => {
@@ -941,7 +939,7 @@ function StepViewer3D({ step, totalSteps, stepIdx, exploded, chapterId, onPrev, 
       const timer = setTimeout(() => { if (rendererRef.current) onSnapshot(rendererRef.current.domElement.toDataURL("image/jpeg", 0.9)); }, 400);
       return () => clearTimeout(timer);
     }
-  }, [step, exploded, showFinal, onSnapshot]);
+  }, [step, exploded, showFinal]);
 
   const comps = step ? parseComps(step.components) : [];
 
@@ -1075,9 +1073,8 @@ interface DetailsProps { chapter: Chapter; stepIdx: number; onStepChange: (i: nu
 function StepDetails({ chapter, stepIdx, onStepChange }: DetailsProps) {
   const totalSteps = chapter.build.steps.length || chapter.build.totalSteps;
   const step = chapter.build.steps[stepIdx];
-  const stepComponents = step?.components ?? EMPTY_COMPONENTS;
-  const comps = useMemo(() => parseComps(stepComponents), [stepComponents]);
-  const connections = useMemo(() => findConnections(comps), [comps]);
+  const comps = step ? parseComps(step.components) : [];
+  const connections = useMemo(() => findConnections(comps), [comps.map(c => c.code).join(",")]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
@@ -1567,14 +1564,12 @@ function AROverlay({ step, stepIdx, onClose }: AROverlayProps) {
 
     scene.appendChild(marker);
     scene.appendChild(camera);
-    const container = containerRef.current;
-    if (!container) return;
-    container.appendChild(scene);
+    containerRef.current.appendChild(scene);
     sceneRef.current = scene;
 
     return () => {
-      if (sceneRef.current && container.contains(sceneRef.current)) {
-        try { container.removeChild(sceneRef.current); } catch { /* ignore */ }
+      if (sceneRef.current && containerRef.current?.contains(sceneRef.current)) {
+        try { containerRef.current.removeChild(sceneRef.current); } catch { /* ignore */ }
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
