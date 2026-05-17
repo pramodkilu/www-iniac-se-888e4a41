@@ -885,6 +885,22 @@ for (const box of componentBoxes) {
 }
 
 /**
+ * Resolves a component code (case-insensitive) to a Gallery-quality Three.js
+ * object via buildObject(). Used by BlixCartViewer to render chapter-specific
+ * step geometry from chapters.ts component codes.
+ * Returns a coloured fallback box for unmapped codes so nothing is invisible.
+ */
+export function buildComponentByCode(code: string): THREE.Object3D {
+  const item = codeToComponent.get(code.toLowerCase());
+  if (item) return buildObject(item);
+  // Fallback for codes not in kitComponents.ts (e.g. legacy "Beam")
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2),
+    new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.1, roughness: 0.6 })));
+  return g;
+}
+
+/**
  * Per-step reference image generator for AI Step Check.
  *
  * Renders every component in `comps` using buildObject (the same Gallery-quality

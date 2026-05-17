@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Play, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
@@ -19,6 +19,8 @@ import { useChapterProgress } from "@/hooks/useChapterProgress";
 import { getChapter, tr, LGR22_STRANDS, SDG_INFO } from "@/data/chapters";
 import { getStepAsset } from "@/data/stepAssets";
 import { useLanguage, useUIStrings } from "@/i18n/LanguageContext";
+// Procedural 3D reference for AI verification — same source-of-truth as BuildGuide
+import { renderStepReferenceImage } from "@/components/ThreeDGallery";
 
 const Chapter = () => {
   const { id } = useParams();
@@ -377,6 +379,26 @@ const Chapter = () => {
               const totalSteps = steps.length;
               const currentStep = steps.find((s) => s.number === activeBuildStep) ?? steps[0];
               const stepAsset = getStepAsset(chapterIdNum, currentStep.number);
+              // ── Procedural reference for AI verification ────────────────────────
+              // Cumulative components (steps 0..activeBuildStep-1) rendered via
+              // Gallery-quality buildObject — same source-of-truth as BuildGuide.
+              // Textbook images (stepAsset.referenceImage) are retained ONLY for
+              // the optional "Book Page" reading view, NOT for AI verification.
+              const cumulativeComps = (() => {
+                const all = steps.slice(0, activeBuildStep).flatMap(s =>
+                  s.pieces.flatMap(p => {
+                    const m = p.match(/^(.+?)\s*[xX×](\d+)$/);
+                    return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: p.trim(), qty: 1 }];
+                  })
+                );
+                const totals = new Map<string, number>();
+                for (const { code, qty } of all) totals.set(code, (totals.get(code) ?? 0) + qty);
+                return Array.from(totals.entries()).map(([code, qty]) => ({ code, qty }));
+              })();
+              const proceduralReference = renderStepReferenceImage(
+                cumulativeComps,
+                `Step ${activeBuildStep} of ${totalSteps}`
+              );
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
               const verdict = progress.step_verdicts[String(currentStep.number)];
@@ -494,7 +516,7 @@ const Chapter = () => {
                           step={currentStep}
                           chapterTitle={chapterTitle}
                           savedVerdict={verdict}
-                          referenceImage={stepAsset.referenceImage}
+                          referenceImage={proceduralReference}
                           onVerified={(v) => saveStepVerdict(currentStep.number, v)}
                           onAdvance={() => setActiveBuildStep((s) => Math.min(totalSteps, s + 1))}
                         />

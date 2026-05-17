@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import * as THREE from "three";
+import { buildComponentByCode } from "@/components/ThreeDGallery";
+import { getChapter } from "@/data/chapters";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -108,8 +110,11 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
   };
 
 
-  // Define build steps with REAL BLIX components from PDF
-  const buildSteps: BuildStep[] = [
+  // ── Chapter 1 / Demo geometry ────────────────────────────────────────────────
+  // Hardcoded Wheeling Cart steps for Chapter 1. High-quality geometry written
+  // specifically for this chapter. Used as the default / fallback for any chapter
+  // that lacks data in chapters.ts, and as the primary demo for Chapter 1.
+  const demoBuildSteps: BuildStep[] = [
     {
       number: 1,
       instruction: "Place two P7X11 U-shaped pillars (17 holes each)",
@@ -338,6 +343,54 @@ const BlixCartViewer = ({ chapterId, activeStep }: BlixCartViewerProps = {}) => 
       }
     }
   ];
+
+  // ── Chapter-specific steps from chapters.ts ───────────────────────────────
+  // For chapters other than 1, derive build steps from chapter.build.steps
+  // and render each component via buildComponentByCode (Gallery-quality buildObject).
+  // This makes the 3D viewer chapter-aware and consistent with the AI reference.
+  //
+  // Architecture:
+  //   chapterId === 1 (or undefined)  → demoBuildSteps (hardcoded Wheeling Cart)
+  //   chapterId 2–30 with steps data  → generatedSteps (buildObject geometry)
+  //   chapterId 2–30 without steps    → demoBuildSteps (fallback)
+  const buildSteps: BuildStep[] = useMemo(() => {
+    // Chapter 1 uses the purpose-built demo geometry (best visual quality)
+    if (!chapterId || chapterId === 1) return demoBuildSteps;
+    const chapter = getChapter(chapterId);
+    if (!chapter?.build.steps.length) return demoBuildSteps; // no data → fallback
+    return chapter.build.steps.map(s => {
+      // Parse each component string into {code, qty} pairs
+      const comps: { code: string; qty: number }[] = s.components.flatMap(raw => {
+        const m = raw.match(/^(.+?)\s*[xX×](\d+)$/);
+        return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: raw.trim(), qty: 1 }];
+      });
+      return {
+        number: s.stepNumber,
+        instruction: s.title.en,
+        // Pieces list for badge display
+        pieces: comps.map(c => c.qty > 1 ? `${c.code} ×${c.qty}` : c.code),
+        // Geometry: Gallery-quality buildObject per component, grid layout
+        addPieces: (_scene: THREE.Scene): THREE.Group => {
+          const group = new THREE.Group();
+          const cols = Math.max(1, Math.ceil(Math.sqrt(comps.length)));
+          const spacing = 1.9;
+          comps.slice(0, 12).forEach(({ code }, i) => {
+            const obj = buildComponentByCode(code);
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            obj.position.set(
+              col * spacing - ((cols - 1) * spacing) / 2,
+              0,
+              row * spacing * 0.7
+            );
+            group.add(obj);
+          });
+          return group;
+        },
+      };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterId]);
 
   useEffect(() => {
     if (!mountRef.current) return;

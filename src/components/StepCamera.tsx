@@ -124,9 +124,11 @@ const StepCamera = ({
     setLoading(true);
     setResult(null);
     try {
-      // Convert reference URL to base64 if one is available
+      // If referenceImage is already a data URL (procedural 3D render from
+      // renderStepReferenceImage), use it directly — no network fetch needed.
+      // If it is a public path (e.g. textbook PNG), fetch and convert.
       const referenceBase64 = referenceImage
-        ? await imageUrlToBase64(referenceImage)
+        ? (referenceImage.startsWith("data:") ? referenceImage : await imageUrlToBase64(referenceImage))
         : null;
 
       const { data, error } = await supabase.functions.invoke("verify-build-step", {
