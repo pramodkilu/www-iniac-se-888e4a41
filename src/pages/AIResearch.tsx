@@ -85,34 +85,57 @@ function ResultPanel({ result, label, accent, loading }: {
   );
 }
 
-// ── Flowchart sub-components ───────────────────────────────────────────────────
-const NODE_COLORS: Record<string, string> = {
-  orange: "bg-orange-500 text-white",
-  blue:   "bg-blue-500 text-white",
-  purple: "bg-purple-500 text-white",
-  green:  "bg-green-500 text-white",
-  red:    "bg-red-500 text-white",
+// ── Pipeline helpers — 8-step visual AI verification flow ─────────────────────
+
+const PIPELINE_ACCENT: Record<string, { border: string; badge: string; num: string }> = {
+  orange: { border: "border-orange-200",  badge: "bg-orange-500 text-white",   num: "bg-orange-500 text-white" },
+  teal:   { border: "border-teal-200",    badge: "bg-teal-600 text-white",     num: "bg-teal-600 text-white" },
+  blue:   { border: "border-blue-200",    badge: "bg-blue-500 text-white",     num: "bg-blue-500 text-white" },
+  indigo: { border: "border-indigo-200",  badge: "bg-indigo-600 text-white",   num: "bg-indigo-600 text-white" },
+  purple: { border: "border-purple-200",  badge: "bg-purple-600 text-white",   num: "bg-purple-600 text-white" },
+  green:  { border: "border-green-200",   badge: "bg-green-600 text-white",    num: "bg-green-600 text-white" },
+  gray:   { border: "border-gray-200",    badge: "bg-gray-400 text-white",     num: "bg-gray-400 text-white" },
 };
 
-function FlowNode({ color, emoji, label, sub, wide }: {
-  color: string; emoji: string; label: string; sub?: string; wide?: boolean;
+function PipelineCard({ num, title, source, accent, children }: {
+  num: number; title: string; source: string; accent: string; children: React.ReactNode;
 }) {
+  const a = PIPELINE_ACCENT[accent] ?? PIPELINE_ACCENT.gray;
   return (
-    <div className={`flex flex-col items-center justify-center text-center rounded-xl px-3 py-2 shadow-sm gap-0.5
-      ${NODE_COLORS[color] ?? "bg-gray-400 text-white"}
-      ${wide ? "w-full max-w-xs" : "w-32"}
-    `}>
-      <span className="text-lg leading-none">{emoji}</span>
-      <span className="text-[11px] font-bold leading-tight">{label}</span>
-      {sub && <span className="text-[9px] opacity-80 leading-tight">{sub}</span>}
+    <div className={`bg-white border ${a.border} rounded-2xl overflow-hidden shadow-sm`}>
+      {/* Card header */}
+      <div className={`flex items-start gap-3 px-4 py-3 border-b ${a.border} bg-gray-50`}>
+        <span className={`shrink-0 w-6 h-6 rounded-full text-[11px] font-bold flex items-center justify-center ${a.num}`}>
+          {num}
+        </span>
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold text-gray-800 leading-tight">{title}</p>
+          <p className="text-[10px] font-mono text-gray-400 truncate mt-0.5">{source}</p>
+        </div>
+      </div>
+      {/* Card body */}
+      <div className="px-4 py-3">{children}</div>
     </div>
   );
 }
 
-function FlowArrow({ dir }: { dir: "down" | "right" }) {
-  return dir === "down"
-    ? <div className="flex justify-center text-gray-300 text-lg leading-none select-none py-0.5">↓</div>
-    : <div className="flex items-center text-gray-300 text-lg leading-none select-none px-0.5">→</div>;
+function DownConnector() {
+  return (
+    <div className="flex flex-col items-center gap-0.5 py-0.5 select-none">
+      <div className="w-px h-3 bg-gray-300" />
+      <div className="text-gray-300 text-sm leading-none">▼</div>
+      <div className="w-px h-3 bg-gray-300" />
+    </div>
+  );
+}
+
+function ImagePlaceholder({ text, icon, small }: { text: string; icon: string; small?: boolean }) {
+  return (
+    <div className={`flex flex-col items-center justify-center gap-1 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-gray-400 ${small ? "h-full py-2" : "py-6"}`}>
+      <span className={small ? "text-xl" : "text-3xl"}>{icon}</span>
+      <p className={`text-center leading-snug ${small ? "text-[9px] px-1" : "text-[11px] px-4"}`}>{text}</p>
+    </div>
+  );
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────────
@@ -129,10 +152,25 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   const [capturedImage]  = useState<string | null>(() => sessionStorage.getItem("blix_captured_image"));
   const [referenceImage] = useState<string | null>(() => sessionStorage.getItem("blix_reference_image"));
 
+  // blix_step_pieces holds the CUMULATIVE component list written by BuildGuide
+  // (all steps 0..stepIdx summed). Falls back to current-step comps when absent.
+  const [piecesRaw] = useState<string | null>(() => sessionStorage.getItem("blix_step_pieces"));
+
   const comps = step ? step.components.flatMap(s => {
     const m = s.match(/^(.+?)\s*[xX×](\d+)$/);
     return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: s.trim(), qty: 1 }];
   }) : [];
+
+  // Cumulative pieces — what was actually sent to Gemini as the pieces list
+  const cumulativePieces: { code: string; qty: number }[] = (() => {
+    if (!piecesRaw) return comps;
+    try {
+      return (JSON.parse(piecesRaw) as string[]).flatMap(s => {
+        const m = s.match(/^(.+?)\s*[×x](\d+)$/);
+        return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: s.trim(), qty: 1 }];
+      });
+    } catch { return comps; }
+  })();
 
   const refreshHistory = () => setHistory(getCheckHistory());
 
@@ -439,79 +477,235 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
           </div>
         )}
 
-        {/* ── How It Works flowchart ── */}
+        {/* ── AI Step Check Pipeline — 8-step visual execution trace ── */}
         <section>
-          <h2 className="text-[13px] font-bold text-gray-700 mb-4 uppercase tracking-wide">How AI Step Check Works</h2>
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <h2 className="text-[13px] font-bold text-gray-700 mb-1 uppercase tracking-wide">AI Step Check Pipeline</h2>
+          <p className="text-[11px] text-gray-400 mb-4">
+            Step-by-step execution trace — live images and data from the current check.
+          </p>
 
-            {/* Top row: 3 input nodes */}
-            <div className="flex items-stretch justify-center gap-2 mb-1">
-              <FlowNode color="orange" emoji="🧑‍🎓" label="Student Completes Build Step" />
-              <FlowArrow dir="right" />
-              <FlowNode color="blue" emoji="📐" label="3D Reference Snapshot Captured" sub="from StepViewer3D" />
-              <FlowArrow dir="right" />
-              <FlowNode color="orange" emoji="📷" label="Student Takes Photo of Build" sub="via camera" />
-            </div>
+          <div className="space-y-1.5">
 
-            {/* Down arrow */}
-            <div className="flex justify-center"><FlowArrow dir="down" /></div>
+            {/* ① Active Step Card */}
+            <PipelineCard num={1} title="Active Build Step" source="chapter.build.steps[stepIdx]" accent="orange">
+              {step ? (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      📖 {chapterTitle ?? "—"}
+                    </span>
+                    <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      Step {(stepIdx ?? 0) + 1}
+                    </span>
+                  </div>
+                  <p className="text-[13px] font-semibold text-gray-800">{step.title.en}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {cumulativePieces.map((c, i) => (
+                      <span key={i} className="font-mono text-[10px] bg-orange-50 border border-orange-200 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">
+                        {c.code} ×{c.qty}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-gray-400">
+                    {cumulativePieces.length} cumulative part{cumulativePieces.length !== 1 ? "s" : ""} — all components assembled up to this step
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[12px] text-gray-400 italic">No step active — navigate here from the Build Guide.</p>
+              )}
+            </PipelineCard>
 
-            {/* AI node — full width */}
-            <div className="flex justify-center mb-1">
-              <FlowNode color="purple" emoji="☁️" label="Gemini Vision Compares Both Images" sub="via Supabase Edge Function · verify-build-step (google/gemini-1.5-flash)" wide />
-            </div>
+            <DownConnector />
 
-            {/* Down arrow */}
-            <div className="flex justify-center"><FlowArrow dir="down" /></div>
+            {/* ② Generated 3D Reference Image */}
+            <PipelineCard num={2} title="Generated Procedural 3D Reference" source="renderStepReferenceImage(cumulativeComps, stepLabel)" accent="teal">
+              <p className="text-[10px] text-gray-500 mb-2">
+                Dynamically rendered from the cumulative component list using Gallery-quality Three.js buildObject geometry.
+                Changes on every step. Not a textbook image.
+              </p>
+              {referenceImage ? (
+                <div className="relative rounded-xl overflow-hidden border border-teal-200 bg-white" style={{ maxHeight: 220 }}>
+                  <img src={referenceImage} alt="Generated 3D reference" className="w-full object-contain" style={{ maxHeight: 220 }} />
+                  <div className="absolute top-2 left-2 bg-teal-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
+                    PROCEDURAL 3D RENDER
+                  </div>
+                </div>
+              ) : (
+                <ImagePlaceholder text="No 3D reference yet — run AI Step Check from the Build Guide first." icon="📐" />
+              )}
+            </PipelineCard>
 
-            {/* Decision diamond */}
-            <div className="flex justify-center mb-1">
-              <div className="flex flex-col items-center">
-                <div className="w-28 h-12 bg-amber-400 text-gray-900 text-[11px] font-bold flex items-center justify-center text-center rounded-lg rotate-0 shadow-sm px-2">
-                  ✅ Correct Build?
+            <DownConnector />
+
+            {/* ③ Student Captured Photo */}
+            <PipelineCard num={3} title="Student Real Build Photo" source="sessionStorage · blix_captured_image" accent="orange">
+              <p className="text-[10px] text-gray-500 mb-2">
+                Live camera capture from the student's device in BuildGuide. JPEG encoded, passed as imageBase64.
+              </p>
+              {capturedImage ? (
+                <div className="relative rounded-xl overflow-hidden border border-orange-200" style={{ maxHeight: 220 }}>
+                  <img src={capturedImage} alt="Student build photo" className="w-full object-cover" style={{ maxHeight: 220 }} />
+                  <div className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow">
+                    STUDENT PHOTO
+                  </div>
+                </div>
+              ) : (
+                <ImagePlaceholder text="No captured image yet — run AI Step Check first." icon="📷" />
+              )}
+            </PipelineCard>
+
+            <DownConnector />
+
+            {/* ④ AI Input Package */}
+            <PipelineCard num={4} title="AI Input Package" source="sent to verify-build-step as JSON body" accent="blue">
+              <p className="text-[10px] text-gray-500 mb-3">
+                Both images + cumulative pieces list + step instruction sent together as the Gemini prompt payload.
+              </p>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-teal-600 uppercase">referenceBase64</p>
+                  <div className="rounded-lg overflow-hidden border border-teal-100 bg-gray-50" style={{ height: 100 }}>
+                    {referenceImage
+                      ? <img src={referenceImage} alt="ref" className="w-full h-full object-contain" />
+                      : <ImagePlaceholder text="—" icon="📐" small />}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-orange-500 uppercase">imageBase64</p>
+                  <div className="rounded-lg overflow-hidden border border-orange-100 bg-gray-50" style={{ height: 100 }}>
+                    {capturedImage
+                      ? <img src={capturedImage} alt="photo" className="w-full h-full object-cover" />
+                      : <ImagePlaceholder text="—" icon="📷" small />}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Two outcome branches */}
-            <div className="flex items-start justify-center gap-6 mt-1">
-              {/* Pass branch */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-[10px] font-bold text-green-600 uppercase tracking-wide">Yes</div>
-                <FlowArrow dir="down" />
-                <FlowNode color="green" emoji="🎉" label="Step Verified" sub="Next Step Unlocked" />
-                <div className="mt-2 bg-green-50 border border-green-200 rounded-xl px-3 py-1.5 text-[10px] text-green-700 font-semibold text-center">
-                  Saved to Supabase<br/>chapter_progress
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">pieces (blix_step_pieces)</p>
+                <div className="flex flex-wrap gap-1">
+                  {cumulativePieces.length > 0 ? cumulativePieces.map((c, i) => (
+                    <span key={i} className="font-mono text-[10px] bg-blue-50 border border-blue-200 text-blue-700 px-1.5 py-0.5 rounded-full">
+                      {c.code} ×{c.qty}
+                    </span>
+                  )) : (
+                    <span className="text-[10px] text-gray-400 italic">No pieces loaded — run AI check first</span>
+                  )}
                 </div>
               </div>
+            </PipelineCard>
 
-              {/* Fail branch */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-[10px] font-bold text-red-500 uppercase tracking-wide">No</div>
-                <FlowArrow dir="down" />
-                <FlowNode color="red" emoji="🔧" label="Feedback Given" sub="Student fixes build" />
-                <div className="mt-2 bg-red-50 border border-red-200 rounded-xl px-3 py-1.5 text-[10px] text-red-600 font-semibold text-center">
-                  Missing components<br/>listed with tips
+            <DownConnector />
+
+            {/* ⑤ Supabase Edge Function */}
+            <PipelineCard num={5} title="Supabase Edge Function" source="supabase/functions/verify-build-step/index.ts" accent="indigo">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl shrink-0">⚡</div>
+                <div>
+                  <p className="text-[13px] font-bold text-gray-800 font-mono">verify-build-step</p>
+                  <p className="text-[10px] text-gray-500">Deno runtime · Supabase hosted · CORS enabled</p>
+                  <p className="text-[10px] text-gray-400">Receives JSON body → constructs prompt → calls AI gateway → returns structured JSON</p>
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">↩ loops back to photo</div>
               </div>
-            </div>
+            </PipelineCard>
 
-            {/* Legend */}
-            <div className="flex flex-wrap justify-center gap-3 mt-5 pt-4 border-t border-gray-100">
-              {[
-                { color: "bg-orange-500", label: "Student action" },
-                { color: "bg-blue-500",   label: "System capture" },
-                { color: "bg-purple-500", label: "AI Vision (Gemini)" },
-                { color: "bg-green-500",  label: "Pass" },
-                { color: "bg-red-500",    label: "Fail / retry" },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
-                  <span className="text-[10px] text-gray-500">{label}</span>
+            <DownConnector />
+
+            {/* ⑥ Gemini / Lovable Gateway */}
+            <PipelineCard num={6} title="Gemini 1.5 Flash via Lovable AI Gateway" source="POST https://ai.gateway.lovable.dev/v1/chat/completions" accent="purple">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-xl shrink-0">☁️</div>
+                <div className="space-y-0.5">
+                  <p className="text-[13px] font-bold text-gray-800">google/gemini-1.5-flash</p>
+                  <p className="text-[10px] text-gray-500">OpenAI-compatible API · multimodal · tool/function calling</p>
+                  <p className="text-[10px] text-gray-400">Auth: LOVABLE_API_KEY · Tool: verify_step → structured JSON output</p>
+                  <p className="text-[10px] font-semibold text-purple-600">Not Claude. Not OpenAI. Gemini via Lovable Gateway.</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            </PipelineCard>
+
+            <DownConnector />
+
+            {/* ⑦ AI Result */}
+            <PipelineCard num={7} title="AI Verification Result" source="verify_step tool response → { status, confidence, found, missing, feedback, tip }" accent="green">
+              {loadingApi ? (
+                <div className="flex items-center gap-2 text-gray-400">
+                  <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[12px]">Gemini is analysing the build…</span>
+                </div>
+              ) : apiResult ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className={`text-[13px] font-bold px-3 py-1 rounded-full ${apiResult.correct ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                      {apiResult.correct ? "✓ Correct" : "✗ Needs fix"}
+                    </span>
+                    <span className="text-[12px] font-semibold text-gray-700">
+                      Confidence: {Math.round((apiResult.confidence ?? 0) * 100)}%
+                    </span>
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden min-w-[80px]">
+                      <div className={`h-full rounded-full transition-all ${apiResult.correct ? "bg-green-400" : "bg-orange-400"}`}
+                        style={{ width: `${Math.round((apiResult.confidence ?? 0) * 100)}%` }} />
+                    </div>
+                  </div>
+                  {apiResult.found?.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-green-600 uppercase mb-1">Found ✓</p>
+                      <div className="flex flex-wrap gap-1">
+                        {apiResult.found.map((c, i) => (
+                          <span key={i} className="font-mono text-[10px] bg-green-50 border border-green-200 text-green-700 px-1.5 py-0.5 rounded-full">{c}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {apiResult.missing?.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-red-500 uppercase mb-1">Missing ✗</p>
+                      <div className="flex flex-wrap gap-1">
+                        {apiResult.missing.map((c, i) => (
+                          <span key={i} className="font-mono text-[10px] bg-red-50 border border-red-200 text-red-600 px-1.5 py-0.5 rounded-full">{c}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {apiResult.feedback && (
+                    <p className="text-[12px] text-gray-700 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                      💬 {apiResult.feedback}
+                    </p>
+                  )}
+                  {apiResult.tip && !apiResult.correct && (
+                    <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200">
+                      💡 {apiResult.tip}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <ImagePlaceholder text="Result will appear here after running AI Vision check." icon="🔬" />
+              )}
+            </PipelineCard>
+
+            <DownConnector />
+
+            {/* ⑧ Progress Save / Unlock */}
+            <PipelineCard num={8} title="Progress Save & Step Unlock" source="Supabase · chapter_progress table" accent={apiResult?.correct ? "green" : "gray"}>
+              {apiResult ? (
+                <div className="space-y-2">
+                  {[
+                    { ok: apiResult.correct, text: "Saved to chapter_progress (Supabase)" },
+                    { ok: apiResult.correct, text: `Step ${(stepIdx ?? 0) + 2} unlocked` },
+                    { ok: apiResult.correct, text: "AR overlay mode available for this step" },
+                  ].map(({ ok, text }, i) => (
+                    <div key={i} className={`flex items-center gap-2 text-[12px] font-semibold ${ok ? "text-green-700" : "text-gray-400"}`}>
+                      <span>{ok ? "✓" : "○"}</span>
+                      <span>{text}</span>
+                    </div>
+                  ))}
+                  {!apiResult.correct && (
+                    <p className="text-[11px] text-gray-400 mt-1 italic">↩ Student retakes photo after fixing the build</p>
+                  )}
+                </div>
+              ) : (
+                <ImagePlaceholder text="Unlock status shown after AI result." icon="🔓" />
+              )}
+            </PipelineCard>
+
           </div>
         </section>
       </div>
