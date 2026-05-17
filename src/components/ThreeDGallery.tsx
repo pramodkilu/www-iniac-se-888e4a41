@@ -941,23 +941,33 @@ export function renderStepReferenceImage(
   canvas.width = W; canvas.height = H;
   const c2d = canvas.getContext("2d")!;
 
-  // Light background
+  // ── Background + header ──────────────────────────────────────────────────────
   c2d.fillStyle = "#f8fafc";
   c2d.fillRect(0, 0, W, H);
-
-  // Orange header — shows step label so Gemini gets context
   c2d.fillStyle = "#f97316";
   c2d.fillRect(0, 0, W, HEADER);
   c2d.fillStyle = "#fff";
   c2d.font = "bold 10px system-ui";
   c2d.textAlign = "left";
-  // Truncate long label to fit
   const maxChars = Math.floor(W / 6.2);
   c2d.fillText(label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label, 8, 18);
   c2d.textAlign = "right";
   c2d.font = "9px system-ui";
   c2d.fillStyle = "rgba(255,255,255,0.8)";
-  c2d.fillText(`${comps.length} part${comps.length !== 1 ? "s" : ""}`, W - 6, 18);
+  c2d.fillText(`${comps.length} part${comps.length !== 1 ? "s" : ""} · ${THUMB_W}×${THUMB_H}px`, W - 6, 18);
+
+  // ── FIX: set a solid scene background before rendering ───────────────────────
+  // Root cause of black renders: c2d.drawImage(webglCanvas) with alpha:true produces
+  // black pixels in many browsers because the WebGL backbuffer compositing does not
+  // match standard 2D canvas source-over semantics.
+  // Fix: give the scene a solid light background so rendered pixels are always
+  // opaque, then read via toDataURL() (same path used by renderFrames / renderAssemblyReference
+  // which both produce correct results). Restore null background afterwards so the
+  // Gallery auto-rotate animation continues to render with transparent background.
+  const prevBackground = scene.background;
+  scene.background = new THREE.Color(0xf0f4f8); // light blue-grey — neutral reference background
+
+  let renderedCount = 0;
 
   comps.forEach(({ code, qty }, i) => {
     const col = i % COLS;
@@ -971,21 +981,32 @@ export function renderStepReferenceImage(
 
     const item = codeToComponent.get(code.toLowerCase());
     if (item) {
-      // Render via Gallery-quality buildObject — same geometry as 3D Gallery
       const obj = buildObject(item);
       scene.add(obj);
       renderer.render(scene, camera);
       scene.remove(obj);
       disposeObject(obj);
-      // Scale the 320×320 GL render down into the thumbnail cell
-      c2d.drawImage(renderer.domElement, x + GAP, y + 2, THUMB - GAP * 2, THUMB - 4);
+
+      // ── Use toDataURL() + Image instead of direct drawImage(webglCanvas) ──
+      // drawImage(webglCanvas) is unreliable with alpha:true renderers;
+      // toDataURL() reads the framebuffer correctly with preserveDrawingBuffer:true.
+      const frameDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.9);
+      const img = new Image();
+      img.src = frameDataUrl; // data URLs decode synchronously in the main thread
+      c2d.drawImage(img, x + GAP, y + 2, THUMB - GAP * 2, THUMB - 4);
+      renderedCount++;
     } else {
-      // Unmapped code: coloured placeholder so Gemini still sees it listed
-      c2d.fillStyle = "#f9731630";
+      // Unmapped code — draw a labelled orange placeholder
+      c2d.fillStyle = "rgba(249,115,22,0.15)";
       c2d.fillRect(x + GAP, y + 4, THUMB - GAP * 2, THUMB - 8);
+      c2d.fillStyle = "#9a3412";
+      c2d.font = "bold 8px monospace";
+      c2d.textAlign = "center";
+      c2d.fillText("?", x + (cellW - GAP) / 2, y + THUMB / 2 + 3);
+      c2d.textAlign = "left";
     }
 
-    // Component code + quantity label below thumbnail
+    // Component code + quantity label
     const textY = y + THUMB + 4;
     c2d.fillStyle = "#111827";
     c2d.font = `bold ${code.length > 8 ? 8 : 9}px monospace`;
@@ -997,7 +1018,17 @@ export function renderStepReferenceImage(
     c2d.textAlign = "left";
   });
 
-  return canvas.toDataURL("image/png");
+  // Restore transparent background for Gallery animation renders
+  scene.background = prevBackground;
+
+  // Debug footer — render stats visible in the reference image for thesis verification
+  const footerY = H - 10;
+  c2d.fillStyle = "rgba(0,0,0,0.35)";
+  c2d.font = "7px monospace";
+  c2d.textAlign = "left";
+  c2d.fillText(`rendered:${renderedCount}/${comps.length} cam:(2.8,1.8,3.2)→(0,0,0)`, 6, footerY);
+
+  return canvas.toDataURL("image/jpeg", 0.92);
 }
 
 // ─── ThreeDGallery ────────────────────────────────────────────────────────────
