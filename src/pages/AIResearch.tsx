@@ -136,7 +136,9 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
 
   const refreshHistory = () => setHistory(getCheckHistory());
 
-  // ── Run Claude Vision API ──────────────────────────────────────────────────
+  // ── Run AI vision check via verify-build-step edge function ─────────────────
+  // Backend model: google/gemini-1.5-flash via Lovable AI Gateway.
+  // NOT Claude — do not label this as Claude Vision in UI or thesis.
   const runVisionAPI = useCallback(async () => {
     if (!capturedImage || !step) return;
     setLoadingApi(true);
@@ -180,7 +182,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
     refreshHistory();
   }, [capturedImage, step, stepIdx, chapterId, chapterTitle]);
 
-  // Auto-run Claude Vision on mount
+  // Auto-run AI vision check on mount (Gemini via verify-build-step)
   useEffect(() => {
     if (!capturedImage || !step) return;
     runVisionAPI();
@@ -190,7 +192,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   const stats = computeStats(history);
   const apiHistory = history.filter(r => r.method === "api");
 
-  // ── Chart data (Claude Vision only) ────────────────────────────────────────
+  // ── Chart data (AI Vision checks only) ─────────────────────────────────────
   const confidenceData = [...apiHistory].reverse().slice(-20).map((r, i) => ({
     check: i + 1,
     "Confidence %": Math.round(r.confidence * 100),
@@ -305,13 +307,13 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
               </div>
             </div>
 
-            {/* Claude Vision result + action */}
+            {/* AI Vision result + action */}
             <div className="space-y-2">
-              <ResultPanel result={apiResult} label="☁️ Claude Vision API" accent="blue" loading={loadingApi} />
+              <ResultPanel result={apiResult} label="☁️ AI Vision (Gemini via Lovable)" accent="blue" loading={loadingApi} />
               {!apiResult && !loadingApi && step && (
                 <button onClick={runVisionAPI}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm">
-                  <Sparkles className="w-4 h-4" /> Verify with Claude Vision AI
+                  <Sparkles className="w-4 h-4" /> Verify with AI Vision
                 </button>
               )}
               {!step && (
@@ -327,9 +329,9 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
         <section>
           <h2 className="text-[13px] font-bold text-gray-700 mb-3 uppercase tracking-wide">Performance Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <StatCard label="Total Checks" value={apiHistory.length} sub="Claude Vision API" color="text-gray-800" isCount />
+            <StatCard label="Total Checks" value={apiHistory.length} sub="AI Vision API" color="text-gray-800" isCount />
             <StatCard label="Accuracy" value={stats.apiAcc} sub={`${apiHistory.length} checks`} color="text-blue-600" />
-            <StatCard label="Avg Confidence" value={stats.apiConf} sub="Claude Vision" color="text-purple-600" />
+            <StatCard label="Avg Confidence" value={stats.apiConf} sub="AI Vision" color="text-purple-600" />
           </div>
         </section>
 
@@ -338,7 +340,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
           <>
             {/* Confidence over time */}
             <div className="bg-white border border-gray-200 rounded-2xl p-4">
-              <h3 className="text-[12px] font-bold text-gray-700 mb-3">Claude Vision Confidence Over Checks (last 20)</h3>
+              <h3 className="text-[12px] font-bold text-gray-700 mb-3">AI Vision Confidence Over Checks (last 20)</h3>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={confidenceData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
@@ -456,7 +458,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
 
             {/* AI node — full width */}
             <div className="flex justify-center mb-1">
-              <FlowNode color="purple" emoji="☁️" label="Claude Vision AI Compares Both Images" sub="via Supabase Edge Function · verify-build-step" wide />
+              <FlowNode color="purple" emoji="☁️" label="Gemini Vision Compares Both Images" sub="via Supabase Edge Function · verify-build-step (google/gemini-1.5-flash)" wide />
             </div>
 
             {/* Down arrow */}
@@ -500,7 +502,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
               {[
                 { color: "bg-orange-500", label: "Student action" },
                 { color: "bg-blue-500",   label: "System capture" },
-                { color: "bg-purple-500", label: "Claude Vision AI" },
+                { color: "bg-purple-500", label: "AI Vision (Gemini)" },
                 { color: "bg-green-500",  label: "Pass" },
                 { color: "bg-red-500",    label: "Fail / retry" },
               ].map(({ color, label }) => (

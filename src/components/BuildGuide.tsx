@@ -5,6 +5,7 @@ import { type Chapter, tr } from "@/data/chapters";
 import { useNavigate } from "react-router-dom";
 import type { VerifyResult } from "@/hooks/useComponentDetector";
 import type { ResearchNavState } from "@/pages/AIResearch";
+import { renderStepReferenceImage } from "@/components/ThreeDGallery";
 
 // ─── Component connections ────────────────────────────────────────────────────
 type ConnType = "gear" | "drive" | "structural" | "electronic";
@@ -805,7 +806,7 @@ export function buildFinalAssembly(chapterId: number): THREE.Group {
       const qg = new THREE.Group();
       qg.add(mk(new THREE.BoxGeometry(1.4, 0.45, 0.72), 0xfde047, 0.05, 0.8));
       [-0.78, 0.78].forEach(x => { const ear = mk(new THREE.BoxGeometry(0.22, 0.1, 0.24), 0x9ca3af, 0.6, 0.3); ear.position.set(x, 0.08, 0); qg.add(ear); });
-      [[-0.28, 0], [0.28, 0]].forEach(([x, z]) => {
+      [[-0.28, 0], [0.28, 0]].forEach(([x, _z]) => {
         qg.add(mk(new THREE.CylinderGeometry(0.1, 0.1, 0.06, 14), wh, 0, 1.0)).position.set(x as number, 0.26, 0.38);
         qg.add(mk(new THREE.CylinderGeometry(0.05, 0.05, 0.07, 10), bk, 0, 1.0)).position.set(x as number, 0.26, 0.39);
       });
@@ -845,6 +846,47 @@ export function buildFinalAssembly(chapterId: number): THREE.Group {
     }
   }
   return g;
+}
+
+// ─── Offscreen renderer: assembled reference image ───────────────────────────
+// Renders buildFinalAssembly() for the chapter using a dedicated WebGL context
+// (module-level, reused across steps — one context total).
+
+let _refRenderer: THREE.WebGLRenderer | null = null;
+const _refCache = new Map<number, string>();
+
+function renderAssemblyReference(chapterId: number): string | null {
+  if (_refCache.has(chapterId)) return _refCache.get(chapterId)!;
+  try {
+    if (!_refRenderer) {
+      _refRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+      _refRenderer.setPixelRatio(1);
+      _refRenderer.setSize(480, 340);
+      _refRenderer.setClearColor(0xf8f8f8, 1);
+    }
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf8f8f8);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(6, 8, 6); scene.add(key);
+    const fill = new THREE.DirectionalLight(0x8888ff, 0.35); fill.position.set(-4, 2, -4); scene.add(fill);
+    const grid = new THREE.GridHelper(10, 20, 0xe5e7eb, 0xf3f4f6); grid.position.y = -1.5; scene.add(grid);
+    const camera = new THREE.PerspectiveCamera(42, 480 / 340, 0.1, 100);
+    camera.position.set(5, 3.5, 5); camera.lookAt(0, 0, 0);
+
+    const assembly = buildFinalAssembly(chapterId);
+    assembly.rotation.set(0.1, 0.5, 0);
+    scene.add(assembly);
+    _refRenderer.render(scene, camera);
+
+    const url = _refRenderer.domElement.toDataURL("image/jpeg", 0.92);
+    scene.remove(assembly);
+    disposeGroup(assembly);
+
+    _refCache.set(chapterId, url);
+    return url;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Left: 3-D Viewer ─────────────────────────────────────────────────────────
@@ -1232,12 +1274,16 @@ type CheckPhase = "idle" | "camera" | "captured" | "done";
 interface AICheckProps {
   stepIdx: number;
   step: { title: { en: string }; components: string[] } | null;
+  // All steps of the chapter — needed to compute the CUMULATIVE component list.
+  // AI reference must show every part accumulated up to and including stepIdx,
+  // not just the parts added in the current step.
+  allSteps: { components: string[] }[];
   chapterId: string;
   chapterTitle: string;
   referenceSnapshot: string | null;
 }
 
-function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot }: AICheckProps) {
+function AIStepCheck({ stepIdx, step, allSteps, chapterId, chapterTitle, referenceSnapshot }: AICheckProps) {
   const navigate  = useNavigate();
   const videoRef  = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -1245,21 +1291,45 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
   const [phase,          setPhase]          = useState<CheckPhase>("idle");
   const [capturedImage,  setCapturedImage]  = useState<string | null>(null);
   const [cameraError,    setCameraError]    = useState<string | null>(null);
-  // Separate results per method so both can be shown simultaneously
   const [apiResult,      setApiResult]      = useState<VerifyResult | null>(null);
-  const [modelResult,    setModelResult]    = useState<VerifyResult | null>(null);
+  const [,               setModelResult]    = useState<VerifyResult | null>(null);
   const [checking,       setChecking]       = useState<"api" | "model" | null>(null);
 
-  // Model runs on the AI Research page only — no pre-load here (avoids WebGL conflict with Three.js)
-
+  // ── Cumulative components — the source of truth for AI reference ─────────────
+  // All components the student should have assembled from step 0 up to stepIdx
+  // (quantities summed across steps). This is what Gemini checks in the photo.
+  // "comps" (current step only) is kept for the step-badge display below.
   const comps = step ? parseComps(step.components) : [];
-  // Generated canvas fallback (used only when 3D snapshot not yet ready)
+
+  const cumulativeComps = useMemo(() => {
+    const all = allSteps.slice(0, stepIdx + 1).flatMap(s => parseComps(s.components));
+    const totals = new Map<string, number>();
+    for (const { code, qty } of all) totals.set(code, (totals.get(code) ?? 0) + qty);
+    return Array.from(totals.entries()).map(([code, qty]) => ({ code, qty }));
+  }, [allSteps, stepIdx]);
+
+  // ── Per-step reference image ─────────────────────────────────────────────────
+  // Generated dynamically from the cumulative component list using the same
+  // buildObject geometry as the 3D Gallery. Changes every time stepIdx changes.
+  // This is the correct source of truth — NOT textbook pages, NOT chapter-level
+  // renders. Each step gets its own reference reflecting the exact build state.
+  //
+  // Fallback chain:
+  //   1. renderStepReferenceImage(cumulativeComps) — per-step, Gallery-quality 3D (primary)
+  //   2. referenceSnapshot                         — manual 3D viewer snapshot if taken
+  //   3. renderAssemblyReference(chapterIdNum)     — chapter-level final assembly (fallback)
+  //   4. buildReferenceImage(comps)                — 2D canvas text grid (last resort)
+  const chapterIdNum = chapterId ? Number(chapterId) : 0;
+  const stepLabel = `Step ${stepIdx + 1} of ${allSteps.length}${step ? ` — ${step.title.en}` : ""}`;
+
   const generatedReference = useMemo(
-    () => comps.length > 0 ? buildReferenceImage(comps) : null,
+    () => renderStepReferenceImage(cumulativeComps, stepLabel)
+       ?? (chapterIdNum > 0 ? renderAssemblyReference(chapterIdNum) : null)
+       ?? (comps.length > 0 ? buildReferenceImage(comps) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [comps.map(c => c.code + c.qty).join(",")]
+    [cumulativeComps.map(c => c.code + c.qty).join(","), stepLabel, chapterIdNum]
   );
-  // Prefer the actual 3D render snapshot over the generated canvas grid
+  // Manual 3D viewer snapshot supersedes generated reference (it may be rotated/angled better)
   const referenceImage = referenceSnapshot ?? generatedReference;
 
   const startCamera = useCallback(async () => {
@@ -1302,16 +1372,23 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
   }, [stopCamera]);
 
   // ── Navigate to research page with captured image + method ─────────────────
+  // Sends cumulativeComps (not just current-step comps) so Gemini checks the
+  // full accumulated build state, not only the parts added in this step.
   const goToResearch = useCallback((method: ResearchNavState["method"]) => {
     if (!capturedImage) return;
     sessionStorage.setItem("blix_captured_image", capturedImage);
     if (referenceImage) sessionStorage.setItem("blix_reference_image", referenceImage);
     else sessionStorage.removeItem("blix_reference_image");
+    // Cumulative pieces — what Gemini should verify in the student photo
+    sessionStorage.setItem(
+      "blix_step_pieces",
+      JSON.stringify(cumulativeComps.map(c => `${c.code} ×${c.qty}`))
+    );
     const state: ResearchNavState = {
       method, step, stepIdx, chapterId, chapterTitle,
     };
     navigate("/ai-research", { state });
-  }, [capturedImage, referenceImage, step, stepIdx, chapterId, chapterTitle, navigate]);
+  }, [capturedImage, referenceImage, cumulativeComps, step, stepIdx, chapterId, chapterTitle, navigate]);
 
   const checkVisionAPI = useCallback(() => goToResearch("api"), [goToResearch]);
 
@@ -1347,9 +1424,9 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
             <p className="text-[11px] text-gray-700 font-semibold mb-1">
               Checking: {stepTitle}
             </p>
-            {comps.length > 0 && (
+            {cumulativeComps.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
-                {comps.map((c, i) => (
+                {cumulativeComps.map((c, i) => (
                   <span key={i} className="font-mono text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">
                     {c.code} ×{c.qty}
                   </span>
@@ -1435,7 +1512,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
                 {checking === "api"
                   ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   : <Sparkles className="w-4 h-4" />}
-                {checking === "api" ? "Checking with Claude Vision…" : "Verify with Claude Vision AI"}
+                {checking === "api" ? "Checking with AI Vision…" : "Verify with AI Vision"}
               </button>
               <button onClick={() => { setCapturedImage(null); setApiResult(null); setModelResult(null); startCamera(); }}
                 className="w-full mt-1.5 text-[10px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 py-0.5 transition-colors">
@@ -1444,7 +1521,7 @@ function AIStepCheck({ stepIdx, step, chapterId, chapterTitle, referenceSnapshot
             </div>
 
             {/* ── Result ── */}
-            {apiResult && <ResultCard result={apiResult} label="☁️ Claude Vision API" accent="blue" />}
+            {apiResult && <ResultCard result={apiResult} label="☁️ AI Vision (Gemini)" accent="blue" />}
 
             {/* ── Step done banner ── */}
             {apiResult?.correct && !checking && (
@@ -1729,7 +1806,14 @@ const BuildGuide = ({ chapter }: BuildGuideProps) => {
         {/* Right column */}
         <div className="space-y-3">
           <StepDetails chapter={chapter} stepIdx={stepIdx} onStepChange={setStepIdx} />
-          <AIStepCheck stepIdx={stepIdx} step={step} chapterId={String(chapter.id)} chapterTitle={tr(chapter.title, "en")} referenceSnapshot={referenceSnapshot} />
+          <AIStepCheck
+            stepIdx={stepIdx}
+            step={step}
+            allSteps={chapter.build.steps}
+            chapterId={String(chapter.id)}
+            chapterTitle={tr(chapter.title, "en")}
+            referenceSnapshot={referenceSnapshot}
+          />
           <AskAIBuddy />
         </div>
       </div>

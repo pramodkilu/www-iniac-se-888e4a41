@@ -873,6 +873,117 @@ const ModelCard = ({ item, autoRotate }: CardProps) => {
   );
 };
 
+// ─── Code → KitComponent lookup (module-level, built once) ──────────────────
+
+const codeToComponent = new Map<string, KitComponent>();
+for (const box of componentBoxes) {
+  for (const group of box.groups) {
+    for (const item of group.items) {
+      codeToComponent.set(item.code.toLowerCase(), item);
+    }
+  }
+}
+
+/**
+ * Per-step reference image generator for AI Step Check.
+ *
+ * Renders every component in `comps` using buildObject (the same Gallery-quality
+ * Three.js geometry), composites them into a labeled grid, and returns a PNG
+ * data-URL that is sent to verify-build-step as referenceBase64.
+ *
+ * `comps` must be the CUMULATIVE component list for the current step — i.e. all
+ * components from steps 0..stepIdx, quantities summed — NOT just the current
+ * step's additions. This ensures Gemini compares the student's photo against the
+ * full assembled state of the build at that point.
+ *
+ * `label` is shown in the orange header band (e.g. "Step 3 of 9 — Build the frame").
+ *
+ * Returns null if WebGL is unavailable (shared renderer could not initialise).
+ */
+export function renderStepReferenceImage(
+  comps: { code: string; qty: number }[],
+  label = "Reference Build"
+): string | null {
+  if (comps.length === 0) return null;
+  const ctx_gl = getSharedRenderer();
+  if (!ctx_gl) return null;
+  const { renderer, scene, camera } = ctx_gl;
+
+  const COLS = Math.min(comps.length, 3);
+  const ROWS = Math.ceil(comps.length / COLS);
+  const THUMB = 100;
+  const LABEL = 22;
+  const GAP = 6;
+  const PAD = 8;
+  const HEADER = 28;
+  const cellW = THUMB + GAP * 2;
+  const cellH = THUMB + LABEL + GAP;
+  const W = Math.max(COLS * cellW + PAD * 2, 260);
+  const H = ROWS * cellH + PAD * 2 + HEADER;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const c2d = canvas.getContext("2d")!;
+
+  // Light background
+  c2d.fillStyle = "#f8fafc";
+  c2d.fillRect(0, 0, W, H);
+
+  // Orange header — shows step label so Gemini gets context
+  c2d.fillStyle = "#f97316";
+  c2d.fillRect(0, 0, W, HEADER);
+  c2d.fillStyle = "#fff";
+  c2d.font = "bold 10px system-ui";
+  c2d.textAlign = "left";
+  // Truncate long label to fit
+  const maxChars = Math.floor(W / 6.2);
+  c2d.fillText(label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label, 8, 18);
+  c2d.textAlign = "right";
+  c2d.font = "9px system-ui";
+  c2d.fillStyle = "rgba(255,255,255,0.8)";
+  c2d.fillText(`${comps.length} part${comps.length !== 1 ? "s" : ""}`, W - 6, 18);
+
+  comps.forEach(({ code, qty }, i) => {
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const x = PAD + col * cellW;
+    const y = HEADER + PAD + row * cellH;
+
+    // White cell background
+    c2d.fillStyle = "#ffffff";
+    c2d.fillRect(x, y, cellW - GAP, cellH - GAP / 2);
+
+    const item = codeToComponent.get(code.toLowerCase());
+    if (item) {
+      // Render via Gallery-quality buildObject — same geometry as 3D Gallery
+      const obj = buildObject(item);
+      scene.add(obj);
+      renderer.render(scene, camera);
+      scene.remove(obj);
+      disposeObject(obj);
+      // Scale the 320×320 GL render down into the thumbnail cell
+      c2d.drawImage(renderer.domElement, x + GAP, y + 2, THUMB - GAP * 2, THUMB - 4);
+    } else {
+      // Unmapped code: coloured placeholder so Gemini still sees it listed
+      c2d.fillStyle = "#f9731630";
+      c2d.fillRect(x + GAP, y + 4, THUMB - GAP * 2, THUMB - 8);
+    }
+
+    // Component code + quantity label below thumbnail
+    const textY = y + THUMB + 4;
+    c2d.fillStyle = "#111827";
+    c2d.font = `bold ${code.length > 8 ? 8 : 9}px monospace`;
+    c2d.textAlign = "center";
+    c2d.fillText(code.length > 10 ? code.slice(0, 9) + "…" : code, x + (cellW - GAP) / 2, textY + 8);
+    c2d.fillStyle = "#6b7280";
+    c2d.font = "8px system-ui";
+    c2d.fillText(`×${qty}`, x + (cellW - GAP) / 2, textY + 18);
+    c2d.textAlign = "left";
+  });
+
+  return canvas.toDataURL("image/png");
+}
+
 // ─── ThreeDGallery ────────────────────────────────────────────────────────────
 
 interface ThreeDGalleryProps {

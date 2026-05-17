@@ -1,11 +1,18 @@
 // ── Step / chapter asset mapping ─────────────────────────────────────────────
 //
-// referenceImage: scanned book-page PNGs that already exist in /public.
-//   These are chapter-level (one image covers all steps of a chapter).
-//   Per-step renders are planned once CAD exports are available.
+// referenceImage:
+//   Scanned book-page PNGs that exist in /public (e.g. /chapter_page_3.png).
+//   LIMITATION: These are CHAPTER-LEVEL — one image covers all steps.
+//   They are NOT per-step 3D reference renders. The AI vision check currently
+//   uses a procedural Three.js render of buildFinalAssembly() as the reference
+//   (rendered offscreen in BuildGuide.tsx → renderAssemblyReference).
+//   Future improvement: generate and store a per-step reference image for each
+//   build step so the AI can compare against the exact partial assembly state,
+//   not just the finished chapter model.
 //
-// modelUrl: GLB files for <model-viewer> AR.
-//   Files don't exist yet. Add them to /public/models/ then uncomment.
+// modelUrl:
+//   GLB files for <model-viewer> AR overlay.
+//   Files don't exist yet — add to /public/models/ then uncomment each entry.
 //   Naming convention: /models/chapter{id}-assembled.glb
 // ─────────────────────────────────────────────────────────────────────────────
 

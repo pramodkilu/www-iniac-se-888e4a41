@@ -1,4 +1,35 @@
-// Verify a BLIX build step from a photo using Lovable AI vision
+// ─── verify-build-step — BLIX AI Step Check ───────────────────────────────────
+//
+// This Supabase Edge Function performs multimodal AI verification of a student's
+// physical BLIX build against the required components for a given step.
+//
+// BACKEND MODEL: google/gemini-1.5-flash
+// GATEWAY:       Lovable AI Gateway  (https://ai.gateway.lovable.dev/v1)
+// AUTH:          LOVABLE_API_KEY env var (set in Supabase project secrets)
+//
+// This is NOT Claude Vision. Claude is Anthropic's model. This function uses
+// Google Gemini 1.5 Flash via the Lovable-hosted OpenAI-compatible API gateway.
+//
+// INPUTS (JSON body):
+//   imageBase64      — student's build photo (base64 or data-URL)
+//   referenceBase64  — optional 3D-rendered reference image (base64 or data-URL)
+//   stepInstruction  — plain-text description of the current build step
+//   stepNumber       — step index (1-based)
+//   pieces           — component codes + quantities e.g. ["CT2 ×2", "G20 ×1"]
+//   chapterTitle     — chapter name for context
+//
+// OUTPUT (JSON):
+//   status      — "correct" | "incorrect" | "needs_review"
+//   confidence  — 0–1 float
+//   found       — component codes clearly visible in the student photo
+//   missing     — component codes NOT visible or in insufficient quantity
+//   feedback    — short encouraging sentence about what the AI sees
+//   tip         — one fix suggestion when status ≠ "correct"
+//
+// CURRENT LIMITATION:
+//   referenceBase64 is a chapter-level assembled 3D render (not per-step).
+//   Gemini compares a real photo against a procedural Three.js geometry render,
+//   which reduces accuracy. Per-step reference images are a planned improvement.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
