@@ -103,7 +103,7 @@ const Chapter = () => {
   // For chapters where detailed steps haven't been written yet (sessions 2-30
   // mostly use the shorthand format with empty steps[] arrays), synthesize
   // placeholder steps from build.totalSteps so the UI still renders.
-  const steps =
+  const steps: { number: number; instruction: string; detail: string; pieces: string[] }[] =
     adaptedSteps.length > 0
       ? adaptedSteps
       : Array.from({ length: chapter.build.totalSteps || 1 }, (_, i) => ({
@@ -118,6 +118,23 @@ const Chapter = () => {
               : "The full build sequence will be added here when ready.",
           pieces: [] as string[],
         }));
+
+  // ── Procedural AI reference — computed once per step, not on every render ──
+  // renderStepReferenceImage does WebGL renders per component; wrapping it in
+  // useMemo ensures it only re-runs when activeBuildStep or chapter changes.
+  const proceduralReference = useMemo(() => {
+    const all = steps.slice(0, activeBuildStep).flatMap(s =>
+      s.pieces.flatMap(p => {
+        const m = p.match(/^(.+?)\s*[xX×](\d+)$/);
+        return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: p.trim(), qty: 1 }];
+      })
+    );
+    const totals = new Map<string, number>();
+    for (const { code, qty } of all) totals.set(code, (totals.get(code) ?? 0) + qty);
+    const cumComps = Array.from(totals.entries()).map(([code, qty]) => ({ code, qty }));
+    return renderStepReferenceImage(cumComps, `Step ${activeBuildStep} of ${steps.length}`);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBuildStep, steps.length, chapter.id]);
 
   // Difficulty / category keep static defaults for now (could be moved into
   // chapters.ts later — leaving as-is to preserve existing visual badges).
@@ -379,26 +396,8 @@ const Chapter = () => {
               const totalSteps = steps.length;
               const currentStep = steps.find((s) => s.number === activeBuildStep) ?? steps[0];
               const stepAsset = getStepAsset(chapterIdNum, currentStep.number);
-              // ── Procedural reference for AI verification ────────────────────────
-              // Cumulative components (steps 0..activeBuildStep-1) rendered via
-              // Gallery-quality buildObject — same source-of-truth as BuildGuide.
-              // Textbook images (stepAsset.referenceImage) are retained ONLY for
-              // the optional "Book Page" reading view, NOT for AI verification.
-              const cumulativeComps = (() => {
-                const all = steps.slice(0, activeBuildStep).flatMap(s =>
-                  s.pieces.flatMap(p => {
-                    const m = p.match(/^(.+?)\s*[xX×](\d+)$/);
-                    return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: p.trim(), qty: 1 }];
-                  })
-                );
-                const totals = new Map<string, number>();
-                for (const { code, qty } of all) totals.set(code, (totals.get(code) ?? 0) + qty);
-                return Array.from(totals.entries()).map(([code, qty]) => ({ code, qty }));
-              })();
-              const proceduralReference = renderStepReferenceImage(
-                cumulativeComps,
-                `Step ${activeBuildStep} of ${totalSteps}`
-              );
+              // proceduralReference is computed in useMemo above (component level)
+              // to avoid running WebGL renders on every React re-render.
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
               const goNext = () => setActiveBuildStep((s) => Math.min(totalSteps, s + 1));
               const verdict = progress.step_verdicts[String(currentStep.number)];
