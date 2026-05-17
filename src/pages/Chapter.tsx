@@ -541,7 +541,7 @@ const Chapter = () => {
                           <Box className="h-4 w-4 text-accent" />
                           <span className="text-sm">
                             {arUnlocked
-                              ? (lang === "sv" ? "Visa i AR" : "View in AR")
+                              ? (lang === "sv" ? "AR-förhandsgranskning (prototyp)" : "AR Preview (Prototype)")
                               : (lang === "sv" ? "AR låst" : "AR Locked")}
                           </span>
                         </Button>
@@ -624,12 +624,12 @@ const Chapter = () => {
                     onClick={() => setArOpen(true)}
                   >
                     <div className="flex items-center gap-2 font-semibold">
-                      <Box className="h-5 w-5 text-accent" /> {lang === "sv" ? "Visa i AR" : "View in AR"}
+                      <Box className="h-5 w-5 text-accent" /> {lang === "sv" ? "AR-förhandsgranskning (prototyp)" : "AR Preview (Prototype)"}
                     </div>
                     <p className="text-xs text-muted-foreground text-left font-normal">
                       {lang === "sv"
-                        ? "Placera ditt BLIX-bygge i verkligheten med kameran."
-                        : "Place your BLIX build in the real world using your camera."}
+                        ? "Procedural 3D-modell. WebXR AR kräver Android Chrome + ARCore. Produktion kräver GLB-export."
+                        : "Procedural 3D model. WebXR AR depends on device support. Production AR requires GLB/CAD exports."}
                     </p>
                   </Button>
                 </div>

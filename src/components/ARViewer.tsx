@@ -6,6 +6,26 @@ import { Loader2, Smartphone, Maximize2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { buildFinalAssembly } from "@/components/BuildGuide";
 
+// ─── ARViewer — Prototype AR Preview ──────────────────────────────────────────
+//
+// CURRENT STATE (prototype):
+//   When no GLB model is available (modelUrl is null/undefined), this component
+//   renders a procedural Three.js model via buildFinalAssembly(chapterId).
+//   The model is approximate geometry — not a real scanned/CAD model.
+//
+// WEBXR MODE:
+//   When WebXR "immersive-ar" is supported (Android Chrome + ARCore), the
+//   "Enter AR" button launches a real hit-test AR session. The procedural model
+//   is placed on a detected real-world surface via reticle tap.
+//   WebXR AR does NOT work on iOS Safari, desktop, or most non-ARCore browsers.
+//
+// PRODUCTION AR (not yet implemented):
+//   Requires: GLB/GLTF files exported from CAD (one per chapter assembly).
+//   When a GLB exists, <model-viewer> handles AR automatically via:
+//     Android → WebXR / Scene Viewer (ARCore)
+//     iOS     → Quick Look (ARKit)
+//   GLB files should be added to /public/models/ and referenced in stepAssets.ts.
+//
 // model-viewer is loaded via CDN to avoid Three.js version conflicts.
 // The script is injected once and the custom element registers itself.
 function loadModelViewer() {
@@ -277,11 +297,13 @@ const ARViewer = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden bg-slate-900 border-slate-700">
         <DialogHeader className="px-5 pt-4 pb-2">
-          <DialogTitle className="text-white text-base font-bold">
-            3D Preview — {title}
+          <DialogTitle className="text-white text-base font-bold flex items-center gap-2">
+            Prototype AR Preview — {title}
           </DialogTitle>
           <DialogDescription className="text-slate-400 text-xs">
-            Drag to rotate · Scroll to zoom · Tap "Enter AR" on a supported device to place in the real world
+            {modelUrl
+              ? "GLB model loaded — drag to inspect · use the built-in AR button on Android / iOS"
+              : "Procedural 3D model (Three.js) — drag to rotate · scroll to zoom · WebXR AR available on Android Chrome with ARCore"}
           </DialogDescription>
         </DialogHeader>
 
@@ -336,7 +358,7 @@ const ARViewer = ({
                   <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-full px-3 py-1">
                     <Smartphone className="w-3.5 h-3.5 text-slate-400" />
                     <span className="text-xs text-slate-400">
-                      Full WebXR AR works on Android Chrome — preview above
+                      WebXR AR requires Android Chrome + ARCore — procedural 3D preview above
                     </span>
                   </div>
                 )}
@@ -375,31 +397,59 @@ const ARViewer = ({
           )}
         </div>
 
-        {/* Info banner */}
-        <div className="px-4 pb-3">
+        {/* Status banner */}
+        <div className="px-4 pb-2">
           {modelUrl ? (
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
               <span className="text-lg">📦</span>
               <div>
-                <p className="text-green-300 text-xs font-bold">3D model preview available</p>
+                <p className="text-green-300 text-xs font-bold">GLB model loaded — AR via model-viewer</p>
                 <p className="text-slate-400 text-[11px] mt-0.5">
-                  AR works best on Android Chrome or iOS Quick Look compatible devices.
-                  Use the built-in AR button in the viewer above.
+                  Use the AR button inside the viewer. Android Chrome uses WebXR/Scene Viewer (ARCore).
+                  iOS uses Quick Look (ARKit). Desktop shows 3D preview only.
                 </p>
               </div>
             </div>
           ) : (
             <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
-              <span className="text-lg">🚀</span>
+              <span className="text-lg">⚗️</span>
               <div>
-                <p className="text-orange-300 text-xs font-bold">No AR model linked for this step yet</p>
+                <p className="text-orange-300 text-xs font-bold">Prototype AR Preview — procedural 3D model shown</p>
                 <p className="text-slate-400 text-[11px] mt-0.5">
-                  Showing procedural 3D preview. GLB models are being added — check back soon.
-                  Full AR on Android Chrome with ARCore will be enabled automatically once available.
+                  No GLB asset linked for this chapter. Displaying a procedural Three.js model
+                  (buildFinalAssembly). Production AR requires exported GLB/CAD files.
+                  WebXR hit-test AR works on Android Chrome + ARCore when "Enter AR" is available.
                 </p>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Thesis-ready AR explanation */}
+        <div className="px-4 pb-4">
+          <div className="bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-3 space-y-2">
+            <p className="text-slate-300 text-[11px] font-bold uppercase tracking-wide">AR Implementation Notes</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] text-slate-400">
+              <div className="space-y-0.5">
+                <p className="text-slate-300 font-semibold">Current</p>
+                <p>Procedural Three.js geometry via buildFinalAssembly()</p>
+                <p>WebXR hit-test AR on supported devices</p>
+                <p className="text-orange-400">Not photorealistic — approximate shapes</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-slate-300 font-semibold">Requires for production</p>
+                <p>GLB/GLTF model exported from CAD per chapter</p>
+                <p>Files in /public/models/ referenced in stepAssets.ts</p>
+                <p>model-viewer handles Android + iOS AR automatically</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-slate-300 font-semibold">Device support</p>
+                <p>Android Chrome + ARCore → WebXR</p>
+                <p>iOS Safari → Quick Look (GLB required)</p>
+                <p className="text-slate-500">Desktop / Firefox → 3D preview only</p>
+              </div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
