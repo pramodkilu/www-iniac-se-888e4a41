@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { ArrowLeft, Play, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Play, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight, CheckCircle2, Package, Layers, ArrowRight } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -212,7 +212,7 @@ const Chapter = () => {
         })()}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="story" className="gap-2">
               <Play className="h-4 w-4" />
               <span className="hidden sm:inline">{ui.story}</span>
@@ -220,6 +220,10 @@ const Chapter = () => {
             <TabsTrigger value="theory" className="gap-2">
               <Lightbulb className="h-4 w-4" />
               <span className="hidden sm:inline">{ui.theory}</span>
+            </TabsTrigger>
+            <TabsTrigger value="check" className="gap-2">
+              <Layers className="h-4 w-4" />
+              <span className="hidden sm:inline">{lang === "sv" ? "Kontroll" : "Check"}</span>
             </TabsTrigger>
             <TabsTrigger value="build" className="gap-2">
               <Hammer className="h-4 w-4" />
@@ -379,6 +383,248 @@ const Chapter = () => {
             </Card>
 
             <ChapterExperiment chapterId={chapterIdNum} lang={lang} />
+          </TabsContent>
+
+          {/* ── Pre-Build Check Tab — 3-Level Learning Validation Framework ── */}
+          <TabsContent value="check" className="space-y-6 max-w-3xl mx-auto">
+
+            {/* Framework header */}
+            <div className="text-center space-y-2 pt-2">
+              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                <Layers className="h-3.5 w-3.5" />
+                {lang === "sv" ? "Ramverk för inlärningsvalidering" : "Learning Validation Framework"}
+              </div>
+              <h2 className="text-2xl font-bold">
+                {lang === "sv" ? "3-nivås förbyggnadskontroll" : "3-Level Pre-Build Check"}
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                {lang === "sv"
+                  ? "Slutför varje valideringsnivå i ordning innan du börjar bygga."
+                  : "Complete each validation level in order before starting your build."}
+              </p>
+            </div>
+
+            {/* Progress flow strip */}
+            <div className="flex items-center justify-center gap-1 flex-wrap text-[11px] font-semibold">
+              {[
+                { label: lang === "sv" ? "Teori" : "Theory",      tab: "theory",    done: true },
+                { label: lang === "sv" ? "Komponentkontroll" : "Component Check", tab: "check", done: false, active: true },
+                { label: lang === "sv" ? "Bygge" : "Build",        tab: "build",     done: false },
+                { label: lang === "sv" ? "Monteringskontroll" : "Assembly Check", tab: null, done: false },
+                { label: lang === "sv" ? "AR-förhandsvisning" : "AR Preview",    tab: null, done: anyStepVerified },
+              ].map((s, i, arr) => (
+                <div key={i} className="flex items-center gap-1">
+                  <button
+                    onClick={() => s.tab ? setActiveTab(s.tab) : undefined}
+                    className={`px-2.5 py-1 rounded-full border transition-all ${
+                      s.active
+                        ? "bg-primary text-primary-foreground border-primary font-bold"
+                        : s.done
+                          ? "bg-success/15 text-success border-success/30"
+                          : "bg-muted text-muted-foreground border-border"
+                    } ${s.tab ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}>
+                    {s.label}
+                  </button>
+                  {i < arr.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/50 flex-shrink-0" />}
+                </div>
+              ))}
+            </div>
+
+            {/* 3 Level cards */}
+            <div className="grid gap-4 md:grid-cols-3">
+
+              {/* Level 1 — Component Check */}
+              <Card className="border-orange-200 bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-background relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-orange-400" />
+                <CardHeader className="pb-2 pt-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center">
+                      <Package className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">
+                      {lang === "sv" ? "Nivå 1" : "Level 1"}
+                    </span>
+                  </div>
+                  <CardTitle className="text-base text-orange-800 dark:text-orange-300">
+                    {lang === "sv" ? "Komponentkontroll" : "Component Check"}
+                  </CardTitle>
+                  <CardDescription className="text-[12px]">
+                    {lang === "sv"
+                      ? "Har eleven de nödvändiga delarna?"
+                      : "Does the student have the required parts?"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pb-5">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {lang === "sv"
+                      ? "Kontrollera att alla komponenter i bygglistan finns tillgängliga och är oskadade innan montering börjar."
+                      : "Verify that all components in the build list are present and undamaged before assembly begins."}
+                  </p>
+                  <div className="space-y-1 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-orange-400" />
+                      {lang === "sv" ? "Visuell inspektion av delar" : "Visual parts inspection"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-orange-400" />
+                      {lang === "sv" ? "Antal- och typkontroll" : "Count and type verification"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-orange-400" />
+                      {lang === "sv" ? "3D-referensgenerering" : "3D reference generation"}
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white gap-2 h-9 text-sm"
+                    onClick={() => setActiveTab("build")}
+                  >
+                    <Package className="h-4 w-4" />
+                    {lang === "sv" ? "Starta komponentkontroll" : "Start Component Check"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Level 2 — Assembly Check */}
+              <Card className="border-blue-200 bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-background relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500" />
+                <CardHeader className="pb-2 pt-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
+                      {lang === "sv" ? "Nivå 2" : "Level 2"}
+                    </span>
+                  </div>
+                  <CardTitle className="text-base text-blue-800 dark:text-blue-300">
+                    {lang === "sv" ? "Monteringskontroll" : "Assembly Check"}
+                  </CardTitle>
+                  <CardDescription className="text-[12px]">
+                    {lang === "sv"
+                      ? "Är delarna arrangerade enligt byggsteget?"
+                      : "Are the parts arranged according to the build step?"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pb-5">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {lang === "sv"
+                      ? "AI-kameran (Gemini 1.5 Flash) jämför elevens foto med den procedurella 3D-referensbilden för varje steg."
+                      : "The AI camera (Gemini 1.5 Flash) compares the student's photo against the procedural 3D reference image for each step."}
+                  </p>
+                  <div className="space-y-1 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-blue-400" />
+                      {lang === "sv" ? "Kamerafångst av bygget" : "Camera capture of build"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-blue-400" />
+                      {lang === "sv" ? "Gemini multimodal analys" : "Gemini multimodal analysis"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-blue-400" />
+                      {lang === "sv" ? "Strukturerad återkoppling" : "Structured feedback"}
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white gap-2 h-9 text-sm"
+                    onClick={() => setActiveTab("build")}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {lang === "sv" ? "Kör monteringskontroll" : "Run Assembly Check"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Level 3 — AR Preview */}
+              <Card className={`border-purple-200 bg-gradient-to-b from-purple-50 to-white dark:from-purple-950/20 dark:to-background relative overflow-hidden ${!anyStepVerified ? "opacity-75" : ""}`}>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-purple-500" />
+                <CardHeader className="pb-2 pt-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 border border-purple-200 flex items-center justify-center">
+                      <Box className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">
+                      {lang === "sv" ? "Nivå 3" : "Level 3"}
+                    </span>
+                    {!anyStepVerified && (
+                      <span className="text-[10px] text-muted-foreground border border-border rounded-full px-1.5 py-0.5 ml-auto">
+                        {lang === "sv" ? "Låst" : "Locked"}
+                      </span>
+                    )}
+                  </div>
+                  <CardTitle className="text-base text-purple-800 dark:text-purple-300">
+                    {lang === "sv" ? "AR-förhandsvisning" : "AR Preview"}
+                  </CardTitle>
+                  <CardDescription className="text-[12px]">
+                    {lang === "sv"
+                      ? "Kan eleven visualisera det förväntade bygget spatialt?"
+                      : "Can the student visualize the expected build spatially?"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pb-5">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {lang === "sv"
+                      ? "WebXR AR placerar den procedurella 3D-modellen i det verkliga rummet via kameran. Kräver Android Chrome + ARCore."
+                      : "WebXR AR places the procedural 3D model into real space via the camera. Requires Android Chrome + ARCore."}
+                  </p>
+                  <div className="space-y-1 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-purple-400" />
+                      {lang === "sv" ? "Procedurellt 3D-bygge i AR" : "Procedural 3D model in AR"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 text-purple-400" />
+                      {lang === "sv" ? "WebXR hit-test placering" : "WebXR hit-test placement"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className={`h-3 w-3 ${anyStepVerified ? "text-purple-400" : "text-muted-foreground/40"}`} />
+                      {lang === "sv" ? "Kräver AI-verifierat steg" : "Requires AI-verified step"}
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-purple-500 hover:bg-purple-600 text-white gap-2 h-9 text-sm disabled:opacity-50"
+                    disabled={!anyStepVerified}
+                    onClick={() => setArOpen(true)}
+                  >
+                    <Box className="h-4 w-4" />
+                    {anyStepVerified
+                      ? (lang === "sv" ? "Starta AR-förhandsvisning" : "Launch AR Preview")
+                      : (lang === "sv" ? "AR låst — verifiera ett steg" : "AR Locked — verify a step")}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Connecting arrow labels between cards on desktop */}
+            <div className="hidden md:flex items-center justify-between px-8 -mt-2 text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
+              <span className="flex-1 text-center">Verifies parts exist</span>
+              <ArrowRight className="h-3 w-3 mx-2 flex-shrink-0" />
+              <span className="flex-1 text-center">Verifies correct assembly</span>
+              <ArrowRight className="h-3 w-3 mx-2 flex-shrink-0" />
+              <span className="flex-1 text-center">Spatial visualization</span>
+            </div>
+
+            {/* Research Contribution note */}
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Layers className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-primary uppercase tracking-wide mb-1">
+                    {lang === "sv" ? "Forskningsbidrag" : "Research Contribution"}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {lang === "sv"
+                      ? "Detta ramverk stödjer progressiv inlärningsvalidering inom robotik med hjälp av multimodal AI (Gemini 1.5 Flash) och procedurella 3D-referenser. De tre nivåerna — komponent, montering och AR — motsvarar ökande kognitiv komplexitet i bygginlärning."
+                      : "This framework supports progressive robotics learning validation using multimodal AI (Gemini 1.5 Flash) and procedural 3D references. The three levels — component, assembly, and AR — correspond to increasing cognitive complexity in construction learning."}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-2 font-mono">
+                    validationLevel: component_check → assembly_check → ar_preview
+                  </p>
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Build Tab — 3 columns: 3D viewer | Instructions | Step-Check + AR */}

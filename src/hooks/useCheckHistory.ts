@@ -56,6 +56,9 @@ export interface CheckRecord {
   stepComplexity?: number;     // 0–100 score from stepComplexity.ts
   referenceType: "procedural-3d" | "textbook" | "none";
 
+  // ── Validation framework level ───────────────────────────────────────────────
+  validationLevel?: "component_check" | "assembly_check" | "ar_preview";
+
   // ── Dual-verification fields ─────────────────────────────────────────────────
   geminiStatus?: "correct" | "incorrect" | "needs_review";
   geminiConfidence?: number;
@@ -198,7 +201,7 @@ export function exportHistoryCSV(history: CheckRecord[]): void {
   const cols: (keyof CheckRecord)[] = [
     "timestamp", "gradeLabel", "chapterNumber", "chapterTitle",
     "stepNumber", "stepTitle", "sessionId", "attemptNumber",
-    "methodLabel", "resultStatus", "correct", "confidence", "responseMs",
+    "methodLabel", "validationLevel", "resultStatus", "correct", "confidence", "responseMs",
     "componentCount", "uniqueComponentTypes", "stepComplexity", "referenceType",
     "geminiStatus", "geminiConfidence", "tfStatus", "tfConfidence",
     "tfMode", "agreementScore",

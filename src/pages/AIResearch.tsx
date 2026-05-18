@@ -314,6 +314,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
         // Method
         method: "api",
         methodLabel: "Gemini 1.5 Flash",
+        validationLevel: "assembly_check" as const,
         source: "api",
         // Result
         correct: result.correct,
@@ -382,6 +383,7 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
         // Method
         method: "model",
         methodLabel: tfMethodLabel,
+        validationLevel: "assembly_check" as const,
         source: result.source,
         // Result
         correct: result.correct,
@@ -425,17 +427,6 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   };
 
   const clearCurrentCheckFn = () => {
-    SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
-    setCurrentCheck(null);
-    setReferenceImage(null);
-    setApiResult(null);
-    setTfResult(null);
-    setApiError(null);
-  };
-
-  const clearAll = () => {
-    clearCheckHistory();
-    setHistory([]);
     SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
     setCurrentCheck(null);
     setReferenceImage(null);
