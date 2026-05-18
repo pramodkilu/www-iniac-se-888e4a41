@@ -739,6 +739,74 @@ const CANVAS_H = 160;
 const THUMB_W = 320;
 const THUMB_H = CANVAS_H * 2;
 
+// ─── Dedicated reference renderer ─────────────────────────────────────────────
+// Separate from the Gallery shared renderer so we can use higher resolution,
+// richer lighting, and per-component auto-fit camera without disturbing the
+// Gallery animation pipeline. Created once, reused across calls.
+
+const REF_RENDER_SIZE = 256; // WebGL pixels per component render
+
+let refRenderer: THREE.WebGLRenderer | null = null;
+let refScene: THREE.Scene | null = null;
+let refCamera: THREE.PerspectiveCamera | null = null;
+
+function getRefRenderer(): { renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera } | null {
+  if (refRenderer && refScene && refCamera) return { renderer: refRenderer, scene: refScene, camera: refCamera };
+  try {
+    refRenderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  } catch { return null; }
+
+  refRenderer.setPixelRatio(1);
+  refRenderer.setSize(REF_RENDER_SIZE, REF_RENDER_SIZE);
+
+  refScene = new THREE.Scene();
+
+  // Strong ambient — nothing should be completely dark
+  refScene.add(new THREE.AmbientLight(0xffffff, 1.4));
+
+  // Hemisphere light — sky/ground gradient for soft depth cue
+  const hemi = new THREE.HemisphereLight(0xddeeff, 0xffeedd, 0.9);
+  refScene.add(hemi);
+
+  // Key light — main directional from upper-right front
+  const key = new THREE.DirectionalLight(0xffffff, 2.4);
+  key.position.set(4, 7, 5);
+  refScene.add(key);
+
+  // Fill light — cool blue from left to separate geometry edges
+  const fill = new THREE.DirectionalLight(0x99aaff, 1.0);
+  fill.position.set(-4, 2, -2);
+  refScene.add(fill);
+
+  // Rim light — warm from behind/below to pop silhouettes
+  const rim = new THREE.DirectionalLight(0xfff3aa, 0.7);
+  rim.position.set(0, -3, -5);
+  refScene.add(rim);
+
+  // Square aspect ratio — 1:1 per cell
+  refCamera = new THREE.PerspectiveCamera(42, 1, 0.01, 1000);
+
+  return { renderer: refRenderer, scene: refScene, camera: refCamera };
+}
+
+// Fit camera to object bounding box — ensures nothing is tiny or clipped
+function fitCameraToObject(cam: THREE.PerspectiveCamera, obj: THREE.Object3D): void {
+  const bbox   = new THREE.Box3().setFromObject(obj);
+  const center = bbox.getCenter(new THREE.Vector3());
+  const size   = bbox.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 0.05);
+  const fovRad = (cam.fov * Math.PI) / 180;
+  // Comfortable distance: object fills ~65% of frame
+  const dist   = (maxDim / 2 / Math.tan(fovRad / 2)) * 1.9;
+  // 3/4 angle — shows depth clearly, consistent across all components
+  const dir    = new THREE.Vector3(1.1, 0.85, 1.3).normalize();
+  cam.position.copy(center).addScaledVector(dir, dist);
+  cam.lookAt(center);
+  cam.near = dist * 0.02;
+  cam.far  = dist * 25;
+  cam.updateProjectionMatrix();
+}
+
 let sharedRenderer: THREE.WebGLRenderer | null = null;
 let sharedScene: THREE.Scene | null = null;
 let sharedCamera: THREE.PerspectiveCamera | null = null;
@@ -917,126 +985,167 @@ export function buildComponentByCode(code: string): THREE.Object3D {
 /**
  * Per-step reference image generator for AI Step Check.
  *
- * Renders every component in `comps` using buildObject (the same Gallery-quality
- * Three.js geometry), composites them into a labeled grid, and returns a PNG
- * data-URL that is sent to verify-build-step as referenceBase64.
+ * Renders each component in `comps` using the dedicated reference renderer
+ * (256×256 per cell, rich lighting, auto-fit camera), composites them into a
+ * labeled grid, and returns a JPEG data-URL sent to Gemini as referenceBase64.
  *
- * `comps` must be the CUMULATIVE component list for the current step — i.e. all
- * components from steps 0..stepIdx, quantities summed — NOT just the current
- * step's additions. This ensures Gemini compares the student's photo against the
- * full assembled state of the build at that point.
- *
- * `label` is shown in the orange header band (e.g. "Step 3 of 9 — Build the frame").
- *
- * Returns null if WebGL is unavailable (shared renderer could not initialise).
+ * `comps` is the CUMULATIVE component list (all steps 0..stepIdx summed).
+ * `label` appears in the header (e.g. "Step 3 of 9 — Build the frame").
  */
 export function renderStepReferenceImage(
   comps: { code: string; qty: number }[],
   label = "Reference Build"
 ): string | null {
   if (comps.length === 0) return null;
-  const ctx_gl = getSharedRenderer();
-  if (!ctx_gl) return null;
-  const { renderer, scene, camera } = ctx_gl;
+  const ctx = getRefRenderer();
+  if (!ctx) return null;
+  const { renderer, scene, camera } = ctx;
 
-  const COLS = Math.min(comps.length, 3);
-  const ROWS = Math.ceil(comps.length / COLS);
-  const THUMB = 100;
-  const LABEL = 22;
-  const GAP = 6;
-  const PAD = 8;
-  const HEADER = 28;
-  const cellW = THUMB + GAP * 2;
-  const cellH = THUMB + LABEL + GAP;
-  const W = Math.max(COLS * cellW + PAD * 2, 260);
-  const H = ROWS * cellH + PAD * 2 + HEADER;
+  // ── Layout constants ────────────────────────────────────────────────────────
+  const COLS     = Math.min(comps.length, 3);
+  const ROWS     = Math.ceil(comps.length / COLS);
+  const CELL     = 160;   // thumbnail size in 2D canvas pixels
+  const LBL_H   = 32;    // label area below each thumbnail
+  const GAP      = 10;   // gap between cells
+  const PAD      = 14;   // outer padding
+  const HEADER   = 56;   // top header band height
+
+  const cellStride = CELL + GAP;
+  const W = COLS * cellStride - GAP + PAD * 2;
+  const H = HEADER + ROWS * (CELL + LBL_H + GAP) - GAP + PAD;
 
   const canvas = document.createElement("canvas");
-  canvas.width = W; canvas.height = H;
+  canvas.width  = W;
+  canvas.height = H;
   const c2d = canvas.getContext("2d")!;
 
-  // ── Background + header ──────────────────────────────────────────────────────
-  c2d.fillStyle = "#f8fafc";
+  // ── Background gradient ─────────────────────────────────────────────────────
+  const bgGrad = c2d.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, "#f1f5f9");
+  bgGrad.addColorStop(1, "#dde4ee");
+  c2d.fillStyle = bgGrad;
   c2d.fillRect(0, 0, W, H);
-  c2d.fillStyle = "#f97316";
-  c2d.fillRect(0, 0, W, HEADER);
-  c2d.fillStyle = "#fff";
-  c2d.font = "bold 10px system-ui";
-  c2d.textAlign = "left";
-  const maxChars = Math.floor(W / 6.2);
-  c2d.fillText(label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label, 8, 18);
-  c2d.textAlign = "right";
-  c2d.font = "9px system-ui";
-  c2d.fillStyle = "rgba(255,255,255,0.8)";
-  c2d.fillText(`${comps.length} part${comps.length !== 1 ? "s" : ""} · ${THUMB_W}×${THUMB_H}px`, W - 6, 18);
 
-  // Give the scene a solid white background so the WebGL framebuffer has no
-  // transparent pixels. This lets us use toDataURL("image/jpeg") directly on
-  // the WebGL canvas without the alpha→black artefact. Restore after the loop.
-  const prevBackground = scene.background;
-  scene.background = new THREE.Color(0xffffff);
+  // ── Header band ────────────────────────────────────────────────────────────
+  const hdrGrad = c2d.createLinearGradient(0, 0, W, 0);
+  hdrGrad.addColorStop(0, "#c2410c");
+  hdrGrad.addColorStop(1, "#f97316");
+  c2d.fillStyle = hdrGrad;
+  c2d.fillRect(0, 0, W, HEADER);
+
+  // Step label
+  c2d.fillStyle = "#ffffff";
+  c2d.font = "bold 14px system-ui, -apple-system, sans-serif";
+  c2d.textAlign = "left";
+  const shortLabel = label.length > 46 ? label.slice(0, 44) + "…" : label;
+  c2d.fillText(shortLabel, PAD, 22);
+
+  // Parts summary
+  const totalQty = comps.reduce((s, c) => s + c.qty, 0);
+  c2d.font = "11px system-ui, -apple-system, sans-serif";
+  c2d.fillStyle = "rgba(255,255,255,0.88)";
+  c2d.fillText(
+    `${comps.length} component type${comps.length !== 1 ? "s" : ""} · ${totalQty} parts cumulative`,
+    PAD, 42
+  );
+
+  // ── Set solid light background for WebGL renders ────────────────────────────
+  const prevBg = scene.background;
+  scene.background = new THREE.Color(0xf8fafc);
 
   let renderedCount = 0;
 
   comps.forEach(({ code, qty }, i) => {
     const col = i % COLS;
     const row = Math.floor(i / COLS);
-    const x = PAD + col * cellW;
-    const y = HEADER + PAD + row * cellH;
+    const cx  = PAD + col * cellStride;
+    const cy  = HEADER + PAD / 2 + row * (CELL + LBL_H + GAP);
 
-    // White cell background
+    // ── Cell background with subtle shadow ────────────────────────────────────
+    c2d.shadowColor   = "rgba(0,0,0,0.12)";
+    c2d.shadowBlur    = 6;
+    c2d.shadowOffsetX = 0;
+    c2d.shadowOffsetY = 2;
     c2d.fillStyle = "#ffffff";
-    c2d.fillRect(x, y, cellW - GAP, cellH - GAP / 2);
+    c2d.fillRect(cx, cy, CELL, CELL + LBL_H);
+    c2d.shadowBlur    = 0;
+    c2d.shadowOffsetY = 0;
 
     const item = codeToComponent.get(code.toLowerCase());
     if (item) {
       const obj = buildObject(item);
       scene.add(obj);
+
+      // Auto-fit camera to this component's bounding box
+      fitCameraToObject(camera, obj);
+
       renderer.render(scene, camera);
       scene.remove(obj);
       disposeObject(obj);
 
-      // With a solid white scene.background, JPEG encodes correctly (no alpha).
-      // Reading via toDataURL then new Image() is always synchronous for data URLs.
-      const frameDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.88);
+      const frameUrl = renderer.domElement.toDataURL("image/jpeg", 0.92);
       const img = new Image();
-      img.src = frameDataUrl;
-      c2d.drawImage(img, x + GAP, y + 2, THUMB - GAP * 2, THUMB - 4);
+      img.src = frameUrl;
+      c2d.drawImage(img, cx, cy, CELL, CELL);
       renderedCount++;
     } else {
-      // Unmapped code — draw a labelled orange placeholder
-      c2d.fillStyle = "rgba(249,115,22,0.15)";
-      c2d.fillRect(x + GAP, y + 4, THUMB - GAP * 2, THUMB - 8);
-      c2d.fillStyle = "#9a3412";
-      c2d.font = "bold 8px monospace";
+      // Unmapped component — orange placeholder with code
+      c2d.fillStyle = "#fff7ed";
+      c2d.fillRect(cx, cy, CELL, CELL);
+      c2d.fillStyle = "#ea580c";
+      c2d.font = "bold 28px monospace";
       c2d.textAlign = "center";
-      c2d.fillText("?", x + (cellW - GAP) / 2, y + THUMB / 2 + 3);
-      c2d.textAlign = "left";
+      c2d.fillText("?", cx + CELL / 2, cy + CELL / 2 + 10);
+      c2d.font = "10px monospace";
+      c2d.fillStyle = "#9a3412";
+      c2d.fillText("unmapped", cx + CELL / 2, cy + CELL / 2 + 28);
     }
 
-    // Component code + quantity label
-    const textY = y + THUMB + 4;
-    c2d.fillStyle = "#111827";
-    c2d.font = `bold ${code.length > 8 ? 8 : 9}px monospace`;
+    // ── Code label below thumbnail ─────────────────────────────────────────────
+    const lblY = cy + CELL;
+    c2d.fillStyle = "#f8fafc";
+    c2d.fillRect(cx, lblY, CELL, LBL_H);
+
+    const displayCode = code.length > 10 ? code.slice(0, 9) + "…" : code;
+    c2d.fillStyle = "#0f172a";
+    c2d.font = `bold ${code.length > 9 ? 10 : 12}px system-ui, monospace`;
     c2d.textAlign = "center";
-    c2d.fillText(code.length > 10 ? code.slice(0, 9) + "…" : code, x + (cellW - GAP) / 2, textY + 8);
-    c2d.fillStyle = "#6b7280";
-    c2d.font = "8px system-ui";
-    c2d.fillText(`×${qty}`, x + (cellW - GAP) / 2, textY + 18);
+    c2d.fillText(displayCode, cx + CELL / 2, lblY + 14);
+
+    c2d.fillStyle = "#64748b";
+    c2d.font = "10px system-ui";
+    c2d.fillText(`qty: ${qty}`, cx + CELL / 2, lblY + 26);
+
+    // ── Quantity badge (top-right corner of thumbnail) ─────────────────────────
+    if (qty > 1) {
+      const bx = cx + CELL - 18;
+      const by = cy + 5;
+      c2d.fillStyle = "#f97316";
+      c2d.beginPath();
+      c2d.arc(bx, by, 11, 0, Math.PI * 2);
+      c2d.fill();
+      c2d.fillStyle = "#ffffff";
+      c2d.font = "bold 9px system-ui";
+      c2d.textAlign = "center";
+      c2d.fillText(`×${qty}`, bx, by + 3.5);
+    }
+
     c2d.textAlign = "left";
   });
 
-  // Restore transparent background for Gallery animation renders
-  scene.background = prevBackground;
+  // Restore scene background for Gallery renders
+  scene.background = prevBg;
 
-  // Debug footer
-  const footerY = H - 10;
-  c2d.fillStyle = "rgba(0,0,0,0.35)";
-  c2d.font = "7px monospace";
-  c2d.textAlign = "left";
-  c2d.fillText(`rendered:${renderedCount}/${comps.length} cam:(2.8,1.8,3.2)→(0,0,0)`, 6, footerY);
+  // ── Thin footer strip ───────────────────────────────────────────────────────
+  c2d.fillStyle = "rgba(15,23,42,0.28)";
+  c2d.font = "8px monospace";
+  c2d.textAlign = "right";
+  c2d.fillText(
+    `rendered ${renderedCount}/${comps.length} · auto-fit · ${REF_RENDER_SIZE}px/cell · BLIX AI Step Check`,
+    W - PAD, H - 4
+  );
 
-  return canvas.toDataURL("image/jpeg", 0.92);
+  return canvas.toDataURL("image/jpeg", 0.93);
 }
 
 // ─── ThreeDGallery ────────────────────────────────────────────────────────────

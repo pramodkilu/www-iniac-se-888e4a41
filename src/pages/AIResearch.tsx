@@ -7,7 +7,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { type VerifyResult, useComponentDetector, verifyComponents } from "@/hooks/useComponentDetector";
 import {
-  getCheckHistory, saveCheckRecord, clearCheckHistory, computeStats, type CheckRecord,
+  getCheckHistory, saveCheckRecord, clearCheckHistory, computeStats, computeAttemptNumber,
+  gradeLabelFromChapterId, type CheckRecord,
   exportHistoryJSON, exportHistoryCSV,
 } from "@/hooks/useCheckHistory";
 import { computeStepComplexity } from "@/lib/stepComplexity";
@@ -300,16 +301,32 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
       };
       const latencyMs = Date.now() - t0;
       setApiResult(result);
+      const currentHistory = getCheckHistory();
       saveCheckRecord({
+        // Curriculum context
+        gradeLabel: gradeLabelFromChapterId(chapterId),
         chapterId, chapterTitle,
+        chapterNumber: parseInt(chapterId) || 0,
+        stepNumber: stepIdx + 1,
         stepIdx, stepTitle,
-        method: "api", correct: result.correct, confidence: result.confidence,
-        found: result.found, missing: result.missing, source: "api",
+        sessionId: currentCheck?.createdAt ?? new Date().toISOString(),
+        attemptNumber: computeAttemptNumber(currentHistory, chapterId, stepIdx, "api"),
+        // Method
+        method: "api",
+        methodLabel: "Gemini 1.5 Flash",
+        source: "api",
+        // Result
+        correct: result.correct,
+        resultStatus: result.correct ? "pass" : "fail",
+        confidence: result.confidence,
+        found: result.found, missing: result.missing,
         responseMs: latencyMs,
-        cumulativeCount: cumulativePieces.reduce((s, c) => s + c.qty, 0),
-        uniqueTypes: cumulativePieces.length,
+        // Component context
+        componentCount: cumulativePieces.reduce((s, c) => s + c.qty, 0),
+        uniqueComponentTypes: cumulativePieces.length,
         stepComplexity: complexity.score,
         referenceType: referenceImage ? "procedural-3d" : "none",
+        // Gemini-specific
         geminiStatus: r.status as "correct" | "incorrect" | "needs_review",
         geminiConfidence: r.confidence,
         geminiFound: result.found,
@@ -351,16 +368,33 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
         agreementScore = allCodes.size > 0 ? agreed / allCodes.size : 0;
       }
 
+      const currentHistory2 = getCheckHistory();
+      const tfMethodLabel = detectorMode === "custom" ? "TF.js Custom Model" : "TF.js COCO-SSD (demo)";
       saveCheckRecord({
+        // Curriculum context
+        gradeLabel: gradeLabelFromChapterId(chapterId),
         chapterId, chapterTitle,
+        chapterNumber: parseInt(chapterId) || 0,
+        stepNumber: stepIdx + 1,
         stepIdx, stepTitle,
-        method: "model", correct: result.correct, confidence: result.confidence,
-        found: result.found, missing: result.missing, source: result.source,
+        sessionId: currentCheck?.createdAt ?? new Date().toISOString(),
+        attemptNumber: computeAttemptNumber(currentHistory2, chapterId, stepIdx, "model"),
+        // Method
+        method: "model",
+        methodLabel: tfMethodLabel,
+        source: result.source,
+        // Result
+        correct: result.correct,
+        resultStatus: result.source === "mock" ? "error" : result.correct ? "pass" : "fail",
+        confidence: result.confidence,
+        found: result.found, missing: result.missing,
         responseMs: latencyMs,
-        cumulativeCount: cumulativePieces.reduce((s, c) => s + c.qty, 0),
-        uniqueTypes: cumulativePieces.length,
+        // Component context
+        componentCount: cumulativePieces.reduce((s, c) => s + c.qty, 0),
+        uniqueComponentTypes: cumulativePieces.length,
         stepComplexity: complexity.score,
         referenceType: referenceImage ? "procedural-3d" : "none",
+        // TF-specific
         tfStatus: result.correct ? "correct" : "incorrect",
         tfConfidence: result.confidence,
         tfFound: result.found,
@@ -1040,62 +1074,225 @@ export default function AIResearch({ inline }: { inline?: boolean } = {}) {
   );
 }
 
-// ── History table extracted to avoid duplication ───────────────────────────────
+// ── Curriculum-aware Verification History ─────────────────────────────────────
 function HistoryTable({ history }: { history: CheckRecord[] }) {
+  const [filterGrade,   setFilterGrade]   = useState("all");
+  const [filterChapter, setFilterChapter] = useState("all");
+  const [filterMethod,  setFilterMethod]  = useState("all");
+  const [filterVerdict, setFilterVerdict] = useState("all");
+  const [grouped,       setGrouped]       = useState(false);
+
+  // Unique filter values from actual records
+  const chNum = (r: CheckRecord) => r.chapterNumber ?? (parseInt(r.chapterId) || 0);
+  const gLabel = (r: CheckRecord) => r.gradeLabel ?? `Grade ${Math.ceil((chNum(r) || 1) / 6)}`;
+
+  const grades   = [...new Set(history.map(r => gLabel(r)))].sort();
+  const chapters = [...new Set(history.map(r => `${chNum(r)}:${r.chapterTitle}`))].sort((a, b) => parseInt(a) - parseInt(b));
+
+  const filtered = history.filter(r => {
+    const grade   = gLabel(r);
+    const method  = r.method === "api" ? "gemini" : "tfjs";
+    const verdict = r.resultStatus ?? (r.correct ? "pass" : "fail");
+    const chapKey = `${chNum(r)}:${r.chapterTitle}`;
+    if (filterGrade   !== "all" && grade   !== filterGrade)   return false;
+    if (filterChapter !== "all" && chapKey !== filterChapter) return false;
+    if (filterMethod  !== "all" && method  !== filterMethod)  return false;
+    if (filterVerdict !== "all" && verdict !== filterVerdict) return false;
+    return true;
+  }).slice(0, 60);
+
+  const verdictBadge = (r: CheckRecord) => {
+    const status = r.resultStatus ?? (r.correct ? "pass" : "fail");
+    if (status === "pass")        return <span className="flex items-center gap-1 text-green-700 font-bold"><CheckCircle2 className="w-3 h-3" /> Pass</span>;
+    if (status === "error")       return <span className="flex items-center gap-1 text-amber-600 font-bold">⚠ Error</span>;
+    if (status === "unavailable") return <span className="text-gray-400">—</span>;
+    return <span className="flex items-center gap-1 text-red-600 font-bold"><XCircle className="w-3 h-3" /> Fail</span>;
+  };
+
+  const methodBadge = (r: CheckRecord) => {
+    const label = r.methodLabel ?? (r.method === "api" ? "Gemini 1.5 Flash" : "TF.js COCO-SSD");
+    return r.method === "api"
+      ? <span className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">☁️ {label}</span>
+      : <span className="bg-orange-50 text-orange-700 border border-orange-200 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">🤖 {label}</span>;
+  };
+
+  // Group records: Grade → Chapter → Step
+  const groups: Record<string, Record<string, CheckRecord[]>> = {};
+  if (grouped) {
+    for (const r of filtered) {
+      const g = r.gradeLabel ?? "Unknown Grade";
+      const c = `Ch. ${chNum(r)} — ${r.chapterTitle}`;
+      if (!groups[g]) groups[g] = {};
+      if (!groups[g][c]) groups[g][c] = [];
+      groups[g][c].push(r);
+    }
+  }
+
+  const selClass = "text-[11px] border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none focus:border-blue-400";
+
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Check History</h2>
-        <span className="text-[11px] text-gray-400">{history.length} records</span>
+      {/* Section header */}
+      <div className="mb-3">
+        <h2 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">
+          Verification History — Grade / Chapter / Step
+        </h2>
+        <p className="text-[11px] text-gray-400 mt-0.5">
+          Records AI verification attempts per curriculum step. Used for thesis evaluation — not final student assessment.
+        </p>
       </div>
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-[11px]">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                {["Step", "Method", "Verdict", "Confidence", "Time", "Date"].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left font-semibold text-gray-500 uppercase tracking-wide text-[10px]">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {history.slice(0, 30).map(r => (
-                <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-3 py-2 font-mono text-gray-700">
-                    <div>{r.chapterTitle?.slice(0, 12)}</div>
-                    <div className="text-gray-400">Step {r.stepIdx + 1}</div>
-                  </td>
-                  <td className="px-3 py-2">
-                    {r.method === "api"
-                      ? <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">☁️ Gemini</span>
-                      : <span className="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-semibold">🤖 TF.js</span>
-                    }
-                  </td>
-                  <td className="px-3 py-2">
-                    {r.correct
-                      ? <span className="flex items-center gap-1 text-green-600 font-semibold"><CheckCircle2 className="w-3 h-3" /> Pass</span>
-                      : <span className="flex items-center gap-1 text-red-500 font-semibold"><XCircle className="w-3 h-3" /> Fail</span>
-                    }
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${r.correct ? "bg-green-400" : "bg-orange-400"}`}
-                          style={{ width: `${Math.round(r.confidence * 100)}%` }} />
-                      </div>
-                      <span className="text-gray-500">{Math.round(r.confidence * 100)}%</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-gray-400">{r.responseMs ? `${r.responseMs}ms` : "—"}</td>
-                  <td className="px-3 py-2 text-gray-400">
-                    {new Date(r.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+      {/* Filters + view toggle */}
+      <div className="flex flex-wrap items-center gap-2 mb-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mr-1">Filter:</span>
+        <select value={filterGrade} onChange={e => setFilterGrade(e.target.value)} className={selClass}>
+          <option value="all">All Grades</option>
+          {grades.map(g => <option key={g} value={g}>{g}</option>)}
+        </select>
+        <select value={filterChapter} onChange={e => setFilterChapter(e.target.value)} className={selClass}>
+          <option value="all">All Chapters</option>
+          {chapters.map(c => {
+            const [num, ...rest] = c.split(":");
+            return <option key={c} value={c}>Ch. {num} — {rest.join(":").slice(0, 20)}</option>;
+          })}
+        </select>
+        <select value={filterMethod} onChange={e => setFilterMethod(e.target.value)} className={selClass}>
+          <option value="all">All Methods</option>
+          <option value="gemini">Gemini</option>
+          <option value="tfjs">TF.js</option>
+        </select>
+        <select value={filterVerdict} onChange={e => setFilterVerdict(e.target.value)} className={selClass}>
+          <option value="all">All Verdicts</option>
+          <option value="pass">Pass</option>
+          <option value="fail">Fail</option>
+          <option value="error">Error</option>
+        </select>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="text-[10px] text-gray-400">{filtered.length} records</span>
+          <button
+            onClick={() => setGrouped(v => !v)}
+            className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition-colors ${grouped ? "bg-indigo-600 text-white border-indigo-600" : "border-gray-200 text-gray-500 hover:border-indigo-400 hover:text-indigo-600"}`}>
+            {grouped ? "Grouped ✓" : "Group"}
+          </button>
         </div>
       </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-8 text-gray-400 bg-white border border-gray-200 rounded-2xl">
+          <p className="text-2xl mb-2">📋</p>
+          <p className="text-[12px]">No records match the current filters.</p>
+        </div>
+      )}
+
+      {/* Grouped view */}
+      {grouped && filtered.length > 0 && (
+        <div className="space-y-4">
+          {Object.entries(groups).sort().map(([grade, chaps]) => (
+            <div key={grade} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex items-center gap-2">
+                <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">{grade}</span>
+                <span className="text-[10px] text-indigo-400">
+                  {Object.values(chaps).flat().length} attempts
+                </span>
+              </div>
+              {Object.entries(chaps).sort().map(([chap, records]) => {
+                // Group by step within chapter
+                const byStep: Record<string, CheckRecord[]> = {};
+                for (const r of records) {
+                  const sk = `Step ${r.stepNumber ?? r.stepIdx + 1} — ${r.stepTitle}`;
+                  if (!byStep[sk]) byStep[sk] = [];
+                  byStep[sk].push(r);
+                }
+                return (
+                  <div key={chap} className="border-b border-gray-100 last:border-0">
+                    <div className="px-4 py-2 bg-gray-50 flex items-center gap-2">
+                      <span className="text-[11px] font-semibold text-gray-700">{chap}</span>
+                      <span className="text-[10px] text-gray-400">{records.length} attempts</span>
+                    </div>
+                    {Object.entries(byStep).sort().map(([step, stepRecords]) => (
+                      <div key={step} className="px-4 py-2 border-t border-gray-50">
+                        <p className="text-[10px] font-semibold text-gray-500 mb-1.5">{step}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {stepRecords.map(r => {
+                            const status = r.resultStatus ?? (r.correct ? "pass" : "fail");
+                            return (
+                              <div key={r.id} className={`text-[10px] border rounded-lg px-2 py-1 font-mono ${
+                                status === "pass" ? "bg-green-50 border-green-200 text-green-700"
+                                : status === "error" ? "bg-amber-50 border-amber-200 text-amber-700"
+                                : "bg-red-50 border-red-200 text-red-600"
+                              }`}>
+                                <span className="font-bold">{status.toUpperCase()}</span>
+                                <span className="text-gray-400 ml-1">{Math.round(r.confidence * 100)}%</span>
+                                <span className="text-gray-300 ml-1">#{r.attemptNumber ?? "?"}</span>
+                                <span className="text-gray-300 ml-1">{r.method === "api" ? "G" : "TF"}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Flat table view */}
+      {!grouped && filtered.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  {["Grade", "Chapter", "Step", "Method", "Attempt", "Verdict", "Confidence", "Latency", "Time"].map(h => (
+                    <th key={h} className="px-2.5 py-2.5 text-left font-semibold text-gray-500 uppercase tracking-wide text-[10px] whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map(r => (
+                  <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-2.5 py-2 whitespace-nowrap">
+                      <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                        {gLabel(r)}
+                      </span>
+                    </td>
+                    <td className="px-2.5 py-2 max-w-[120px]">
+                      <div className="font-semibold text-gray-700 truncate">
+                        Ch. {chNum(r) || "?"} — {r.chapterTitle?.slice(0, 14)}
+                      </div>
+                    </td>
+                    <td className="px-2.5 py-2 max-w-[130px]">
+                      <div className="font-semibold text-gray-700">Step {r.stepNumber ?? r.stepIdx + 1}</div>
+                      <div className="text-gray-400 truncate text-[10px]">{r.stepTitle?.slice(0, 18)}</div>
+                    </td>
+                    <td className="px-2.5 py-2 whitespace-nowrap">{methodBadge(r)}</td>
+                    <td className="px-2.5 py-2 text-center">
+                      <span className="text-gray-500 font-mono">#{r.attemptNumber ?? "?"}</span>
+                    </td>
+                    <td className="px-2.5 py-2 whitespace-nowrap">{verdictBadge(r)}</td>
+                    <td className="px-2.5 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-10 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${r.correct ? "bg-green-400" : "bg-orange-400"}`}
+                            style={{ width: `${Math.round(r.confidence * 100)}%` }} />
+                        </div>
+                        <span className="text-gray-600 font-mono">{Math.round(r.confidence * 100)}%</span>
+                      </div>
+                    </td>
+                    <td className="px-2.5 py-2 text-gray-400 font-mono">{r.responseMs ? `${r.responseMs}ms` : "—"}</td>
+                    <td className="px-2.5 py-2 text-gray-400 whitespace-nowrap">
+                      {new Date(r.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

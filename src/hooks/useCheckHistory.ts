@@ -1,37 +1,62 @@
 // ─── AI Step Check — Session History & Metrics ────────────────────────────────
 //
 // Stores every verification attempt in localStorage (max 200 records).
-// Schema is intentionally richer than the minimum to support thesis analysis:
-//   - dual verification (Gemini API + browser TF model)
-//   - step complexity correlation
-//   - reference image provenance
-//   - latency tracking
-//   - agreement analysis between methods
+// Schema is curriculum-aware (grade → chapter → step) and thesis-readable.
 
 const STORAGE_KEY = "blix_ai_check_history";
+
+// ── Curriculum helpers ─────────────────────────────────────────────────────────
+
+export function gradeFromChapterId(chapterId: string | number): number {
+  const n = typeof chapterId === "string" ? parseInt(chapterId) || 0 : chapterId;
+  if (n <= 6)  return 1;
+  if (n <= 12) return 2;
+  if (n <= 18) return 3;
+  if (n <= 24) return 4;
+  return 5;
+}
+
+export function gradeLabelFromChapterId(chapterId: string | number): string {
+  return `Grade ${gradeFromChapterId(chapterId)}`;
+}
+
+// ── CheckRecord ────────────────────────────────────────────────────────────────
 
 export interface CheckRecord {
   id: string;
   timestamp: number;
 
-  // ── Session context ──────────────────────────────────────────────────────────
-  chapterId: string;
+  // ── Curriculum context ───────────────────────────────────────────────────────
+  gradeLabel: string;          // "Grade 1" – "Grade 5"
+  chapterId: string;           // "1" – "30"
+  chapterNumber: number;       // 1 – 30
   chapterTitle: string;
-  stepIdx: number;
+  stepNumber: number;          // 1-based (stepIdx + 1)
+  stepIdx: number;             // 0-based (kept for chart compat)
   stepTitle: string;
+  sessionId: string;           // from blix_current_check.createdAt — groups attempts in one session
+  attemptNumber: number;       // 1-based count of attempts for same chapter+step+method
 
   // ── Verification method ──────────────────────────────────────────────────────
-  method: "api" | "model";          // "api" = Gemini, "model" = TF.js
-  source: string;                   // sub-source ("api" | "demo-model" | "model" | "mock")
+  method: "api" | "model";     // "api" = Gemini, "model" = TF.js (kept for computeStats compat)
+  methodLabel: string;         // "Gemini 1.5 Flash" | "TF.js COCO-SSD (demo)" | "TF.js Custom"
+  source: string;              // sub-source ("api" | "demo-model" | "model" | "mock")
 
-  // ── Primary result ──────────────────────────────────────────────────────────
+  // ── Result ───────────────────────────────────────────────────────────────────
   correct: boolean;
-  confidence: number;               // 0–1
+  resultStatus: "pass" | "fail" | "error" | "unavailable";
+  confidence: number;          // 0–1
   found: string[];
   missing: string[];
-  responseMs?: number;              // end-to-end latency in ms
+  responseMs?: number;         // end-to-end latency ms
 
-  // ── Dual-verification fields (populated when both methods run) ───────────────
+  // ── Step / component context ─────────────────────────────────────────────────
+  componentCount: number;      // total qty of cumulative parts
+  uniqueComponentTypes: number; // distinct codes in cumulative list
+  stepComplexity?: number;     // 0–100 score from stepComplexity.ts
+  referenceType: "procedural-3d" | "textbook" | "none";
+
+  // ── Dual-verification fields ─────────────────────────────────────────────────
   geminiStatus?: "correct" | "incorrect" | "needs_review";
   geminiConfidence?: number;
   geminiFound?: string[];
@@ -43,16 +68,13 @@ export interface CheckRecord {
   tfFound?: string[];
   tfMissing?: string[];
   tfMs?: number;
-  tfMode?: "custom" | "demo" | "none";  // which TF model ran
+  tfMode?: "custom" | "demo" | "none";
 
-  // Agreement between Gemini and TF on the same step (0–1)
   agreementScore?: number;
 
-  // ── Step context ─────────────────────────────────────────────────────────────
-  cumulativeCount?: number;         // total parts in cumulative list
-  uniqueTypes?: number;             // distinct component codes in cumulative list
-  stepComplexity?: number;          // 0–100 score from stepComplexity.ts
-  referenceType?: "procedural-3d" | "textbook" | "none"; // what reference was used
+  // ── Legacy aliases (kept so old records still display) ───────────────────────
+  cumulativeCount?: number;    // old name for componentCount
+  uniqueTypes?: number;        // old name for uniqueComponentTypes
 }
 
 // ── Storage helpers ─────────────────────────────────────────────────────────────
@@ -73,6 +95,18 @@ export function clearCheckHistory() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+// Compute attemptNumber for a new record BEFORE saving (count existing same-context records)
+export function computeAttemptNumber(
+  history: CheckRecord[],
+  chapterId: string,
+  stepIdx: number,
+  method: "api" | "model"
+): number {
+  return history.filter(
+    r => r.chapterId === chapterId && r.stepIdx === stepIdx && r.method === method
+  ).length + 1;
+}
+
 // ── Computed stats ─────────────────────────────────────────────────────────────
 
 export function computeStats(history: CheckRecord[]) {
@@ -82,7 +116,6 @@ export function computeStats(history: CheckRecord[]) {
   const acc = (arr: CheckRecord[]) =>
     arr.length ? Math.round((arr.filter(r => r.correct).length / arr.length) * 100) : null;
 
-  // Agreement: steps where both methods ran and gave the same verdict
   const stepKeys = new Set([...api, ...model].map(r => `${r.chapterId}-${r.stepIdx}`));
   let agreed = 0, disputed = 0;
   stepKeys.forEach(key => {
@@ -100,7 +133,6 @@ export function computeStats(history: CheckRecord[]) {
     return timed.length ? Math.round(timed.reduce((s, r) => s + (r.responseMs ?? 0), 0) / timed.length) : null;
   };
 
-  // Latency distribution buckets (ms)
   const latencyBuckets = (arr: CheckRecord[]) => {
     const buckets = { "<1s": 0, "1-2s": 0, "2-3s": 0, "3-5s": 0, ">5s": 0 };
     arr.forEach(r => {
@@ -115,7 +147,6 @@ export function computeStats(history: CheckRecord[]) {
     return Object.entries(buckets).map(([range, count]) => ({ range, count }));
   };
 
-  // Confidence distribution buckets
   const confidenceBuckets = (arr: CheckRecord[]) => {
     const buckets = { "0-20%": 0, "20-40%": 0, "40-60%": 0, "60-80%": 0, "80-100%": 0 };
     arr.forEach(r => {
@@ -129,7 +160,6 @@ export function computeStats(history: CheckRecord[]) {
     return Object.entries(buckets).map(([range, count]) => ({ range, count }));
   };
 
-  // Complexity vs confidence correlation data
   const complexityVsConfidence = api
     .filter(r => r.stepComplexity != null)
     .map(r => ({
@@ -166,9 +196,10 @@ export function exportHistoryJSON(history: CheckRecord[]): void {
 
 export function exportHistoryCSV(history: CheckRecord[]): void {
   const cols: (keyof CheckRecord)[] = [
-    "timestamp", "chapterId", "chapterTitle", "stepIdx", "stepTitle",
-    "method", "correct", "confidence", "responseMs",
-    "cumulativeCount", "uniqueTypes", "stepComplexity", "referenceType",
+    "timestamp", "gradeLabel", "chapterNumber", "chapterTitle",
+    "stepNumber", "stepTitle", "sessionId", "attemptNumber",
+    "methodLabel", "resultStatus", "correct", "confidence", "responseMs",
+    "componentCount", "uniqueComponentTypes", "stepComplexity", "referenceType",
     "geminiStatus", "geminiConfidence", "tfStatus", "tfConfidence",
     "tfMode", "agreementScore",
   ];
@@ -178,7 +209,7 @@ export function exportHistoryCSV(history: CheckRecord[]): void {
       const v = r[c];
       if (v === undefined || v === null) return "";
       if (typeof v === "string" && v.includes(",")) return `"${v}"`;
-      if (v instanceof Array) return `"${v.join("|")}"`;
+      if (Array.isArray(v)) return `"${v.join("|")}"`;
       return String(v);
     }).join(",")
   );
