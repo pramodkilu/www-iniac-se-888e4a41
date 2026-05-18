@@ -11,12 +11,12 @@ import Header from "@/components/Header";
 import BuildGuide from "@/components/BuildGuide";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package, ChevronLeft, ChevronRight, FlaskConical } from "lucide-react";
+import { BookOpen, Lightbulb, Wrench, Trophy, BarChart2, Map, Grid3x3, Package, ChevronLeft, ChevronRight, FlaskConical, Layers, Sparkles, Box, ArrowRight, CheckCircle2 } from "lucide-react";
 import AIResearch from "@/pages/AIResearch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type MainTab     = "preview" | "components" | "sdg";
-type PreviewTab  = "story" | "theory" | "build" | "challenge" | "research";
+type PreviewTab  = "story" | "theory" | "check" | "build" | "challenge" | "research";
 type MapSubTab   = "heatmap" | "by-chapter" | "by-component" | "totals";
 type SDGSubTab   = "min-kit" | "sdg-map" | "sdg-coverage";
 
@@ -164,6 +164,7 @@ export function ChapterPreview({ defaultChapterId }: { defaultChapterId?: number
             tabs={[
               { id: "story",     label: "Story",       icon: <BookOpen className="w-3.5 h-3.5" /> },
               { id: "theory",    label: "Theory",      icon: <Lightbulb className="w-3.5 h-3.5" /> },
+              { id: "check",     label: "Check",       icon: <Layers className="w-3.5 h-3.5" /> },
               { id: "build",     label: "Build",       icon: <Wrench className="w-3.5 h-3.5" /> },
               { id: "challenge", label: "Challenge",   icon: <Trophy className="w-3.5 h-3.5" /> },
               { id: "research",  label: "AI Research", icon: <FlaskConical className="w-3.5 h-3.5" /> },
@@ -264,6 +265,140 @@ export function ChapterPreview({ defaultChapterId }: { defaultChapterId?: number
                     SDG {g}: {SDG_INFO[g]?.en}
                   </span>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {tab === "check" && (
+            <div className="space-y-5 max-w-2xl px-2">
+
+              {/* Header */}
+              <div className="text-center space-y-1 pt-1">
+                <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                  <Layers className="h-3.5 w-3.5" />
+                  Learning Validation Framework
+                </div>
+                <h2 className="text-xl font-bold">3-Level Pre-Build Check</h2>
+                <p className="text-sm text-muted-foreground">
+                  Complete each validation level in order before starting the build.
+                </p>
+              </div>
+
+              {/* Progress flow */}
+              <div className="flex items-center justify-center gap-1 flex-wrap text-[11px] font-semibold">
+                {[
+                  { label: "Theory",           active: false, done: true  },
+                  { label: "Component Check",  active: true,  done: false },
+                  { label: "Build",            active: false, done: false },
+                  { label: "Assembly Check",   active: false, done: false },
+                  { label: "AR Preview",       active: false, done: false },
+                ].map((s, i, arr) => (
+                  <div key={i} className="flex items-center gap-1">
+                    <span className={`px-2 py-0.5 rounded-full border text-[10px] ${
+                      s.active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : s.done
+                          ? "bg-success/15 text-success border-success/30"
+                          : "bg-muted text-muted-foreground border-border"
+                    }`}>{s.label}</span>
+                    {i < arr.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground/40 flex-shrink-0" />}
+                  </div>
+                ))}
+              </div>
+
+              {/* 3 Level cards */}
+              <div className="grid gap-3 md:grid-cols-3">
+
+                {/* Level 1 */}
+                <div className="rounded-2xl border border-orange-200 bg-gradient-to-b from-orange-50 to-white overflow-hidden relative">
+                  <div className="h-1 bg-orange-400" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center">
+                        <Package className="h-3.5 w-3.5 text-orange-600" />
+                      </div>
+                      <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">Level 1</span>
+                    </div>
+                    <p className="font-semibold text-[13px] text-orange-800">Component Check</p>
+                    <p className="text-[11px] text-muted-foreground">Does the student have the required parts?</p>
+                    <div className="space-y-1 text-[10px] text-muted-foreground">
+                      {["Visual parts inspection", "Count and type verification", "3D reference generation"].map(t => (
+                        <div key={t} className="flex items-center gap-1.5"><CheckCircle2 className="h-2.5 w-2.5 text-orange-400" />{t}</div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setTab("build")}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white text-[12px] font-semibold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                      <Package className="h-3.5 w-3.5" /> Start Component Check
+                    </button>
+                  </div>
+                </div>
+
+                {/* Level 2 */}
+                <div className="rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50 to-white overflow-hidden relative">
+                  <div className="h-1 bg-blue-500" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                      </div>
+                      <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Level 2</span>
+                    </div>
+                    <p className="font-semibold text-[13px] text-blue-800">Assembly Check</p>
+                    <p className="text-[11px] text-muted-foreground">Are the parts arranged according to the build step?</p>
+                    <div className="space-y-1 text-[10px] text-muted-foreground">
+                      {["Camera capture of build", "Gemini multimodal analysis", "Structured feedback"].map(t => (
+                        <div key={t} className="flex items-center gap-1.5"><CheckCircle2 className="h-2.5 w-2.5 text-blue-400" />{t}</div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setTab("build")}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                      <Sparkles className="h-3.5 w-3.5" /> Run Assembly Check
+                    </button>
+                  </div>
+                </div>
+
+                {/* Level 3 */}
+                <div className="rounded-2xl border border-purple-200 bg-gradient-to-b from-purple-50 to-white overflow-hidden relative">
+                  <div className="h-1 bg-purple-500" />
+                  <div className="p-4 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-purple-100 border border-purple-200 flex items-center justify-center">
+                        <Box className="h-3.5 w-3.5 text-purple-600" />
+                      </div>
+                      <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">Level 3</span>
+                    </div>
+                    <p className="font-semibold text-[13px] text-purple-800">AR Preview</p>
+                    <p className="text-[11px] text-muted-foreground">Can the student visualize the expected build spatially?</p>
+                    <div className="space-y-1 text-[10px] text-muted-foreground">
+                      {["Procedural 3D model in AR", "WebXR hit-test placement", "Requires AI-verified step"].map(t => (
+                        <div key={t} className="flex items-center gap-1.5"><CheckCircle2 className="h-2.5 w-2.5 text-purple-400" />{t}</div>
+                      ))}
+                    </div>
+                    <a
+                      href={`/chapter/${sel.id}`}
+                      className="w-full bg-purple-500 hover:bg-purple-600 text-white text-[12px] font-semibold py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors">
+                      <Box className="h-3.5 w-3.5" /> Launch AR Preview
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Research Contribution */}
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Layers className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-primary uppercase tracking-wide mb-1">Research Contribution</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    This framework supports progressive robotics learning validation using multimodal AI (Gemini 1.5 Flash) and procedural 3D references. The three levels — component, assembly, and AR — correspond to increasing cognitive complexity in construction learning.
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/50 mt-1.5 font-mono">
+                    validationLevel: component_check → assembly_check → ar_preview
+                  </p>
+                </div>
               </div>
             </div>
           )}
