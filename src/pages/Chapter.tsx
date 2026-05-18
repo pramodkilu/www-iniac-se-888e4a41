@@ -60,69 +60,47 @@ const Chapter = () => {
     }
   }, [progress.current_step]);
 
-  // Guard: chapter not found
-  if (!chapter) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Chapter not found</h1>
-          <p className="text-muted-foreground mb-4">No content exists for chapter {id}.</p>
-          <Link to="/"><Button>Back to home</Button></Link>
-        </div>
-      </div>
-    );
-  }
+  // Any step verified correctly — used to gate AR in the Challenge tab
+  const anyStepVerified = Object.values(progress.step_verdicts).some(v => v.status === "correct");
 
-  // Resolve translated content once
-  const chapterTitle = tr(chapter.title, lang);
-  const chapterDescription = tr(chapter.subtitle, lang);
-  const conceptText = tr(chapter.theory.concept, lang);
-  const explanationText = tr(chapter.theory.explanation, lang);
-  const challengeTitle = tr(chapter.challenge.title, lang);
-  const challengeDescription = tr(chapter.challenge.description, lang);
+  // Resolve translated content once (chapter may be null — guarded below after all hooks)
+  const chapterTitle    = chapter ? tr(chapter.title, lang) : "";
+  const chapterDescription = chapter ? tr(chapter.subtitle, lang) : "";
+  const conceptText     = chapter ? tr(chapter.theory.concept, lang) : "";
+  const explanationText = chapter ? tr(chapter.theory.explanation, lang) : "";
+  const challengeTitle  = chapter ? tr(chapter.challenge.title, lang) : "";
+  const challengeDescription = chapter ? tr(chapter.challenge.description, lang) : "";
 
-  // The theory tab originally had an "experiment" field. Map this to the first
-  // realWorldExample if it exists, falling back to a hint or empty string.
-  const experimentText =
-    chapter.theory.realWorldExamples.length > 0
+  const experimentText = chapter
+    ? chapter.theory.realWorldExamples.length > 0
       ? tr(chapter.theory.realWorldExamples[0], lang)
-      : chapter.challenge.hint
-        ? tr(chapter.challenge.hint, lang)
-        : "";
+      : chapter.challenge.hint ? tr(chapter.challenge.hint, lang) : ""
+    : "";
 
   // Adapt build steps from chapters.ts shape -> shape Chapter.tsx already uses.
-  // Chapter.tsx originally read step.number, step.instruction, step.detail, step.pieces.
-  // chapters.ts uses step.stepNumber, step.title, step.description, step.components.
-  const adaptedSteps = chapter.build.steps.map((s) => ({
-    number: s.stepNumber,
-    instruction: tr(s.title, lang),
-    detail: tr(s.description, lang),
-    pieces: s.components,
-  }));
+  const adaptedSteps = chapter
+    ? chapter.build.steps.map((s) => ({
+        number: s.stepNumber,
+        instruction: tr(s.title, lang),
+        detail: tr(s.description, lang),
+        pieces: s.components,
+      }))
+    : [];
 
-  // For chapters where detailed steps haven't been written yet (sessions 2-30
-  // mostly use the shorthand format with empty steps[] arrays), synthesize
-  // placeholder steps from build.totalSteps so the UI still renders.
   const steps: { number: number; instruction: string; detail: string; pieces: string[] }[] =
     adaptedSteps.length > 0
       ? adaptedSteps
-      : Array.from({ length: chapter.build.totalSteps || 1 }, (_, i) => ({
+      : Array.from({ length: chapter?.build.totalSteps || 1 }, (_, i) => ({
           number: i + 1,
-          instruction:
-            lang === "sv"
-              ? `Steg ${i + 1} — detaljer kommer snart.`
-              : `Step ${i + 1} — details coming soon.`,
-          detail:
-            lang === "sv"
-              ? "Den fullständiga byggsekvensen läggs till här när den är klar."
-              : "The full build sequence will be added here when ready.",
+          instruction: lang === "sv" ? `Steg ${i + 1} — detaljer kommer snart.` : `Step ${i + 1} — details coming soon.`,
+          detail: lang === "sv" ? "Den fullständiga byggsekvensen läggs till här när den är klar." : "The full build sequence will be added here when ready.",
           pieces: [] as string[],
         }));
 
   // ── Procedural AI reference — computed once per step, not on every render ──
-  // renderStepReferenceImage does WebGL renders per component; wrapping it in
-  // useMemo ensures it only re-runs when activeBuildStep or chapter changes.
+  // Must be called before any early returns (Rules of Hooks).
   const proceduralReference = useMemo(() => {
+    if (!chapter) return null;
     const all = steps.slice(0, activeBuildStep).flatMap(s =>
       s.pieces.flatMap(p => {
         const m = p.match(/^(.+?)\s*[xX×](\d+)$/);
@@ -134,7 +112,20 @@ const Chapter = () => {
     const cumComps = Array.from(totals.entries()).map(([code, qty]) => ({ code, qty }));
     return renderStepReferenceImage(cumComps, `Step ${activeBuildStep} of ${steps.length}`);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeBuildStep, steps.length, chapter.id]);
+  }, [activeBuildStep, steps.length, chapterIdNum]);
+
+  // Guard: chapter not found — after all hooks
+  if (!chapter) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Chapter not found</h1>
+          <p className="text-muted-foreground mb-4">No content exists for chapter {id}.</p>
+          <Link to="/"><Button>Back to home</Button></Link>
+        </div>
+      </div>
+    );
+  }
 
   // Difficulty / category keep static defaults for now (could be moved into
   // chapters.ts later — leaving as-is to preserve existing visual badges).
@@ -395,7 +386,6 @@ const Chapter = () => {
             {(() => {
               const totalSteps = steps.length;
               const currentStep = steps.find((s) => s.number === activeBuildStep) ?? steps[0];
-              const stepAsset = getStepAsset(chapterIdNum, currentStep.number);
               // proceduralReference is computed in useMemo above (component level)
               // to avoid running WebGL renders on every React re-render.
               const goPrev = () => setActiveBuildStep((s) => Math.max(1, s - 1));
@@ -641,16 +631,24 @@ const Chapter = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/5"
+                    disabled={!anyStepVerified}
+                    className="h-auto py-4 flex-col items-start gap-1 border-accent/30 hover:bg-accent/5 disabled:opacity-50"
                     onClick={() => setArOpen(true)}
                   >
                     <div className="flex items-center gap-2 font-semibold">
-                      <Box className="h-5 w-5 text-accent" /> {lang === "sv" ? "AR-förhandsgranskning (prototyp)" : "AR Preview (Prototype)"}
+                      <Box className="h-5 w-5 text-accent" />
+                      {anyStepVerified
+                        ? (lang === "sv" ? "AR-förhandsgranskning (prototyp)" : "AR Preview (Prototype)")
+                        : (lang === "sv" ? "AR låst" : "AR Locked")}
                     </div>
                     <p className="text-xs text-muted-foreground text-left font-normal">
-                      {lang === "sv"
-                        ? "Procedural 3D-modell. WebXR AR kräver Android Chrome + ARCore. Produktion kräver GLB-export."
-                        : "Procedural 3D model. WebXR AR depends on device support. Production AR requires GLB/CAD exports."}
+                      {anyStepVerified
+                        ? (lang === "sv"
+                            ? "Procedural 3D-modell. WebXR AR kräver Android Chrome + ARCore."
+                            : "Procedural 3D model. WebXR AR requires Android Chrome + ARCore.")
+                        : (lang === "sv"
+                            ? "Verifiera minst ett steg med AI-kameran för att låsa upp AR."
+                            : "Verify at least one step with the AI camera to unlock AR.")}
                     </p>
                   </Button>
                 </div>
@@ -696,7 +694,9 @@ const Chapter = () => {
         onOpenChange={setArOpen}
         title={chapterTitle}
         chapterId={chapterIdNum}
+        stepIdx={activeBuildStep - 1}
         modelUrl={getStepAsset(chapterIdNum, activeBuildStep).modelUrl}
+        isAuthenticated={!!user}
         savedPose={progress.ar_pose}
         onSavePose={saveArPose}
         onClearPose={clearArPose}

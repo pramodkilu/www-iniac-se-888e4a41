@@ -1376,10 +1376,22 @@ function AIStepCheck({ stepIdx, step, allSteps, chapterId, chapterTitle, referen
   // full accumulated build state, not only the parts added in this step.
   const goToResearch = useCallback((method: ResearchNavState["method"]) => {
     if (!capturedImage) return;
+    // Unified current-check object — single source of truth for AIResearch
+    const currentCheck = {
+      chapterId: chapterId ?? "unknown",
+      chapterTitle: chapterTitle ?? "BLIX Build Guide",
+      stepIdx: stepIdx ?? 0,
+      stepTitle: step?.title.en ?? `Step ${(stepIdx ?? 0) + 1}`,
+      cumulativePieces: cumulativeComps,
+      capturedImage,
+      referenceImage: referenceImage ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    sessionStorage.setItem("blix_current_check", JSON.stringify(currentCheck));
+    // Keep individual keys as fallback
     sessionStorage.setItem("blix_captured_image", capturedImage);
     if (referenceImage) sessionStorage.setItem("blix_reference_image", referenceImage);
     else sessionStorage.removeItem("blix_reference_image");
-    // Cumulative pieces — what Gemini should verify in the student photo
     sessionStorage.setItem(
       "blix_step_pieces",
       JSON.stringify(cumulativeComps.map(c => `${c.code} ×${c.qty}`))

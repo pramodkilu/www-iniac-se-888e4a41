@@ -883,6 +883,20 @@ for (const box of componentBoxes) {
     }
   }
 }
+// Human-readable name aliases used in chapters.ts component strings
+// e.g. "Wheel x4" → code "Wheel" → resolves to the "W" component
+const CODE_ALIASES: Record<string, string> = {
+  "wheel":           "w",
+  "wheel w/o tires": "w-nt",
+  "mudguard left":   "mgl",
+  "mudguard right":  "mgr",
+  "steering wheel":  "str",
+  "balloon":         "rb",    // closest approximation
+};
+for (const [alias, target] of Object.entries(CODE_ALIASES)) {
+  const comp = codeToComponent.get(target);
+  if (comp) codeToComponent.set(alias, comp);
+}
 
 /**
  * Resolves a component code (case-insensitive) to a Gallery-quality Three.js
@@ -956,16 +970,11 @@ export function renderStepReferenceImage(
   c2d.fillStyle = "rgba(255,255,255,0.8)";
   c2d.fillText(`${comps.length} part${comps.length !== 1 ? "s" : ""} · ${THUMB_W}×${THUMB_H}px`, W - 6, 18);
 
-  // ── FIX: set a solid scene background before rendering ───────────────────────
-  // Root cause of black renders: c2d.drawImage(webglCanvas) with alpha:true produces
-  // black pixels in many browsers because the WebGL backbuffer compositing does not
-  // match standard 2D canvas source-over semantics.
-  // Fix: give the scene a solid light background so rendered pixels are always
-  // opaque, then read via toDataURL() (same path used by renderFrames / renderAssemblyReference
-  // which both produce correct results). Restore null background afterwards so the
-  // Gallery auto-rotate animation continues to render with transparent background.
+  // Give the scene a solid white background so the WebGL framebuffer has no
+  // transparent pixels. This lets us use toDataURL("image/jpeg") directly on
+  // the WebGL canvas without the alpha→black artefact. Restore after the loop.
   const prevBackground = scene.background;
-  scene.background = new THREE.Color(0xf0f4f8); // light blue-grey — neutral reference background
+  scene.background = new THREE.Color(0xffffff);
 
   let renderedCount = 0;
 
@@ -987,12 +996,11 @@ export function renderStepReferenceImage(
       scene.remove(obj);
       disposeObject(obj);
 
-      // ── Use toDataURL() + Image instead of direct drawImage(webglCanvas) ──
-      // drawImage(webglCanvas) is unreliable with alpha:true renderers;
-      // toDataURL() reads the framebuffer correctly with preserveDrawingBuffer:true.
-      const frameDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.9);
+      // With a solid white scene.background, JPEG encodes correctly (no alpha).
+      // Reading via toDataURL then new Image() is always synchronous for data URLs.
+      const frameDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.88);
       const img = new Image();
-      img.src = frameDataUrl; // data URLs decode synchronously in the main thread
+      img.src = frameDataUrl;
       c2d.drawImage(img, x + GAP, y + 2, THUMB - GAP * 2, THUMB - 4);
       renderedCount++;
     } else {
@@ -1021,7 +1029,7 @@ export function renderStepReferenceImage(
   // Restore transparent background for Gallery animation renders
   scene.background = prevBackground;
 
-  // Debug footer — render stats visible in the reference image for thesis verification
+  // Debug footer
   const footerY = H - 10;
   c2d.fillStyle = "rgba(0,0,0,0.35)";
   c2d.font = "7px monospace";

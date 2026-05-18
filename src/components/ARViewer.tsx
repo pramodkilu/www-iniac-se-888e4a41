@@ -5,6 +5,53 @@ import * as THREE from "three";
 import { Loader2, Smartphone, Maximize2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { buildFinalAssembly } from "@/components/BuildGuide";
+import { buildComponentByCode } from "@/components/ThreeDGallery";
+import { getChapter } from "@/data/chapters";
+
+// Build cumulative Three.js assembly up to (and including) stepIdx.
+// Falls back to buildFinalAssembly when chapter has no detailed step data.
+function buildStepAssembly(chapterId: number, stepIdx: number): THREE.Group {
+  const chapter = getChapter(chapterId);
+  if (!chapter?.build.steps.length) return buildFinalAssembly(chapterId);
+
+  const steps = chapter.build.steps.slice(0, stepIdx + 1);
+  if (steps.length === 0) return buildFinalAssembly(chapterId);
+
+  // Collect cumulative unique component codes up to this step
+  const totals = new Map<string, number>();
+  for (const s of steps) {
+    for (const raw of s.components) {
+      const m = raw.match(/^(.+?)\s*[xX×](\d+)$/);
+      const code = m ? m[1].trim() : raw.trim();
+      const qty  = m ? parseInt(m[2]) : 1;
+      totals.set(code, (totals.get(code) ?? 0) + qty);
+    }
+  }
+
+  // Lay the resolved components out in a 3D grid so the AR model looks
+  // like a parts manifest rather than a random pile.
+  const group = new THREE.Group();
+  const entries = Array.from(totals.entries());
+  const cols = Math.ceil(Math.sqrt(entries.length));
+  const SPACING = 1.4;
+  entries.forEach(([code, qty], idx) => {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    const obj = buildComponentByCode(code);
+    obj.position.set((col - (cols - 1) / 2) * SPACING, 0, (row - (Math.ceil(entries.length / cols) - 1) / 2) * SPACING);
+    // Small label sphere showing qty
+    if (qty > 1) {
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xf97316 })
+      );
+      dot.position.set(0.5, 0.5, 0);
+      obj.add(dot);
+    }
+    group.add(obj);
+  });
+  return group;
+}
 
 // ─── ARViewer — Prototype AR Preview ──────────────────────────────────────────
 //
@@ -48,7 +95,9 @@ interface ARViewerProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   chapterId?: number;
+  stepIdx?: number;      // current build step (0-based) — AR shows assembly up to this step
   modelUrl?: string | null;
+  isAuthenticated?: boolean;
   savedPose?: ARPose | null;
   onSavePose?: (matrix: number[]) => void;
   onClearPose?: () => void;
@@ -66,8 +115,8 @@ function makeReticle() {
 }
 
 const ARViewer = ({
-  open, onOpenChange, title, chapterId = 1, modelUrl,
-  savedPose, onSavePose, onClearPose,
+  open, onOpenChange, title, chapterId = 1, stepIdx, modelUrl,
+  isAuthenticated = true, savedPose, onSavePose, onClearPose,
 }: ARViewerProps) => {
   const mountRef   = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -130,8 +179,10 @@ const ARViewer = ({
       const grid = new THREE.GridHelper(8, 16, 0x334155, 0x1e293b);
       grid.position.y = -2; scene.add(grid);
 
-      // Chapter model — centred and scaled to fit viewport
-      const model = buildFinalAssembly(chapterId);
+      // Chapter model — cumulative assembly up to stepIdx (or full final if no step data)
+      const model = stepIdx != null
+        ? buildStepAssembly(chapterId, stepIdx)
+        : buildFinalAssembly(chapterId);
       const bbox  = new THREE.Box3().setFromObject(model);
       const centre = bbox.getCenter(new THREE.Vector3());
       const size   = bbox.getSize(new THREE.Vector3()).length();
@@ -199,7 +250,7 @@ const ARViewer = ({
       cleanupRef.current = () => {};
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, chapterId]);
+  }, [open, chapterId, stepIdx]);
 
   // ── Mouse / touch orbit ───────────────────────────────────────────────────────
   const onPointerDown = (e: React.PointerEvent) => {
@@ -299,13 +350,33 @@ const ARViewer = ({
         <DialogHeader className="px-5 pt-4 pb-2">
           <DialogTitle className="text-white text-base font-bold flex items-center gap-2">
             Prototype AR Preview — {title}
+            {stepIdx != null && (
+              <span className="text-[11px] font-normal text-orange-400 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-full">
+                Step {stepIdx + 1} assembly
+              </span>
+            )}
           </DialogTitle>
           <DialogDescription className="text-slate-400 text-xs">
-            {modelUrl
-              ? "GLB model loaded — drag to inspect · use the built-in AR button on Android / iOS"
-              : "Procedural 3D model (Three.js) — drag to rotate · scroll to zoom · WebXR AR available on Android Chrome with ARCore"}
+            {!isAuthenticated
+              ? "Sign in to save AR poses and unlock step verification."
+              : modelUrl
+                ? "GLB model loaded — drag to inspect · use the built-in AR button on Android / iOS"
+                : stepIdx != null
+                  ? `Showing cumulative build state at Step ${stepIdx + 1}. Drag to rotate · scroll to zoom · WebXR AR on Android Chrome + ARCore.`
+                  : "Procedural 3D model (Three.js) — drag to rotate · scroll to zoom · WebXR AR available on Android Chrome with ARCore"}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Unauthenticated warning */}
+        {!isAuthenticated && (
+          <div className="mx-5 mb-2 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5 flex items-center gap-2">
+            <span className="text-amber-400 text-sm">⚠</span>
+            <p className="text-amber-300 text-xs">
+              You are not signed in. AR poses will not be saved, and step verification is unavailable.
+              Sign in to enable the full AR experience.
+            </p>
+          </div>
+        )}
 
         {/* Viewer — model-viewer (GLB) when available, Three.js canvas otherwise */}
         {modelUrl ? (
@@ -322,7 +393,7 @@ const ARViewer = ({
             />
           </div>
         ) : (
-          /* Three.js procedural fallback — uses buildFinalAssembly() */
+          /* Three.js procedural model — per-step via buildStepAssembly or final via buildFinalAssembly */
           <div
             ref={mountRef}
             className="w-full bg-slate-950 cursor-grab active:cursor-grabbing select-none"
@@ -414,10 +485,13 @@ const ARViewer = ({
             <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-2.5 flex items-start gap-3">
               <span className="text-lg">⚗️</span>
               <div>
-                <p className="text-orange-300 text-xs font-bold">Prototype AR Preview — procedural 3D model shown</p>
+                <p className="text-orange-300 text-xs font-bold">
+                  Prototype AR Preview — {stepIdx != null ? `cumulative assembly at Step ${stepIdx + 1}` : "final assembly"} shown
+                </p>
                 <p className="text-slate-400 text-[11px] mt-0.5">
-                  No GLB asset linked for this chapter. Displaying a procedural Three.js model
-                  (buildFinalAssembly). Production AR requires exported GLB/CAD files.
+                  No GLB asset linked. Displaying a procedural Three.js model
+                  ({stepIdx != null ? "buildStepAssembly — components up to this step in a 3D grid" : "buildFinalAssembly — complete chapter model"}).
+                  Production AR requires exported GLB/CAD files.
                   WebXR hit-test AR works on Android Chrome + ARCore when "Enter AR" is available.
                 </p>
               </div>
