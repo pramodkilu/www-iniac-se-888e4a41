@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Play, Hammer, Trophy, Lightbulb, Sparkles, Box, BookmarkCheck, X, ChevronLeft, ChevronRight, CheckCircle2, Package, Layers, ArrowRight } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import BlixCartViewer from "@/components/3d/BlixCartViewer";
@@ -21,6 +21,9 @@ import { getStepAsset } from "@/data/stepAssets";
 import { useLanguage, useUIStrings } from "@/i18n/LanguageContext";
 // Procedural 3D reference for AI verification — same source-of-truth as BuildGuide
 import { renderStepReferenceImage } from "@/components/ThreeDGallery";
+import {
+  saveCheckRecord, getCheckHistory, gradeLabelFromChapterId, computeAttemptNumber,
+} from "@/hooks/useCheckHistory";
 
 const Chapter = () => {
   const { id } = useParams();
@@ -37,6 +40,22 @@ const Chapter = () => {
   const { lang } = useLanguage();
   const ui = useUIStrings();
   const { user } = useAuth();
+
+  // ── Level 1 Component Check state ────────────────────────────────────────────
+  const [checkStep, setCheckStep] = useState(1);
+  type CcPhase = "idle" | "camera" | "captured" | "result";
+  const [ccPhase, setCcPhase] = useState<CcPhase>("idle");
+  const [ccSnapshot, setCcSnapshot] = useState<string | null>(null);
+  const [ccLoading, setCcLoading] = useState(false);
+  const [ccError, setCcError] = useState<string | null>(null);
+  const [ccResult, setCcResult] = useState<{
+    status: string; confidence: number;
+    found: string[]; missing: string[];
+    feedback: string; tip: string;
+  } | null>(null);
+  const ccVideoRef  = useRef<HTMLVideoElement>(null);
+  const ccCanvasRef = useRef<HTMLCanvasElement>(null);
+  const ccStreamRef = useRef<MediaStream | null>(null);
 
   // Pull chapter from the bilingual data file
   const chapter = getChapter(chapterIdNum);
@@ -59,6 +78,60 @@ const Chapter = () => {
       setActiveBuildStep(Math.max(1, progress.current_step));
     }
   }, [progress.current_step]);
+
+  // ── Component Check camera helpers ───────────────────────────────────────────
+  const ccStopCamera = useCallback(() => {
+    ccStreamRef.current?.getTracks().forEach(t => t.stop());
+    ccStreamRef.current = null;
+  }, []);
+
+  const ccStartCamera = useCallback(async () => {
+    setCcError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
+        audio: false,
+      });
+      ccStreamRef.current = stream;
+      if (ccVideoRef.current) {
+        ccVideoRef.current.srcObject = stream;
+        await ccVideoRef.current.play().catch(() => {});
+      }
+      setCcPhase("camera");
+    } catch {
+      setCcError(lang === "sv" ? "Kameraåtkomst nekad." : "Camera access denied.");
+    }
+  }, [lang]);
+
+  const ccCapture = useCallback(() => {
+    const v = ccVideoRef.current;
+    const c = ccCanvasRef.current;
+    if (!v || !c) return;
+    c.width  = v.videoWidth  || 1280;
+    c.height = v.videoHeight || 720;
+    c.getContext("2d")?.drawImage(v, 0, 0, c.width, c.height);
+    setCcSnapshot(c.toDataURL("image/jpeg", 0.85));
+    ccStopCamera();
+    setCcPhase("captured");
+  }, [ccStopCamera]);
+
+  const ccRetake = useCallback(() => {
+    setCcSnapshot(null);
+    setCcResult(null);
+    ccStartCamera();
+  }, [ccStartCamera]);
+
+  // Reset camera when step or chapter changes
+  useEffect(() => {
+    ccStopCamera();
+    setCcPhase("idle");
+    setCcSnapshot(null);
+    setCcResult(null);
+    setCcError(null);
+  }, [checkStep, chapterIdNum, ccStopCamera]);
+
+  // Cleanup on unmount
+  useEffect(() => () => ccStopCamera(), [ccStopCamera]);
 
   // Any step verified correctly — used to gate AR in the Challenge tab
   const anyStepVerified = Object.values(progress.step_verdicts).some(v => v.status === "correct");
@@ -97,16 +170,91 @@ const Chapter = () => {
           pieces: [] as string[],
         }));
 
+  // ── Component Check — parsed pieces for selected checkStep ─────────────────
+  // parsePiece is defined here so it can be reused by both proceduralReference
+  // and the component check flow without duplication.
+  const parsePiece = (p: string) => {
+    const m = p.match(/^(.+?)\s*[xX×](\d+)$/);
+    return m ? { code: m[1].trim(), qty: parseInt(m[2]) } : { code: p.trim(), qty: 1 };
+  };
+
+  const ccStepData = useMemo(() =>
+    steps.find(s => s.number === checkStep) ?? steps[0],
+  [checkStep, steps]);
+
+  const ccStepComps = useMemo(() =>
+    (ccStepData?.pieces ?? []).map(parsePiece).filter(c => c.code.length > 0),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [ccStepData]);
+
+  // Per-step reference image for Component Check — each component gets its own card
+  const ccRefImage = useMemo(() => {
+    if (!ccStepComps.length) return null;
+    return renderStepReferenceImage(
+      ccStepComps,
+      `Step ${checkStep} — ${lang === "sv" ? "Komponenter att hitta" : "Components to find"}`
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ccStepComps, checkStep, lang]);
+
+  // Component Check verify — sends mode:"component_check" to edge function
+  const ccVerify = useCallback(async () => {
+    if (!ccSnapshot || !ccStepComps.length) return;
+    setCcLoading(true);
+    setCcError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-build-step", {
+        body: {
+          mode: "component_check",
+          imageBase64: ccSnapshot,
+          referenceBase64: ccRefImage ?? undefined,
+          stepInstruction: ccStepData?.instruction ?? `Step ${checkStep}`,
+          stepNumber: checkStep,
+          pieces: ccStepComps.map(c => `${c.code} ×${c.qty}`),
+          chapterTitle: chapter ? tr(chapter.title, lang) : "BLIX Build",
+        },
+      });
+      if (error) throw error;
+      const r = data as { status: string; confidence: number; found: string[]; missing: string[]; feedback: string; tip: string };
+      if ((r as any)?.error) throw new Error((r as any).error);
+      setCcResult(r);
+      setCcPhase("result");
+      // Save to history
+      const hist = getCheckHistory();
+      saveCheckRecord({
+        gradeLabel: gradeLabelFromChapterId(chapterIdNum),
+        chapterId: String(chapterIdNum),
+        chapterNumber: chapterIdNum,
+        chapterTitle: chapter ? tr(chapter.title, lang) : "",
+        stepNumber: checkStep,
+        stepIdx: checkStep - 1,
+        stepTitle: ccStepData?.instruction ?? `Step ${checkStep}`,
+        sessionId: new Date().toISOString(),
+        attemptNumber: computeAttemptNumber(hist, String(chapterIdNum), checkStep - 1, "api"),
+        method: "api",
+        methodLabel: "Gemini 1.5 Flash",
+        validationLevel: "component_check",
+        source: "api",
+        correct: r.status === "correct",
+        resultStatus: r.status === "correct" ? "pass" : r.status === "needs_review" ? "error" : "fail",
+        confidence: r.confidence ?? 0,
+        found: Array.isArray(r.found) ? r.found : [],
+        missing: Array.isArray(r.missing) ? r.missing : [],
+        componentCount: ccStepComps.reduce((s, c) => s + c.qty, 0),
+        uniqueComponentTypes: ccStepComps.length,
+        referenceType: ccRefImage ? "procedural-3d" : "none",
+      });
+    } catch (e: any) {
+      setCcError(e?.message || (lang === "sv" ? "Verifiering misslyckades." : "Verification failed. Check connection."));
+    }
+    setCcLoading(false);
+  }, [ccSnapshot, ccStepComps, ccRefImage, ccStepData, checkStep, chapterIdNum, chapter, lang]);
+
   // ── Procedural AI reference — computed once per step, not on every render ──
   // Must be called before any early returns (Rules of Hooks).
   const proceduralReference = useMemo(() => {
     if (!chapter) return null;
-    const all = steps.slice(0, activeBuildStep).flatMap(s =>
-      s.pieces.flatMap(p => {
-        const m = p.match(/^(.+?)\s*[xX×](\d+)$/);
-        return m ? [{ code: m[1].trim(), qty: parseInt(m[2]) }] : [{ code: p.trim(), qty: 1 }];
-      })
-    );
+    const all = steps.slice(0, activeBuildStep).flatMap(s => s.pieces.map(parsePiece));
     const totals = new Map<string, number>();
     for (const { code, qty } of all) totals.set(code, (totals.get(code) ?? 0) + qty);
     const cumComps = Array.from(totals.entries()).map(([code, qty]) => ({ code, qty }));
@@ -430,59 +578,249 @@ const Chapter = () => {
               ))}
             </div>
 
-            {/* 3 Level cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            {/* ── Level 1 — Component Check (full interactive panel) ── */}
+            <Card className="border-orange-200 bg-gradient-to-b from-orange-50/60 to-white dark:from-orange-950/20 dark:to-background relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-orange-500" />
+              <CardHeader className="pb-3 pt-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center">
+                    <Package className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">
+                    {lang === "sv" ? "Nivå 1" : "Level 1"}
+                  </span>
+                </div>
+                <CardTitle className="text-base text-orange-800 dark:text-orange-300">
+                  {lang === "sv" ? "Komponentkontroll" : "Component Check"}
+                </CardTitle>
+                <CardDescription className="text-[12px]">
+                  {lang === "sv"
+                    ? "Har eleven de nödvändiga delarna? Lägg dem platt på bordet och ta ett foto."
+                    : "Does the student have the required parts? Lay them flat on a table and take a photo."}
+                </CardDescription>
+              </CardHeader>
 
-              {/* Level 1 — Component Check */}
-              <Card className="border-orange-200 bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-background relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-orange-400" />
-                <CardHeader className="pb-2 pt-5">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center">
-                      <Package className="h-4 w-4 text-orange-600" />
+              <CardContent className="space-y-4 pb-5">
+                {/* Step selector */}
+                {steps.length > 1 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      {lang === "sv" ? "Välj steg" : "Select step"}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {steps.map(s => (
+                        <button
+                          key={s.number}
+                          onClick={() => setCheckStep(s.number)}
+                          className={`w-8 h-8 rounded-full text-xs font-bold transition-colors border ${
+                            s.number === checkStep
+                              ? "bg-orange-500 text-white border-orange-500"
+                              : "bg-white text-muted-foreground border-border hover:border-orange-300"
+                          }`}
+                        >
+                          {s.number}
+                        </button>
+                      ))}
                     </div>
-                    <span className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">
-                      {lang === "sv" ? "Nivå 1" : "Level 1"}
-                    </span>
                   </div>
-                  <CardTitle className="text-base text-orange-800 dark:text-orange-300">
-                    {lang === "sv" ? "Komponentkontroll" : "Component Check"}
-                  </CardTitle>
-                  <CardDescription className="text-[12px]">
-                    {lang === "sv"
-                      ? "Har eleven de nödvändiga delarna?"
-                      : "Does the student have the required parts?"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 pb-5">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {lang === "sv"
-                      ? "Kontrollera att alla komponenter i bygglistan finns tillgängliga och är oskadade innan montering börjar."
-                      : "Verify that all components in the build list are present and undamaged before assembly begins."}
+                )}
+
+                {/* Required components for selected step */}
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    {lang === "sv" ? `Steg ${checkStep} — Komponenter att hitta` : `Step ${checkStep} — Components to find`}
                   </p>
-                  <div className="space-y-1 text-[11px] text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-orange-400" />
-                      {lang === "sv" ? "Visuell inspektion av delar" : "Visual parts inspection"}
+                  {ccStepComps.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">
+                      {lang === "sv" ? "Inga komponentdata för detta steg." : "No component data for this step."}
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {ccStepComps.map(({ code, qty }) => (
+                        <div key={code} className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-xl px-2.5 py-1.5">
+                          <Package className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                          <div>
+                            <p className="text-[11px] font-bold font-mono text-orange-800">{code}</p>
+                            <p className="text-[9px] text-orange-600">×{qty} — {lang === "sv" ? "Hitta denna del" : "Find this part"}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-orange-400" />
-                      {lang === "sv" ? "Antal- och typkontroll" : "Count and type verification"}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-orange-400" />
-                      {lang === "sv" ? "3D-referensgenerering" : "3D reference generation"}
+                  )}
+                </div>
+
+                {/* 3D Reference image for this step */}
+                {ccRefImage && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                      {lang === "sv" ? "3D-referens" : "3D Reference"}
+                    </p>
+                    <div className="rounded-xl border border-orange-200 overflow-hidden bg-white">
+                      <img src={ccRefImage} alt="Component reference" className="w-full object-contain" />
                     </div>
                   </div>
-                  <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white gap-2 h-9 text-sm"
-                    onClick={() => setActiveTab("build")}
-                  >
-                    <Package className="h-4 w-4" />
-                    {lang === "sv" ? "Starta komponentkontroll" : "Start Component Check"}
-                  </Button>
-                </CardContent>
-              </Card>
+                )}
+
+                {/* Camera / snapshot area */}
+                <div>
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                    {lang === "sv" ? "Ditt foto" : "Your photo"}
+                  </p>
+                  <div className="relative w-full aspect-video bg-muted rounded-xl overflow-hidden border border-border">
+                    {ccSnapshot ? (
+                      <img src={ccSnapshot} alt="Captured" className="w-full h-full object-contain bg-black" />
+                    ) : (
+                      <video
+                        ref={ccVideoRef}
+                        playsInline
+                        muted
+                        className={`w-full h-full object-cover ${ccPhase !== "camera" ? "hidden" : ""}`}
+                      />
+                    )}
+                    {ccPhase === "idle" && !ccSnapshot && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                        <Package className="h-8 w-8" />
+                        <p className="text-xs text-center px-4">
+                          {lang === "sv"
+                            ? "Lägg komponenterna platt på bordet och starta kameran"
+                            : "Lay components flat on a table and start the camera"}
+                        </p>
+                      </div>
+                    )}
+                    <canvas ref={ccCanvasRef} className="hidden" />
+                  </div>
+
+                  {/* Camera action buttons */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {ccPhase === "idle" && (
+                      <Button size="sm" onClick={ccStartCamera} className="gap-1.5 bg-orange-500 hover:bg-orange-600 text-white">
+                        <Package className="h-3.5 w-3.5" />
+                        {lang === "sv" ? "Starta kamera" : "Start Camera"}
+                      </Button>
+                    )}
+                    {ccPhase === "camera" && (
+                      <>
+                        <Button size="sm" onClick={ccCapture} className="gap-1.5 bg-orange-500 hover:bg-orange-600 text-white">
+                          <Package className="h-3.5 w-3.5" />
+                          {lang === "sv" ? "Ta foto" : "Capture"}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => { ccStopCamera(); setCcPhase("idle"); }}>
+                          {lang === "sv" ? "Avbryt" : "Cancel"}
+                        </Button>
+                      </>
+                    )}
+                    {(ccPhase === "captured" || ccPhase === "result") && !ccLoading && (
+                      <>
+                        {ccPhase === "captured" && (
+                          <Button
+                            size="sm"
+                            onClick={ccVerify}
+                            disabled={!ccStepComps.length}
+                            className="gap-1.5 bg-orange-500 hover:bg-orange-600 text-white"
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            {lang === "sv" ? "Verifiera med AI" : "Verify with AI"}
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" onClick={ccRetake} className="gap-1.5">
+                          <ArrowRight className="h-3.5 w-3.5 rotate-180" />
+                          {lang === "sv" ? "Ta om foto" : "Retake"}
+                        </Button>
+                      </>
+                    )}
+                    {ccLoading && (
+                      <div className="flex items-center gap-2 text-sm text-orange-600">
+                        <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                        {lang === "sv" ? "Analyserar…" : "Checking components…"}
+                      </div>
+                    )}
+                  </div>
+                  {ccError && (
+                    <p className="text-xs text-destructive mt-1.5">{ccError}</p>
+                  )}
+                </div>
+
+                {/* Result panel */}
+                {ccResult && ccPhase === "result" && (() => {
+                  const passed = ccResult.status === "correct";
+                  const needsReview = ccResult.status === "needs_review";
+                  return (
+                    <div className={`rounded-xl border p-4 space-y-3 ${
+                      passed ? "bg-success/10 border-success/30"
+                      : needsReview ? "bg-amber-50 border-amber-200"
+                      : "bg-destructive/5 border-destructive/20"
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {passed
+                          ? <CheckCircle2 className="h-5 w-5 text-success" />
+                          : needsReview
+                            ? <span className="text-lg">⚠️</span>
+                            : <span className="text-lg">❌</span>
+                        }
+                        <p className={`font-semibold text-sm ${passed ? "text-success" : needsReview ? "text-amber-700" : "text-destructive"}`}>
+                          {passed
+                            ? (lang === "sv" ? "Komponentkontroll godkänd — du har de nödvändiga delarna!" : "Component Check Passed — you have the required parts!")
+                            : needsReview
+                              ? (lang === "sv" ? "Behöver tydligare foto" : "Needs clearer photo")
+                              : (lang === "sv" ? "Hitta de saknade komponenterna och ta ett nytt foto." : "Please find the missing components and retake the photo.")}
+                        </p>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {Math.round((ccResult.confidence ?? 0) * 100)}%
+                        </span>
+                      </div>
+
+                      {ccResult.found.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-bold text-success uppercase mb-1">
+                            {lang === "sv" ? "Hittade" : "Found"} ✓
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {ccResult.found.map(c => (
+                              <span key={c} className="font-mono text-[10px] bg-success/10 border border-success/20 text-success px-1.5 py-0.5 rounded-full">✓ {c}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {ccResult.missing.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-bold text-destructive uppercase mb-1">
+                            {lang === "sv" ? "Saknas" : "Missing"} ✗
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {ccResult.missing.map(c => (
+                              <span key={c} className="font-mono text-[10px] bg-destructive/10 border border-destructive/20 text-destructive px-1.5 py-0.5 rounded-full">✗ {c}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {ccResult.feedback && (
+                        <p className="text-xs text-muted-foreground bg-white/60 rounded-lg px-3 py-2 border border-border">
+                          💬 {ccResult.feedback}
+                        </p>
+                      )}
+                      {!passed && ccResult.tip && (
+                        <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200">
+                          💡 {ccResult.tip}
+                        </p>
+                      )}
+
+                      {passed && (
+                        <Button
+                          className="w-full bg-success text-success-foreground hover:bg-success/90 gap-2"
+                          onClick={() => setActiveTab("build")}
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                          {lang === "sv" ? "Fortsätt till Bygge" : "Continue to Build"}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* ── Level 2 & 3 overview cards (unchanged) ── */}
+            <div className="grid gap-4 md:grid-cols-2">
 
               {/* Level 2 — Assembly Check */}
               <Card className="border-blue-200 bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-background relative overflow-hidden">
@@ -595,13 +933,11 @@ const Chapter = () => {
               </Card>
             </div>
 
-            {/* Connecting arrow labels between cards on desktop */}
-            <div className="hidden md:flex items-center justify-between px-8 -mt-2 text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
-              <span className="flex-1 text-center">Verifies parts exist</span>
-              <ArrowRight className="h-3 w-3 mx-2 flex-shrink-0" />
-              <span className="flex-1 text-center">Verifies correct assembly</span>
-              <ArrowRight className="h-3 w-3 mx-2 flex-shrink-0" />
-              <span className="flex-1 text-center">Spatial visualization</span>
+            {/* Level 2 → Level 3 connector */}
+            <div className="hidden md:flex items-center justify-center gap-2 -mt-2 text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
+              <span>Verifies correct assembly</span>
+              <ArrowRight className="h-3 w-3 flex-shrink-0" />
+              <span>Spatial visualization</span>
             </div>
 
             {/* Research Contribution note */}

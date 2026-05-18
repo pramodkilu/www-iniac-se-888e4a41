@@ -177,8 +177,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { imageBase64, referenceBase64, stepInstruction, stepNumber, pieces, chapterTitle } =
+    const { imageBase64, referenceBase64, stepInstruction, stepNumber, pieces, chapterTitle, mode } =
       await req.json();
+    const isComponentCheck = mode === "component_check";
 
     if (!imageBase64 || typeof imageBase64 !== "string") {
       return new Response(
@@ -209,28 +210,52 @@ Deno.serve(async (req) => {
       return m ? m[1].trim() : p.trim();
     });
 
-    const systemPrompt =
-      "You are a STEM robotics build guide checker for kids aged 7-14. " +
-      "You analyse a photo of a student's physical BLIX robotics build and determine which components are visible. " +
-      "Be encouraging and kind. Use the component descriptions to identify each part. " +
-      "Call the verify_step tool with your structured answer.";
+    const systemPrompt = isComponentCheck
+      ? "You are a STEM robotics kit helper for children. " +
+        "The student has laid their kit components flat on a table BEFORE starting to build. " +
+        "Your ONLY job is to check whether the required parts are physically present in the photo. " +
+        "DO NOT check assembly order, connections, or placement — the parts are not yet assembled. " +
+        "If the required components are visible as loose parts, that counts as CORRECT. " +
+        "Be encouraging and kind. Call the verify_step tool with your structured answer."
+      : "You are a STEM robotics build guide checker for kids aged 7-14. " +
+        "You analyse a photo of a student's physical BLIX robotics build and determine which components are visible. " +
+        "Be encouraging and kind. Use the component descriptions to identify each part. " +
+        "Call the verify_step tool with your structured answer.";
 
-    const userText = [
-      `Chapter: ${chapterTitle ?? "BLIX build"}`,
-      `Step ${stepNumber ?? "?"}: ${stepInstruction}`,
-      "",
-      "Required components for this step:",
-      describeComponents(pieceList),
-      "",
-      refUrl
-        ? "The FIRST image is a 3D diagram showing the exact components needed (for reference shape/layout). " +
-          "The SECOND image is the student's real build photo. " +
-          "Identify which required components you can actually see in the student's photo."
-        : "Look at the student's build photo and identify which of the required components listed above are visible.",
-      "",
-      "For each required component, decide if it is PRESENT (clearly visible) or MISSING.",
-      "If the photo is blurry, too dark, or you cannot see the build clearly, use needs_review.",
-    ].join("\n");
+    const userText = isComponentCheck
+      ? [
+          `Chapter: ${chapterTitle ?? "BLIX build"}`,
+          `Step ${stepNumber ?? "?"} components to find: ${stepInstruction}`,
+          "",
+          "Required components (lay them flat on a table):",
+          describeComponents(pieceList),
+          "",
+          refUrl
+            ? "The FIRST image is a 3D diagram showing what each required component looks like. " +
+              "The SECOND image is the student's photo of their loose parts. " +
+              "Check ONLY that the required components are present as loose pieces — do not check assembly."
+            : "Look at the student's photo and check that each required component is physically visible as a loose part.",
+          "",
+          "Mark a component FOUND if you can see it (even if it's not assembled).",
+          "Mark a component MISSING only if it is clearly not in the photo.",
+          "Use needs_review if the photo is blurry or too dark to tell.",
+        ].join("\n")
+      : [
+          `Chapter: ${chapterTitle ?? "BLIX build"}`,
+          `Step ${stepNumber ?? "?"}: ${stepInstruction}`,
+          "",
+          "Required components for this step:",
+          describeComponents(pieceList),
+          "",
+          refUrl
+            ? "The FIRST image is a 3D diagram showing the exact components needed (for reference shape/layout). " +
+              "The SECOND image is the student's real build photo. " +
+              "Identify which required components you can actually see in the student's photo."
+            : "Look at the student's build photo and identify which of the required components listed above are visible.",
+          "",
+          "For each required component, decide if it is PRESENT (correctly assembled) or MISSING.",
+          "If the photo is blurry, too dark, or you cannot see the build clearly, use needs_review.",
+        ].join("\n");
 
     const userContent: object[] = [{ type: "text", text: userText }];
     if (refUrl) userContent.push({ type: "image_url", image_url: { url: refUrl } });
@@ -255,9 +280,9 @@ Deno.serve(async (req) => {
                   type: "string",
                   enum: ["correct", "incorrect", "needs_review"],
                   description:
-                    "correct = all required components visible and correctly placed; " +
-                    "incorrect = components clearly missing or wrong; " +
-                    "needs_review = photo unclear or partially visible",
+                    "correct = all required components are visible (assembled or as loose parts); " +
+                    "incorrect = one or more required components are clearly absent from the photo; " +
+                    "needs_review = photo is too blurry, dark, or unclear to make a determination",
                 },
                 confidence: {
                   type: "number",
